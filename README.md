@@ -9,4 +9,5 @@ Welcome to Team 1's project repository
 - Member 3
 - Member 4
 - Member 5
-- Member 6
+- Dallin Dutson
+    - Hello, I am Dallin Dutson. My hobbies include reading, writing, gaming, film, and cooking. I am excited to work on this project together.
