@@ -8,5 +8,6 @@ Welcome to Team 1's project repository
 - Member 2
 - Member 3
 - Member 4
-- Member 5
+- Lindsey West
+    I am Lindsey, I work as a Data Analyst at Mountain Land Physical Therapy Partners. In my free time I like to spend time with my dog and read.
 - Member 6
