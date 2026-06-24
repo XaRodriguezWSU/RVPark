@@ -1,0 +1,54 @@
+@model RVSite.Models.Site
+
+@{
+    ViewData["Title"] = "Edit";
+}
+
+<h1>Edit</h1>
+
+<h4>Site</h4>
+<hr />
+<div class="row">
+    <div class="col-md-4">
+        <form asp-action="Edit">
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            <input type="hidden" asp-for="SiteID" />
+            <div class="form-group">
+                <label asp-for="SiteNumber" class="control-label"></label>
+                <input asp-for="SiteNumber" class="form-control" />
+                <span asp-validation-for="SiteNumber" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="SiteType" class="control-label"></label>
+                <input asp-for="SiteType" class="form-control" />
+                <span asp-validation-for="SiteType" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="SiteStatus" class="control-label"></label>
+                <input asp-for="SiteStatus" class="form-control" />
+                <span asp-validation-for="SiteStatus" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="MaxRVLength" class="control-label"></label>
+                <input asp-for="MaxRVLength" class="form-control" />
+                <span asp-validation-for="MaxRVLength" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="BaseRate" class="control-label"></label>
+                <input asp-for="BaseRate" class="form-control" />
+                <span asp-validation-for="BaseRate" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <input type="submit" value="Save" class="btn btn-primary" />
+            </div>
+        </form>
+    </div>
+</div>
+
+<div>
+    <a asp-action="Index">Back to List</a>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}

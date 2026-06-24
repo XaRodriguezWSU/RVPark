@@ -1,0 +1,59 @@
+@model IEnumerable<RVSite.Models.Site>
+
+@{
+    ViewData["Title"] = "Index";
+}
+
+<h1>Index</h1>
+
+<p>
+    <a asp-action="Create">Create New</a>
+</p>
+<table class="table">
+    <thead>
+        <tr>
+            <th>
+                @Html.DisplayNameFor(model => model.SiteNumber)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.SiteType)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.SiteStatus)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.MaxRVLength)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.BaseRate)
+            </th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+@foreach (var item in Model) {
+        <tr>
+            <td>
+                @Html.DisplayFor(model => item.SiteNumber)
+            </td>
+            <td>
+                @Html.DisplayFor(model => item.SiteType)
+            </td>
+            <td>
+                @Html.DisplayFor(model => item.SiteStatus)
+            </td>
+            <td>
+                @Html.DisplayFor(model => item.MaxRVLength)
+            </td>
+            <td>
+                @Html.DisplayFor(model => item.BaseRate)
+            </td>
+            <td>
+                <a asp-action="Edit" asp-route-id="@item.SiteID">Edit</a> |
+                <a asp-action="Details" asp-route-id="@item.SiteID">Details</a> |
+                <a asp-action="Delete" asp-route-id="@item.SiteID">Delete</a>
+            </td>
+        </tr>
+}
+    </tbody>
+</table>
