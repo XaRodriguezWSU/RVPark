@@ -14,13 +14,13 @@ namespace RVSite.Migrations
                 name: "Sites",
                 columns: table => new
                 {
-                    SiteID = table.Column<int>(type: "INTEGER", nullable: false)
-                        .Annotation("Sqlite:Autoincrement", true),
-                    SiteNumber = table.Column<string>(type: "TEXT", maxLength: 20, nullable: false),
-                    SiteType = table.Column<string>(type: "TEXT", maxLength: 50, nullable: false),
-                    SiteStatus = table.Column<string>(type: "TEXT", maxLength: 50, nullable: false),
-                    MaxRVLength = table.Column<int>(type: "INTEGER", nullable: false),
-                    BaseRate = table.Column<decimal>(type: "TEXT", nullable: false)
+                    SiteID = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    SiteNumber = table.Column<string>(type: "nvarchar(20)", maxLength: 20, nullable: false),
+                    SiteType = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
+                    SiteStatus = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
+                    MaxRVLength = table.Column<int>(type: "int", nullable: false),
+                    BaseRate = table.Column<decimal>(type: "decimal(18,2)", nullable: false)
                 },
                 constraints: table =>
                 {
