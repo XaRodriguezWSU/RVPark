@@ -1,39 +1,59 @@
-name: Deploy ASP.NET via FTP
+name: Deploy via FTP
 
 on:
-  workflow_dispatch:      # manual trigger
-  # uncomment to auto-deploy on push to main
+  workflow_dispatch:
   # push:
   #   branches:
   #     - deploy
 
 jobs:
-  build-and-deploy:
-    runs-on: windows-latest
+  ftp-deploy:
+    runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+    - name: Checkout code
+      uses: actions/checkout@v4
 
-      - name: Setup .NET
-        uses: actions/setup-dotnet@v4
-        with:
-          dotnet-version: "8.0.x"   # match your project
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: '8.0.x'
 
-      - name: Restore dependencies
-        run: dotnet restore
+    - name: Publish project
+      run: dotnet publish -c Release -o ./publish
 
-      - name: Build
-        run: dotnet build --configuration Release --no-restore
+    - name: Create app_offline.htm
+      run: echo "App offline for deployment" > app_offline.htm
 
-      - name: Publish
-        run: dotnet publish -c Release -o ./publish
+    - name: Upload app_offline.htm (stop app)
+      uses: SamKirkland/FTP-Deploy-Action@v4.3.4
+      with:
+        server: ${{ secrets.FTP_SERVER }}
+        username: ${{ secrets.FTP_USERNAME }}
+        password: ${{ secrets.FTP_PASSWORD }}
+        local-dir: .
+        server-dir: ${{ secrets.FTP_PATH }}
 
-      - name: Deploy via FTP
-        uses: SamKirkland/FTP-Deploy-Action@v4.3.4
-        with:
-          server: ${{ secrets.FTP_SERVER }}
-          username: ${{ secrets.FTP_USERNAME }}
-          password: ${{ secrets.FTP_PASSWORD }}
-          local-dir: ./publish/
-          server-dir: ${{ secrets.FTP_PATH }}
+    - name: FTP Deploy published app
+      uses: SamKirkland/FTP-Deploy-Action@v4.3.4
+      with:
+        server: ${{ secrets.FTP_SERVER }}
+        username: ${{ secrets.FTP_USERNAME }}
+        password: ${{ secrets.FTP_PASSWORD }}
+        local-dir: ./publish
+        server-dir: ${{ secrets.FTP_PATH }}
+
+    - name: Delete app_offline.htm
+      run: rm app_offline.htm
+
+    - name: Remove app_offline.htm from server (restart app)
+      uses: SamKirkland/FTP-Deploy-Action@v4.3.4
+      with:
+        server: ${{ secrets.FTP_SERVER }}
+        username: ${{ secrets.FTP_USERNAME }}
+        password: ${{ secrets.FTP_PASSWORD }}
+        local-dir: .
+        server-dir: ${{ secrets.FTP_PATH }}
+        exclude: |
+          **/*
+        delete: true
