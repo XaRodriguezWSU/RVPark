@@ -10,7 +10,7 @@ builder.Services.AddControllersWithViews();
 if (builder.Environment.IsDevelopment())
 {
     builder.Services.AddDbContext<AppDbContext>(options =>
-        options.UseSqlServer("Server=SQL5101.site4now.net;Initial Catalog=db_acb20d_rvparkdb;User Id=db_acb20d_rvparkdb_admin;Password=CS3750Team1;Encrypt=True;TrustServerCertificate=True;"));
+        options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 }
 else
 {
