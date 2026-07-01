@@ -22,16 +22,18 @@ jobs:
     - name: Publish project
       run: dotnet publish -c Release -o ./publish
 
-    - name: Create app_offline.htm
-      run: echo "App offline for deployment" > app_offline.htm
+    - name: Create offline folder and app_offline.htm
+      run: |
+        mkdir offline
+        echo "App offline for deployment" > offline/app_offline.htm
 
-    - name: Upload app_offline.htm (stop app)
+    - name: Upload app_offline.htm
       uses: SamKirkland/FTP-Deploy-Action@v4.3.4
       with:
         server: ${{ secrets.FTP_SERVER }}
         username: ${{ secrets.FTP_USERNAME }}
         password: ${{ secrets.FTP_PASSWORD }}
-        local-dir: .
+        local-dir: ./offline/
         server-dir: ${{ secrets.FTP_PATH }}
 
     - name: FTP Deploy published app
@@ -40,19 +42,19 @@ jobs:
         server: ${{ secrets.FTP_SERVER }}
         username: ${{ secrets.FTP_USERNAME }}
         password: ${{ secrets.FTP_PASSWORD }}
-        local-dir: ./publish
+        local-dir: ./publish/
         server-dir: ${{ secrets.FTP_PATH }}
 
-    - name: Delete app_offline.htm
-      run: rm app_offline.htm
+    - name: Remove offline folder locally
+      run: rm -rf offline
 
-    - name: Remove app_offline.htm from server (restart app)
+    - name: Delete app_offline.htm on server
       uses: SamKirkland/FTP-Deploy-Action@v4.3.4
       with:
         server: ${{ secrets.FTP_SERVER }}
         username: ${{ secrets.FTP_USERNAME }}
         password: ${{ secrets.FTP_PASSWORD }}
-        local-dir: .
+        local-dir: ./publish/
         server-dir: ${{ secrets.FTP_PATH }}
         exclude: |
           **/*
