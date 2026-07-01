@@ -5,7 +5,7 @@ on:
   # uncomment to auto-deploy on push to main
   # push:
   #   branches:
-  #     - main
+  #     - deploy
 
 jobs:
   build-and-deploy:
