@@ -1,11 +1,10 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace RVSite.Models
-
-public class Reservation
 {
-	public Reservation()
-	{
+    public class Reservation
+    {
         [Key]
         public int ReservationID { get; set; }
 
@@ -41,8 +40,7 @@ public class Reservation
         public string? SpecialRequests { get; set; }
 
         [Required]
-        [StringLength(30)]
-        public string ReservationStatus { get; set; }
+        public ReservationStatus ReservationStatus { get; set; }
 
         [Required]
         [Column(TypeName = "decimal(10,2)")]
