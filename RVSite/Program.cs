@@ -2,7 +2,13 @@ using Microsoft.EntityFrameworkCore;
 using RVSite.Models;
 using SiteDemo.Models;
 
-var builder = WebApplication.CreateBuilder(args);
+var builder = WebApplication.CreateBuilder(new WebApplicationOptions
+{
+    Args = args,
+    ContentRootPath = AppContext.BaseDirectory.Contains(@"\bin\")
+        ? Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, @"..\..\..\"))
+        : Directory.GetCurrentDirectory()
+});
 
 // Add services to the container.
 builder.Services.AddControllersWithViews();
@@ -20,6 +26,7 @@ else
 
 
 var app = builder.Build();
+
 
 using (var scope = app.Services.CreateScope())
 {
