@@ -10,7 +10,7 @@ builder.Services.AddControllersWithViews();
 if (builder.Environment.IsDevelopment())
 {
     builder.Services.AddDbContext<AppDbContext>(options =>
-        options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+        options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection")));
 }
 else
 {
@@ -24,7 +24,7 @@ var app = builder.Build();
 using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-    db.Database.Migrate();
+    db.Database.EnsureCreated();
 }
 
 
@@ -32,6 +32,10 @@ using (var scope = app.Services.CreateScope())
 using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+
+    db.Sites.RemoveRange(db.Sites);
+    db.SaveChanges();
+
     if (!db.Sites.Any())
     {
         db.Sites.AddRange(
