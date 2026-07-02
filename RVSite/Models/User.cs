@@ -36,7 +36,7 @@ namespace RVSite.Models
 
         public bool HasRole(string roleName)
         {
-            return Role?.RoleName == roleName;
+            return Role?.Type.ToString() == roleName;
         }
     }
 }
