@@ -2,9 +2,9 @@ name: Deploy via FTP
 
 on:
   workflow_dispatch:
-  # push:
-  #   branches:
-  #     - deploy
+  push:
+    branches:
+      - deploy
 
 jobs:
   ftp-deploy:
