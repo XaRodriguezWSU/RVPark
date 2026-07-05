@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
+using RVSite.Data;
 using RVSite.Models;
-using SiteDemo.Models;
+using RVSite.Services;
 
 var builder = WebApplication.CreateBuilder(new WebApplicationOptions
 {
@@ -12,6 +13,8 @@ var builder = WebApplication.CreateBuilder(new WebApplicationOptions
 
 // Add services to the container.
 builder.Services.AddControllersWithViews();
+
+builder.Services.AddScoped<CostService>();
 
 if (builder.Environment.IsDevelopment())
 {
@@ -36,21 +39,12 @@ using (var scope = app.Services.CreateScope())
 
 
 // Quick data seeding for demonstration purposes
-using (var scope = app.Services.CreateScope())
+if (app.Environment.IsDevelopment())
 {
-    var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-
-    db.Sites.RemoveRange(db.Sites);
-    db.SaveChanges();
-
-    if (!db.Sites.Any())
+    using (var scope = app.Services.CreateScope())
     {
-        db.Sites.AddRange(
-            new Site { SiteNumber = "A1", SiteType = "Tent", SiteStatus = "Available", MaxRVLength = 0, BaseRate = 25.00m },
-            new Site { SiteNumber = "B2", SiteType = "RV", SiteStatus = "Occupied", MaxRVLength = 40, BaseRate = 45.00m },
-            new Site { SiteNumber = "C3", SiteType = "Cabin", SiteStatus = "Available", MaxRVLength = 0, BaseRate = 80.00m }
-        );
-        db.SaveChanges();
+        var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        DataSeeder.Seed(db);
     }
 }
 
