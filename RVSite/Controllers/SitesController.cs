@@ -2,7 +2,6 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using RVSite.Models;
-using SiteDemo.Models;
 
 public class SitesController : Controller
 {
