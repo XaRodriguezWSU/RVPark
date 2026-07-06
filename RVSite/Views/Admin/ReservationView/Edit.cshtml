@@ -1,0 +1,48 @@
+﻿@*
+    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
+*@
+@{
+}
+
+@model Reservation
+
+<h2>Edit Reservation</h2>
+
+<form asp-action="Edit" method="post">
+    <input type="hidden" asp-for="ReservationID" />
+
+    <div class="form-group">
+        <label>Customer</label>
+        <input class="form-control" value="@Model.User.FirstName @Model.User.LastName" disabled />
+    </div>
+
+    <div class="form-group">
+        <label>Current Site</label>
+        <input class="form-control" value="@Model.Site.SiteNumber" disabled />
+    </div>
+
+    <div class="form-group">
+        <label>Start Date</label>
+        <input asp-for="CheckInDate" type="date" class="form-control" />
+    </div>
+
+    <div class="form-group">
+        <label>End Date</label>
+        <input asp-for="CheckOutDate" type="date" class="form-control" />
+    </div>
+
+    <div class="form-group">
+        <label>Change Site</label>
+        <select name="newSiteID" class="form-control">
+            <option value="">Keep Current Site</option>
+            @foreach (var site in ViewBag.AvailableSites)
+            {
+                <option value="@site.SiteID">@site.SiteNumber</option>
+            }
+        </select>
+    </div>
+
+    <button type="submit" class="btn btn-success mt-3">Save Changes</button>
+
+    <a asp-action="CancelReservation" asp-route-id="@Model.ReservationID" class="btn btn-danger mt-3">Cancel Reservation</a>
+</form>
