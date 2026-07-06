@@ -50,5 +50,7 @@ namespace RVSite.Models
         public decimal BalanceDue { get; set; }
 
         public DateTime ReservationDate { get; set; } = DateTime.Now;
+
+        public ICollection<Fee> Fees { get; set; } = new List<Fee>();
     }
 }
