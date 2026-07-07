@@ -45,11 +45,6 @@ namespace RVSite.Controllers
             return View();
         }
 
-        //[HttpGet]
-        //public IActionResult Dashboard()
-        //{
-        //    return View();
-        //}
 
         [HttpGet]
         public IActionResult Search()
