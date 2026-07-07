@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using RVSite.Data;
 using RVSite.Models;
 using System;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace RVSite.Controllers
@@ -14,6 +15,34 @@ namespace RVSite.Controllers
         public AdminController(AppDbContext context)
         {
             _context = context;
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> Dashboard()
+        {
+            var totalSites = await _context.Sites.CountAsync();
+
+            var availableSites = await _context.Sites
+                .CountAsync(s => s.SiteStatus == SiteStatus.Available.ToString());
+
+            var reservedSites = await _context.Sites
+                .CountAsync(s => s.SiteStatus == SiteStatus.Reserved.ToString());
+
+            var maintenanceSites = await _context.Sites
+                .CountAsync(s => s.SiteStatus == SiteStatus.Maintenance.ToString());
+
+            var recentSites = await _context.Sites
+                .OrderBy(s => s.SiteNumber)
+                .Take(8)
+                .ToListAsync();
+
+            ViewBag.TotalSites = totalSites;
+            ViewBag.AvailableSites = availableSites;
+            ViewBag.ReservedSites = reservedSites;
+            ViewBag.MaintenanceSites = maintenanceSites;
+            ViewBag.RecentSites = recentSites;
+
+            return View();
         }
 
         [HttpGet]
@@ -124,7 +153,11 @@ namespace RVSite.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, DateTime checkInDate, DateTime checkOutDate, int? newSiteID)
+        public async Task<IActionResult> Edit(
+            int id,
+            DateTime checkInDate,
+            DateTime checkOutDate,
+            int? newSiteID)
         {
             var reservation = await _context.Reservations
                 .Include(r => r.Site)
@@ -148,6 +181,7 @@ namespace RVSite.Controllers
             return RedirectToAction(nameof(Search));
         }
 
+        [HttpGet]
         public async Task<IActionResult> CancelReservation(int id)
         {
             var reservation = await _context.Reservations.FindAsync(id);
