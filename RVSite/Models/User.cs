@@ -38,5 +38,7 @@ namespace RVSite.Models
         {
             return Role?.Type.ToString() == roleName;
         }
+
+        public bool IsLocked { get; set; } = false;
     }
 }

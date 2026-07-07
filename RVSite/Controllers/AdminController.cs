@@ -45,11 +45,11 @@ namespace RVSite.Controllers
             return View();
         }
 
-        [HttpGet]
-        public IActionResult Dashboard()
-        {
-            return View();
-        }
+        //[HttpGet]
+        //public IActionResult Dashboard()
+        //{
+        //    return View();
+        //}
 
         [HttpGet]
         public IActionResult Search()
@@ -202,6 +202,19 @@ namespace RVSite.Controllers
             await _context.SaveChangesAsync();
 
             return RedirectToAction(nameof(Search));
+        }
+
+        // Stuff for the employee management system below
+        [HttpGet]
+        public async Task<IActionResult> Employees()
+        {
+            var employees = await _context.Users
+                .Include(u => u.Role)
+                .Where(u => u.Role.Type == RoleType.Staff || u.Role.Type == RoleType.Admin)
+                .OrderBy(u => u.LastName)
+                .ToListAsync();
+
+            return View(employees);
         }
     }
 }
