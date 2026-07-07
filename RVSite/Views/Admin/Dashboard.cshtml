@@ -13,10 +13,14 @@
             <h2 class="fw-bold mb-1">Admin Dashboard</h2>
             <p class="text-muted mb-0">Manage site overview, site editing, and photo management.</p>
         </div>
-
-        <a asp-controller="Admin" asp-action="Search" class="btn btn-primary">
-            Search Reservations
-        </a>
+        <div class="d-flex flex-column align-items-center">
+            <a asp-controller="Admin" asp-action="Search" class="btn btn-primary mb-1 w-100">
+                Search Reservations
+            </a>
+            <a asp-controller="Admin" asp-action="Reports" class="btn btn-secondary w-100">
+                Generate Reports
+            </a>
+        </div>
     </div>
 
     <div class="row g-3 mb-4">
@@ -91,47 +95,47 @@
                             {
                                 foreach (var site in recentSites)
                                 {
-                                    <tr>
-                                        <td>@site.SiteNumber</td>
-                                        <td>@site.SiteType</td>
-                                        <td>
-                                            @if (site.SiteStatus == SiteStatus.Available.ToString())
+                            <tr>
+                                <td>@site.SiteNumber</td>
+                                <td>@site.SiteType</td>
+                                <td>
+                                    @if (site.SiteStatus == SiteStatus.Available.ToString())
                                             {
-                                                <span class="badge bg-success">Available</span>
+                                    <span class="badge bg-success">Available</span>
                                             }
                                             else if (site.SiteStatus == SiteStatus.Reserved.ToString())
                                             {
-                                                <span class="badge bg-warning text-dark">Reserved</span>
+                                    <span class="badge bg-warning text-dark">Reserved</span>
                                             }
                                             else if (site.SiteStatus == SiteStatus.Maintenance.ToString())
                                             {
-                                                <span class="badge bg-danger">Maintenance</span>
+                                    <span class="badge bg-danger">Maintenance</span>
                                             }
                                             else
                                             {
-                                                <span class="badge bg-secondary">@site.SiteStatus</span>
+                                    <span class="badge bg-secondary">@site.SiteStatus</span>
                                             }
-                                        </td>
-                                        <td>@site.MaxRVLength ft</td>
-                                        <td>$@site.BaseRate</td>
-                                        <td>
-                                            <a asp-controller="Sites"
-                                               asp-action="Edit"
-                                               asp-route-id="@site.SiteID"
-                                               class="btn btn-sm btn-outline-secondary">
-                                                Edit
-                                            </a>
-                                        </td>
-                                    </tr>
+                                </td>
+                                <td>@site.MaxRVLength ft</td>
+                                <td>$@site.BaseRate</td>
+                                <td>
+                                    <a asp-controller="Sites"
+                                       asp-action="Edit"
+                                       asp-route-id="@site.SiteID"
+                                       class="btn btn-sm btn-outline-secondary">
+                                        Edit
+                                    </a>
+                                </td>
+                            </tr>
                                 }
                             }
                             else
                             {
-                                <tr>
-                                    <td colspan="6" class="text-center text-muted">
-                                        No sites found.
-                                    </td>
-                                </tr>
+                            <tr>
+                                <td colspan="6" class="text-center text-muted">
+                                    No sites found.
+                                </td>
+                            </tr>
                             }
                         </tbody>
                     </table>
@@ -162,8 +166,8 @@
                         Edit Reservations
                     </a>
 
-                    <a asp-controller="Reports" asp-action="Index" class="btn btn-outline-secondary">
-                        Reservation Reports
+                    <a asp-controller="Admin" asp-action="Employees" class="btn btn-outline-secondary">
+                        Manage Employees
                     </a>
 
                     <a asp-controller="Fees" asp-action="Index" class="btn btn-outline-secondary">

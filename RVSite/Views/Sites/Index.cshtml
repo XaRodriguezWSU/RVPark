@@ -4,7 +4,7 @@
     ViewData["Title"] = "Index";
 }
 
-<h1>Index</h1>
+<h1>All Sites</h1>
 
 <p>
     <a asp-action="Create">Create New</a>
@@ -49,9 +49,9 @@
                 @Html.DisplayFor(model => item.BaseRate)
             </td>
             <td>
-                <a asp-action="Edit" asp-route-id="@item.SiteID">Edit</a> |
-                <a asp-action="Details" asp-route-id="@item.SiteID">Details</a> |
-                <a asp-action="Delete" asp-route-id="@item.SiteID">Delete</a>
+                <a asp-controller="Sites" asp-action="Edit" asp-route-id="@item.SiteID">Edit</a> |
+                <a asp-controller="Sites" asp-action="Details" asp-route-id="@item.SiteID">Details</a> |
+                <a asp-controller="Sites" asp-action="Delete" asp-route-id="@item.SiteID">Delete</a>
             </td>
         </tr>
 }
