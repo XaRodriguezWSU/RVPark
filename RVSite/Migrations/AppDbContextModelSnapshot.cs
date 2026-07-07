@@ -130,14 +130,55 @@ namespace RVSite.Migrations
                         .HasMaxLength(50)
                         .HasColumnType("TEXT");
 
-                    b.Property<string>("SiteType")
-                        .IsRequired()
+                    b.Property<int>("SiteTypeID")
                         .HasMaxLength(50)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("INTEGER");
 
                     b.HasKey("SiteID");
 
+                    b.HasIndex("SiteTypeID");
+
                     b.ToTable("Sites");
+                });
+
+            modelBuilder.Entity("RVSite.Models.SiteType", b =>
+                {
+                    b.Property<int>("SiteTypeID")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("SiteTypeID");
+
+                    b.ToTable("SiteTypes");
+                });
+
+            modelBuilder.Entity("RVSite.Models.SiteTypePrice", b =>
+                {
+                    b.Property<int>("SiteTypePriceID")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime?>("EndDate")
+                        .HasColumnType("TEXT");
+
+                    b.Property<decimal>("Price")
+                        .HasColumnType("decimal(10,2)");
+
+                    b.Property<int>("SiteTypeID")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime>("StartDate")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("SiteTypePriceID");
+
+                    b.HasIndex("SiteTypeID");
+
+                    b.ToTable("SiteTypePrices");
                 });
 
             modelBuilder.Entity("RVSite.Models.User", b =>
@@ -211,6 +252,28 @@ namespace RVSite.Migrations
                     b.Navigation("User");
                 });
 
+            modelBuilder.Entity("RVSite.Models.Site", b =>
+                {
+                    b.HasOne("RVSite.Models.SiteType", "SiteType")
+                        .WithMany("Sites")
+                        .HasForeignKey("SiteTypeID")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("SiteType");
+                });
+
+            modelBuilder.Entity("RVSite.Models.SiteTypePrice", b =>
+                {
+                    b.HasOne("RVSite.Models.SiteType", "SiteType")
+                        .WithMany("Prices")
+                        .HasForeignKey("SiteTypeID")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("SiteType");
+                });
+
             modelBuilder.Entity("RVSite.Models.User", b =>
                 {
                     b.HasOne("RVSite.Models.Role", "Role")
@@ -230,6 +293,13 @@ namespace RVSite.Migrations
             modelBuilder.Entity("RVSite.Models.Role", b =>
                 {
                     b.Navigation("Users");
+                });
+
+            modelBuilder.Entity("RVSite.Models.SiteType", b =>
+                {
+                    b.Navigation("Prices");
+
+                    b.Navigation("Sites");
                 });
 
             modelBuilder.Entity("RVSite.Models.User", b =>

@@ -12,5 +12,7 @@ namespace RVSite.Models
         public DbSet<User> Users { get; set; }
         public DbSet<Role> Role { get; set; }
         public DbSet<Fee> Fees { get; set; }
+        public DbSet<SiteType> SiteTypes { get; set; }
+        public DbSet<SiteTypePrice> SiteTypePrices { get; set; }
     }
 }
