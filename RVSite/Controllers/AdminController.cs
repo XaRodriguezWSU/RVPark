@@ -211,5 +211,102 @@ namespace RVSite.Controllers
 
             return View(employees);
         }
+
+        [HttpGet]
+        public async Task<IActionResult> CreateEmployee()
+        {
+            ViewBag.AvailableRoles = await _context.Role
+                .Where(r => r.Type == RoleType.Staff || r.Type == RoleType.Admin)
+                .ToListAsync();
+
+            return View();
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> CreateEmployee(
+            string firstName, string lastName,
+            string email, string phoneNumber, int selectedRoleID, string password)
+        {
+            if (!ModelState.IsValid)
+            {
+                ViewBag.AvailableRoles = await _context.Role
+                    .Where(r => r.Type == RoleType.Staff || r.Type == RoleType.Admin)
+                    .ToListAsync();
+
+                return View();
+            }
+
+            var employee = new User
+            {
+                FirstName = firstName,
+                LastName = lastName,
+                Email = email,
+                PhoneNumber = phoneNumber,
+                RoleID = selectedRoleID,
+                PasswordHash = password
+            };
+
+            _context.Users.Add(employee);
+            await _context.SaveChangesAsync();
+
+            return RedirectToAction(nameof(Employees));
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> EditEmployee(int id)
+        {
+            var user = await _context.Users
+                .Include(u => u.Role)
+                .FirstOrDefaultAsync(u => u.UserID == id);
+
+            if (user == null) return NotFound();
+
+            ViewBag.AvailableRoles = await _context.Role
+                .Where(r => r.Type == RoleType.Staff || r.Type == RoleType.Admin)
+                .ToListAsync();
+
+            return View(user);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> EditEmployee(
+            int id,
+            string firstName,
+            string lastName,
+            string email,
+            string phoneNumber,
+            int selectedRoleID,
+            bool isLocked = false)
+        {
+            var user = await _context.Users.FindAsync(id);
+
+            if (user == null) return NotFound();
+
+            user.FirstName = firstName;
+            user.LastName = lastName;
+            user.Email = email;
+            user.PhoneNumber = phoneNumber;
+            user.RoleID = selectedRoleID;
+            user.IsLocked = isLocked;
+
+            await _context.SaveChangesAsync();
+
+            return RedirectToAction(nameof(Employees));
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> ToggleLock(int id)
+        {
+            var user = await _context.Users.FindAsync(id);
+
+            if (user == null) return NotFound();
+
+            user.IsLocked = !user.IsLocked;
+            await _context.SaveChangesAsync();
+
+            return RedirectToAction(nameof(Employees));
+        }
     }
 }
