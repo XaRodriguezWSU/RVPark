@@ -1,8 +1,100 @@
-﻿@{
-    ViewData["Title"] = "Home Page";
-}
+﻿@model IEnumerable<RVSite.Models.Site>
 
-<div class="text-center">
-    <h1 class="display-4">Welcome</h1>
-    <p>Learn about <a href="https://learn.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
-</div>
+    @{
+    ViewData["Title"] = "Home";
+    }
+
+    <!-- Hero Carousel Placeholder -->
+    <div id="homeCarousel" class="carousel slide mb-4" data-bs-ride="carousel">
+        <div class="carousel-inner rounded border shadow-sm">
+
+            <div class="carousel-item active">
+                <div class="d-flex align-items-center justify-content-center bg-light" style="height: 280px;">
+                    <h2 class="text-muted">Campground Image Coming Soon</h2>
+                </div>
+            </div>
+
+            <div class="carousel-item">
+                <div class="d-flex align-items-center justify-content-center bg-light" style="height: 280px;">
+                    <h2 class="text-muted">RV Site Image Coming Soon</h2>
+                </div>
+            </div>
+
+            <div class="carousel-item">
+                <div class="d-flex align-items-center justify-content-center bg-light" style="height: 280px;">
+                    <h2 class="text-muted">Rv Site2 Image Coming Soon</h2>
+                </div>
+            </div>
+
+        </div>
+
+        <button class="carousel-control-prev" type="button" data-bs-target="#homeCarousel" data-bs-slide="prev">
+            <span class="carousel-control-prev-icon"></span>
+        </button>
+
+        <button class="carousel-control-next" type="button" data-bs-target="#homeCarousel" data-bs-slide="next">
+            <span class="carousel-control-next-icon"></span>
+        </button>
+    </div>
+
+    <!-- Intro Blurb -->
+    <section class="card shadow-sm mb-4">
+        <div class="card-body text-center p-4">
+            <h1 class="mb-3">BASIC - Updated for Customer Facing next Sprint</h1>
+            <p class="lead mb-0">
+                This blurb will be updated, reservaiton buttons and images will be updated next sprint when we
+                focus on customer facing features.  This is a basic version of the site to show the 
+                functionality of the site and how it will work.  The next sprint will focus on making 
+                it look good and be user friendly.
+            </p>
+        </div>
+    </section>
+
+    <!-- Site List -->
+    <section class="card shadow-sm">
+        <div class="card-header" style="background-color:#b8d0c5;">
+            <h2 class="mb-0">Available RV Sites</h2>
+        </div>
+
+        <div class="card-body">
+            @if (Model == null || !Model.Any())
+        {
+            <div class="alert alert-info mb-0">
+                No RV sites are currently available.
+            </div>
+        }
+        else
+        {
+            @foreach (var site in Model)
+            {
+            <div class="row align-items-center border rounded p-3 mb-3">
+                <div class="col-md-2 mb-3 mb-md-0">
+                    <div class="bg-light border rounded d-flex align-items-center justify-content-center"
+                         style="height: 90px;">
+                        <span class="text-muted">Image</span>
+                    </div>
+                </div>
+
+                <div class="col-md-7">
+                    <h4>RV Site @site.SiteNumber</h4>
+                    <p class="mb-1">
+                        @site.SiteType site · Max RV Length: @site.MaxRVLength ft
+                    </p>
+                    <p class="mb-0">
+                        Base Rate: @site.BaseRate.ToString("C") per night
+                    </p>
+                </div>
+
+                <div class="col-md-3 text-md-end mt-3 mt-md-0">
+                    <a asp-controller="Reservations"
+                       asp-action="Create"
+                       asp-route-siteId="@site.SiteID"
+                       class="btn btn-outline-dark rounded-pill px-4">
+                        Reserve
+                    </a>
+                </div>
+            </div>
+            }
+        }
+        </div>
+    </section>
