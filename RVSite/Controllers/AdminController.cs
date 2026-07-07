@@ -22,22 +22,58 @@ namespace RVSite.Controllers
             return View();
         }
 
+        /// <summary>
+        /// Displays the admin/reservation reports dashboard and generates summary metrics for the
+        /// selected reporting period. 
+        /// </summary>
+        /// <param name="startDate">The beginning of reporting period</param>
+        /// <param name="endDate">The end of the reporting period</param>
+        /// <param name="reportType">The selected report type to display</param>
+        /// <returns>The admin/reservations report dashboard view</returns>
         [HttpGet]
-        public IActionResult Reports()
+        public async Task<IActionResult> Reports(DateTime? startDate, DateTime? endDate, string? reportType)
         {
-            return View();
-        }
+            var start = startDate ?? DateTime.Today;
+            var end = endDate ?? DateTime.Today;
 
-        [HttpGet]
-        public async Task<IActionResult> DailyArrivals()
-        {
-            var arrivals = await _context.Reservations
+            var reservations = await _context.Reservations
                 .Include(r => r.User)
                 .Include(r => r.Site)
-                .Where(r => r.CheckInDate.Date == DateTime.Today)
+                .Where(r => r.CheckInDate.Date <= end.Date && r.CheckOutDate.Date >= start.Date)
                 .ToListAsync();
 
-            return View(arrivals);
+            var totalSites = await _context.Sites.CountAsync();
+            var occupiedSites = reservations
+                .Where(r => r.ReservationStatus != ReservationStatus.Cancelled)
+                .Select(r => r.SiteID)
+                .Distinct()
+                .Count();
+
+            var model = new ReportsViewModel
+            {
+                StartDate = start,
+                EndDate = end,
+                ReportType = reportType ?? "Reservations",
+
+                ArrivalsCount = reservations.Count(r =>
+                    r.CheckInDate.Date >= start.Date &&
+                    r.CheckInDate.Date <= end.Date),
+
+                DeparturesCount = reservations.Count(r =>
+                    r.CheckOutDate.Date >= start.Date &&
+                    r.CheckOutDate.Date <= end.Date),
+
+                RevenueTotal = reservations.Sum(r => r.TotalCost),
+
+                OccupancyRate = totalSites == 0
+                    ? 0
+                    : Math.Round((decimal)occupiedSites / totalSites * 100, 1),
+
+                Reservations = reservations
+            };
+
+            return View(model);
+
         }
 
         [HttpPost]
