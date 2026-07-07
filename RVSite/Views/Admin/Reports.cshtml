@@ -1,0 +1,79 @@
+﻿@*
+    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
+*@
+
+@{
+    ViewData["Title"] = "Reports Dashboard";
+}
+
+<h1 class="mb-3">Reports Dashboard</h1>
+
+<form method="get" asp-controller="Admin" asp-action="Reports" class="border rounded p-4 mb-4">
+    <h4 class="text-center mb-4">Filters</h4>
+
+    <div class="row align-items-end">
+        <div class="col-md-4">
+            <label class="form-label">Start date</label>
+            <input type="date" name="startDate" class="form-control" />
+        </div>
+
+        <div class="col-md-4">
+            <label class="form-label">End date</label>
+            <input type="date" name="endDate" class="form-control" />
+        </div>
+
+        <div class="col-md-4">
+            <button type="submit" class="btn btn-success w-100">
+                Generate Report
+            </button>
+        </div>
+    </div>
+</form>
+
+<div class="btn-group w-100 mb-4" role="group" aria-label="Report Type">
+    <a class="btn btn-outline-secondary" asp-action="Reports" asp-route-reportType="Arrivals">
+        Daily Arrivals
+    </a>
+    <a class="btn btn-outline-secondary" asp-action="Reports" asp-route-reportType="Departures">
+        Upcoming Departures
+    </a>
+    <a class="btn btn-outline-secondary" asp-action="Reports" asp-route-reportType="Occupancy">
+        Occupancy
+    </a>
+    <a class="btn btn-outline-secondary" asp-action="Reports" asp-route-reportType="Reservations">
+        Reservation History
+    </a>
+    <a class="btn btn-outline-secondary" asp-action="Reports" asp-route-reportType="Revenue">
+        Revenue / Payments
+    </a>
+</div>
+
+<div class="border rounded p-4 mb-4">
+    <h4 class="text-center mb-4">Report Summary</h4>
+
+    <div class="row text-center">
+        <div class="col-md-3 border rounded p-3">
+            <h2>0</h2>
+            <p class="mb-0">Arrivals</p>
+        </div>
+
+        <div class="col-md-3 border rounded p-3">
+            <h2>0</h2>
+            <p class="mb-0">Departures</p>
+        </div>
+
+        <div class="col-md-3 border rounded p-3">
+            <h2>0%</h2>
+            <p class="mb-0">Occupancy</p>
+        </div>
+
+        <div class="col-md-3 border rounded p-3">
+            <h2>$0.00</h2>
+            <p class="mb-0">Revenue</p>
+        </div>
+    </div>
+
+    <div class="mt-4 p-4 border rounded text-center text-muted">
+        Select a report type and date range to generate results.
+    </div>
+</div>

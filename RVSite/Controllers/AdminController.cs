@@ -22,6 +22,24 @@ namespace RVSite.Controllers
             return View();
         }
 
+        [HttpGet]
+        public IActionResult Reports()
+        {
+            return View();
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> DailyArrivals()
+        {
+            var arrivals = await _context.Reservations
+                .Include(r => r.User)
+                .Include(r => r.Site)
+                .Where(r => r.CheckInDate.Date == DateTime.Today)
+                .ToListAsync();
+
+            return View(arrivals);
+        }
+
         [HttpPost]
         public async Task<IActionResult> Search(string? reservationNumber, string? customerName)
         {
