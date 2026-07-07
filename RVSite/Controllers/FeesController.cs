@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Mvc.Rendering;
 using RVSite.Models;
 
 namespace RVSite.Controllers
@@ -13,13 +14,13 @@ namespace RVSite.Controllers
             _context = context;
         }
 
-        // GET: Fees
+        // GET: Fees & send to fee index view
         public async Task<IActionResult> Index()
         {
             return View(await _context.Fees.ToListAsync());
         }
 
-        // GET: Fees/Details/5
+        // GET: Open one fee & it's details based on feeid
         public async Task<IActionResult> Details(int? id)
         {
             if (id == null)
@@ -38,16 +39,17 @@ namespace RVSite.Controllers
             return View(fee);
         }
 
-        // GET: Fees/Create
+        // GET: Display "create fee" view
         public IActionResult Create()
         {
+            LoadReservationDropDown();
             return View();
         }
 
-        // POST: Fees/Create
+        // POST: Save the newly created (valid) fee & return user to "list of fees" view
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("FeeID,NameCode,Amount,EffectiveDate")] Fee fee)
+        public async Task<IActionResult> Create([Bind("FeeID,ReservationID,NameCode,Amount,EffectiveDate")] Fee fee)
         {
             if (ModelState.IsValid)
             {
@@ -56,10 +58,11 @@ namespace RVSite.Controllers
                 return RedirectToAction(nameof(Index));
             }
 
+            LoadReservationDropDown(fee.ReservationID);
             return View(fee);
         }
 
-        // GET: Fees/Edit/5
+        // GET: Open fee edit page based on feeid
         public async Task<IActionResult> Edit(int? id)
         {
             if (id == null)
@@ -74,13 +77,14 @@ namespace RVSite.Controllers
                 return NotFound();
             }
 
+            LoadReservationDropDown(fee.ReservationID);
             return View(fee);
         }
 
-        // POST: Fees/Edit/5
+        // POST: Save fee edit changes
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("FeeID,NameCode,Amount,EffectiveDate")] Fee fee)
+        public async Task<IActionResult> Edit(int id, [Bind("FeeID,ReservationID,NameCode,Amount,EffectiveDate")] Fee fee)
         {
             if (id != fee.FeeID)
             {
@@ -107,10 +111,11 @@ namespace RVSite.Controllers
                 return RedirectToAction(nameof(Index));
             }
 
+            LoadReservationDropDown(fee.ReservationID);
             return View(fee);
         }
 
-        // GET: Fees/Delete/5
+        // GET: Display deletion confirmation page
         public async Task<IActionResult> Delete(int? id)
         {
             if (id == null)
@@ -129,7 +134,7 @@ namespace RVSite.Controllers
             return View(fee);
         }
 
-        // POST: Fees/Delete/5
+        // POST: Delete fee after confirmation is recieved
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)
@@ -145,9 +150,28 @@ namespace RVSite.Controllers
             return RedirectToAction(nameof(Index));
         }
 
+        // Helper: Check that fee exists in db
         private bool FeeExists(int id)
         {
             return _context.Fees.Any(e => e.FeeID == id);
+        }
+
+        // Helper: Reservation selector for create and edit
+        private void LoadReservationDropDown(int? selectedReservationID = null)
+        {
+            var reservations = _context.Reservations
+                .Include(r => r.User)
+                .Include(r => r.Site)
+                .Select(r => new
+                {
+                    r.ReservationID,
+                    DisplayText = "Reservation #" + r.ReservationID
+                        + " - " + r.User.FirstName + " " + r.User.LastName
+                        + " - Site " + r.Site.SiteNumber
+                })
+                .ToList();
+
+            ViewBag.ReservationID = new SelectList(reservations, "ReservationID", "DisplayText", selectedReservationID);
         }
     }
 }
