@@ -8,7 +8,7 @@ namespace RVSite.Data
     {
         public static void Seed(AppDbContext db)
         {
-            db.Database.Migrate();
+            //db.Database.Migrate();
 
             if (!db.Role.Any())
             {
