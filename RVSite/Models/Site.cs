@@ -11,7 +11,8 @@ namespace RVSite.Models
         public string SiteNumber { get; set; }
 
         [Required, StringLength(50)]
-        public string SiteType { get; set; }
+        public int SiteTypeID { get; set; }
+        public SiteType SiteType { get; set; }
 
         [Required, StringLength(50)]
         public string SiteStatus { get; set; }

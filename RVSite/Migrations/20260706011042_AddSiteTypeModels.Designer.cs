@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using RVSite.Models;
 
@@ -10,37 +11,14 @@ using RVSite.Models;
 namespace RVSite.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260706011042_AddSiteTypeModels")]
+    partial class AddSiteTypeModels
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "8.0.28");
-
-            modelBuilder.Entity("RVSite.Models.Fee", b =>
-                {
-                    b.Property<int>("FeeID")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER");
-
-                    b.Property<decimal>("Amount")
-                        .HasColumnType("decimal(10,2)");
-
-                    b.Property<DateTime>("EffectiveDate")
-                        .HasColumnType("TEXT");
-
-                    b.Property<int>("NameCode")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<int>("ReservationID")
-                        .HasColumnType("INTEGER");
-
-                    b.HasKey("FeeID");
-
-                    b.HasIndex("ReservationID");
-
-                    b.ToTable("Fees");
-                });
 
             modelBuilder.Entity("RVSite.Models.Reservation", b =>
                 {
@@ -196,9 +174,6 @@ namespace RVSite.Migrations
                         .HasMaxLength(50)
                         .HasColumnType("TEXT");
 
-                    b.Property<bool>("IsLocked")
-                        .HasColumnType("INTEGER");
-
                     b.Property<string>("LastName")
                         .IsRequired()
                         .HasMaxLength(50)
@@ -220,17 +195,6 @@ namespace RVSite.Migrations
                     b.HasIndex("RoleID");
 
                     b.ToTable("Users");
-                });
-
-            modelBuilder.Entity("RVSite.Models.Fee", b =>
-                {
-                    b.HasOne("RVSite.Models.Reservation", "Reservation")
-                        .WithMany("Fees")
-                        .HasForeignKey("ReservationID")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Reservation");
                 });
 
             modelBuilder.Entity("RVSite.Models.Reservation", b =>
@@ -283,11 +247,6 @@ namespace RVSite.Migrations
                         .IsRequired();
 
                     b.Navigation("Role");
-                });
-
-            modelBuilder.Entity("RVSite.Models.Reservation", b =>
-                {
-                    b.Navigation("Fees");
                 });
 
             modelBuilder.Entity("RVSite.Models.Role", b =>
