@@ -1,0 +1,38 @@
+﻿@*
+    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
+*@
+@{
+}
+
+@model IEnumerable<RVSite.Models.SiteType>
+
+<h2>Site Types</h2>
+
+<a asp-action="Create" class="btn btn-primary">Add Site Type</a>
+
+<table class="table mt-3">
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Pricing</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var t in Model)
+        {
+            <tr>
+                <td>@t.Name</td>
+                <td>
+                    <a asp-controller="SiteTypePrice" asp-action="Index" asp-route-siteTypeId="@t.SiteTypeID">
+                        Manage Pricing
+                    </a>
+                </td>
+                <td>
+                    <a asp-action="Edit" asp-route-id="@t.SiteTypeID">Edit</a> |
+                    <a asp-action="Delete" asp-route-id="@t.SiteTypeID">Delete</a>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
