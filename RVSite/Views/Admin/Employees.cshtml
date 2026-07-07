@@ -1,0 +1,54 @@
+@model IEnumerable<RVSite.Models.User>
+
+    @{
+    ViewData["Title"] = "Admin Employees";
+    }
+
+    <h2>Employee Management</h2>
+    <a asp-action="CreateEmployee" class="btn btn-primary mb-3">+ Add Employee</a>
+
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Email</th>
+                <th>Phone</th>
+                <th>Role</th>
+                <th>Status</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var emp in Model)
+        {
+            <tr>
+                <td>@emp.FirstName @emp.LastName</td>
+                <td>@emp.Email</td>
+                <td>@emp.PhoneNumber</td>
+                <td>@emp.Role?.GetRoleName()</td>
+                <td>
+                    @if (emp.IsLocked)
+                    {
+                    <span class="badge bg-danger">Locked</span>
+                    }
+                    else
+                    {
+                    <span class="badge bg-success">Active</span>
+                    }
+                </td>
+                <td>
+                    <a asp-action="EditEmployee" asp-route-id="@emp.UserID"
+                       class="btn btn-sm btn-outline-secondary">Edit</a>
+                    <form asp-action="ToggleLock" asp-route-id="@emp.UserID"
+                          method="post" style="display:inline">
+                        @Html.AntiForgeryToken()
+                        <button type="submit" class="btn btn-sm
+                            @(emp.IsLocked ? "btn-outline-success" : "btn-outline-danger")">
+                            @(emp.IsLocked ? "Unlock" : "Lock")
+                        </button>
+                    </form>
+                </td>
+            </tr>
+        }
+        </tbody>
+    </table>
