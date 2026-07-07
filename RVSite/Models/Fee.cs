@@ -15,8 +15,7 @@ namespace RVSite.Models
         public Reservation? Reservation { get; set; }
 
         [Required]
-        [StringLength(50)]
-        public string NameCode { get; set; }
+        public FeeCodes NameCode { get; set; }
 
         [Required]
         [Column(TypeName = "decimal(10,2)")]
