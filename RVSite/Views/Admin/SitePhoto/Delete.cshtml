@@ -1,0 +1,19 @@
+﻿@*
+    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
+*@
+@{
+}
+
+@model RVSite.Models.SitePhoto
+
+<h2>Delete Photo</h2>
+
+<img src="@Model.FilePath" class="img-fluid mb-3" />
+
+<p>Are you sure you want to delete this photo?</p>
+
+<form asp-action="DeleteConfirmed" method="post">
+    <input type="hidden" asp-for="SitePhotoID" />
+    <button class="btn btn-danger">Delete</button>
+    <a class="btn btn-secondary" href="/SitePhoto/Index/@Model.SiteID">Cancel</a>
+</form>
