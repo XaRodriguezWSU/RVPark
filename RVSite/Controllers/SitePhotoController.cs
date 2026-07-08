@@ -16,11 +16,11 @@ namespace RVSite.Controllers
         }
 
         // GET: /SitePhoto/Index/5
-        public async Task<IActionResult> Index(int siteId)
+        public async Task<IActionResult> Index(int id)
         {
             var site = await _context.Sites
                 .Include(s => s.Photos)
-                .FirstOrDefaultAsync(s => s.SiteID == siteId);
+                .FirstOrDefaultAsync(s => s.SiteID == id);
 
             if (site == null)
                 return NotFound();
@@ -29,16 +29,18 @@ namespace RVSite.Controllers
         }
 
         // GET: /SitePhoto/Create/5
-        public IActionResult Create(int siteId)
+        public IActionResult Create(int id)
         {
-            return View(new SitePhoto { SiteID = siteId });
+            return View(new SitePhoto { SiteID = id });
         }
 
         // POST: /SitePhoto/Create
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create(SitePhoto model, IFormFile file)
+        public async Task<IActionResult> Create(int id, SitePhoto model, IFormFile file)
         {
+            model.SiteID = id;
+
             if (file == null || file.Length == 0)
             {
                 ModelState.AddModelError("", "Please upload a photo.");
@@ -64,7 +66,7 @@ namespace RVSite.Controllers
             _context.SitePhoto.Add(model);
             await _context.SaveChangesAsync();
 
-            return RedirectToAction("Index", new { siteId = model.SiteID });
+            return RedirectToAction("Index", new { id = model.SiteID });
         }
 
         // GET: /SitePhoto/Edit/10
@@ -85,7 +87,7 @@ namespace RVSite.Controllers
             _context.SitePhoto.Update(model);
             await _context.SaveChangesAsync();
 
-            return RedirectToAction("Index", new { siteId = model.SiteID });
+            return RedirectToAction("Index", new { id = model.SiteID });
         }
 
         // GET: /SitePhoto/Delete/10
@@ -115,7 +117,8 @@ namespace RVSite.Controllers
             _context.SitePhoto.Remove(photo);
             await _context.SaveChangesAsync();
 
-            return RedirectToAction("Index", new { siteId = photo.SiteID });
+            return View("DeleteConfirmed", photo);
+
         }
     }
 }
