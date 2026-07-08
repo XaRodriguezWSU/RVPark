@@ -1,15 +1,17 @@
-﻿@*
+﻿@model RVSite.Models.SiteTypePrice
+@*
     For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
 *@
 @{
 }
 
-@model RVSite.Models.SiteTypePrice
-
 <h2>Add Price Range</h2>
 
-<form asp-action="Create">
-    <input type="hidden" asp-for="SiteTypeID" value="@ViewBag.SiteTypeID" />
+<form asp-action="Create" asp-route-id="@Model.SiteTypeID">
+    <div asp-validation-summary="All" class="text-danger"></div>
+
+    <input type="hidden" asp-for="SiteTypeID" />
+
 
     <div class="form-group">
         <label>Start Date</label>
