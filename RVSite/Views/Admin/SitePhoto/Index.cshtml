@@ -1,0 +1,26 @@
+﻿@*
+    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
+*@
+@{
+}
+
+@model RVSite.Models.Site
+
+<h2>Photos for @Model.SiteID</h2>
+
+<a class="btn btn-primary" href="/SitePhoto/Create/@Model.SiteID">Add Photo</a>
+
+<hr />
+
+<div class="row">
+@foreach (var p in Model.Photos.OrderBy(x => x.SortOrder))
+{
+    <div class="col-md-3 text-center mb-4">
+        <img src="@p.FilePath" class="img-fluid rounded" />
+        <p>@p.Caption</p>
+
+        <a class="btn btn-sm btn-warning" href="/SitePhoto/Edit/@p.SitePhotoID">Edit</a>
+        <a class="btn btn-sm btn-danger" href="/SitePhoto/Delete/@p.SitePhotoID">Delete</a>
+    </div>
+}
+</div>
