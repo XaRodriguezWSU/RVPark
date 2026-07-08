@@ -103,6 +103,8 @@ namespace RVSite.Controllers
                 }
 
                 reservation.SiteID = newSiteID.Value;
+                _context.Entry(reservation).Reference(r => r.Site).Load();
+                _context.Entry(reservation.Site).Reference(s => s.SiteType).Load();
             }
 
             // 2. Update dates
