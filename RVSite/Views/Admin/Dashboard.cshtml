@@ -1,0 +1,202 @@
+﻿@using RVSite.Models
+
+@{
+    ViewData["Title"] = "Admin Dashboard";
+
+    var recentSites = ViewBag.RecentSites as List<Site>;
+}
+
+<div class="container-fluid mt-4">
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="fw-bold mb-1">Admin Dashboard</h2>
+            <p class="text-muted mb-0">Manage site overview, site editing, and photo management.</p>
+        </div>
+        <div class="d-flex flex-column align-items-center">
+            <a asp-controller="Sites" asp-action="Search" class="btn btn-primary mb-1 w-100">
+                Search Reservations
+            </a>
+            <a asp-controller="Admin" asp-action="Reports" class="btn btn-secondary w-100">
+                Generate Reports
+            </a>
+        </div>
+    </div>
+
+    <div class="row g-3 mb-4">
+
+        <div class="col-md-3">
+            <div class="card shadow-sm border-0 dashboard-card">
+                <div class="card-body">
+                    <p class="text-muted mb-1">Total Sites</p>
+                    <h3 class="fw-bold">@ViewBag.TotalSites</h3>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="card shadow-sm border-0 dashboard-card">
+                <div class="card-body">
+                    <p class="text-muted mb-1">Available Sites</p>
+                    <h3 class="fw-bold text-success">@ViewBag.AvailableSites</h3>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="card shadow-sm border-0 dashboard-card">
+                <div class="card-body">
+                    <p class="text-muted mb-1">Reserved Sites</p>
+                    <h3 class="fw-bold text-warning">@ViewBag.ReservedSites</h3>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="card shadow-sm border-0 dashboard-card">
+                <div class="card-body">
+                    <p class="text-muted mb-1">Maintenance</p>
+                    <h3 class="fw-bold text-danger">@ViewBag.MaintenanceSites</h3>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <div class="row g-4">
+
+        <div class="col-lg-8">
+
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Site Overview</h5>
+
+                    <a asp-controller="Sites" asp-action="Index" class="btn btn-sm btn-outline-primary">
+                        Manage All Sites
+                    </a>
+                </div>
+
+                <div class="card-body">
+
+                    <table class="table table-hover align-middle">
+                        <thead>
+                            <tr>
+                                <th>Site Number</th>
+                                <th>Type</th>
+                                <th>Status</th>
+                                <th>Max RV Length</th>
+                                <th>Base Rate</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+
+                        <tbody>
+                            @if (recentSites != null && recentSites.Any())
+                            {
+                                foreach (var site in recentSites)
+                                {
+                            <tr>
+                                <td>@site.SiteNumber</td>
+                                <td>@site.SiteType</td>
+                                <td>
+                                    @if (site.SiteStatus == SiteStatus.Available.ToString())
+                                            {
+                                    <span class="badge bg-success">Available</span>
+                                            }
+                                            else if (site.SiteStatus == SiteStatus.Reserved.ToString())
+                                            {
+                                    <span class="badge bg-warning text-dark">Reserved</span>
+                                            }
+                                            else if (site.SiteStatus == SiteStatus.Maintenance.ToString())
+                                            {
+                                    <span class="badge bg-danger">Maintenance</span>
+                                            }
+                                            else
+                                            {
+                                    <span class="badge bg-secondary">@site.SiteStatus</span>
+                                            }
+                                </td>
+                                <td>@site.MaxRVLength ft</td>
+                                <td>$@site.BaseRate</td>
+                                <td>
+                                    <a asp-controller="Sites"
+                                       asp-action="Edit"
+                                       asp-route-id="@site.SiteID"
+                                       class="btn btn-sm btn-outline-secondary">
+                                        Edit
+                                    </a>
+                                </td>
+                            </tr>
+                                }
+                            }
+                            else
+                            {
+                            <tr>
+                                <td colspan="6" class="text-center text-muted">
+                                    No sites found.
+                                </td>
+                            </tr>
+                            }
+                        </tbody>
+                    </table>
+
+                </div>
+            </div>
+
+        </div>
+
+        <div class="col-lg-4">
+
+            <div class="card shadow-sm border-0 mb-4">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0">Quick Actions</h5>
+                </div>
+
+                <div class="card-body d-grid gap-2">
+
+                    <a asp-controller="Sites" asp-action="Index" class="btn btn-primary">
+                        Manage Sites
+                    </a>
+
+                    <a asp-controller="Sites" asp-action="Create" class="btn btn-outline-primary">
+                        Add New Site
+                    </a>
+
+                    <a asp-controller="Reservation" asp-action="Index" class="btn btn-outline-secondary">
+                        Edit Reservations
+                    </a>
+
+                    <a asp-controller="Admin" asp-action="Employees" class="btn btn-outline-secondary">
+                        Manage Employees
+                    </a>
+
+                    <a asp-controller="Fees" asp-action="Index" class="btn btn-outline-secondary">
+                        Manage Fees
+                    </a>
+
+                </div>
+            </div>
+
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0">Photo Management</h5>
+                </div>
+
+                <div class="card-body">
+
+                    <p class="text-muted">
+                        Manage site images for the RV park. Use this section to preview, add, or update photos for each site.
+                    </p>
+
+                    <a asp-controller="Sites" asp-action="Index" class="btn btn-outline-primary w-100">
+                        Manage Site Photos
+                    </a>
+
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+
+</div>

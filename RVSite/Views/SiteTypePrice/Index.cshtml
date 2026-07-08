@@ -1,0 +1,38 @@
+﻿@*
+    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
+*@
+@{
+}
+
+@model IEnumerable<RVSite.Models.SiteTypePrice>
+
+<h2>Pricing for @ViewBag.SiteType.Name</h2>
+
+<a asp-action="Create" asp-route-id="@ViewBag.SiteType.SiteTypeID" class="btn btn-primary">
+    Add Price Range
+</a>
+
+<table class="table mt-3">
+    <thead>
+        <tr>
+            <th>Start</th>
+            <th>End</th>
+            <th>Price</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var p in Model)
+        {
+            <tr>
+                <td>@p.StartDate.ToShortDateString()</td>
+                <td>@(p.EndDate?.ToShortDateString() ?? "Current")</td>
+                <td>@p.Price</td>
+                <td>
+                    <a asp-action="Edit" asp-route-id="@p.SiteTypePriceID" class="btn btn-sm btn-warning">Edit</a>
+                    <a asp-action="Delete" asp-route-id="@p.SiteTypePriceID" class="btn btn-sm btn-danger">Delete</a>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>

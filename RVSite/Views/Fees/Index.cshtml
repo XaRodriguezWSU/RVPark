@@ -1,0 +1,55 @@
+﻿@model IEnumerable<RVSite.Models.Fee>
+
+@{
+    ViewData["Title"] = "Manage Fees";
+}
+
+<h1>Manage Fees</h1>
+
+<p>
+    <a asp-action="Create">Create New Fee</a>
+</p>
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>
+                Reservation
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.NameCode)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.Amount)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.EffectiveDate)
+            </th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+@foreach (var item in Model)
+{
+        <tr>
+            <td>
+                Reservation #@item.ReservationID
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.NameCode)
+            </td>
+            <td>
+                @item.Amount.ToString("C")
+            </td>
+            <td>
+                @item.EffectiveDate.ToShortDateString()
+            </td>
+            <td>
+                <a asp-action="Edit" asp-route-id="@item.FeeID">Edit</a> |
+                <a asp-action="Details" asp-route-id="@item.FeeID">Details</a> |
+                <a asp-action="Delete" asp-route-id="@item.FeeID">Delete</a>
+            </td>
+        </tr>
+}
+    </tbody>
+</table>

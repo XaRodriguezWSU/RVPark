@@ -1,0 +1,61 @@
+﻿@*
+    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
+*@
+@{
+}
+
+@model IEnumerable<RVSite.Models.Reservation>
+
+@{
+    ViewData["Title"] = "Reservations";
+}
+
+<h2>Reservations</h2>
+
+<a class="btn btn-primary mb-3" asp-controller="Reservation" asp-action="Search">Search Reservations</a>
+
+<table class="table table-striped">
+    <thead>
+        <tr>
+            <th>Reservation ID</th>
+            <th>Customer</th>
+            <th>Site</th>
+            <th>Check-In</th>
+            <th>Check-Out</th>
+            <th>Total Cost</th>
+            <th>Status</th>
+            <th></th>
+        </tr>
+    </thead>
+
+    <tbody>
+        @foreach (var r in Model)
+        {
+            <tr>
+                <td>@r.ReservationID</td>
+                <td>@(r.User != null ? $"{r.User.FirstName} {r.User.LastName}" : "Unknown")</td>
+                <td>@(r.Site != null ? r.Site.SiteNumber : "Unknown")</td>
+                <td>@r.CheckInDate.ToShortDateString()</td>
+                <td>@r.CheckOutDate.ToShortDateString()</td>
+                <td>$@r.TotalCost</td>
+                <td>@r.ReservationStatus</td>
+
+                <td>
+                    <a class="btn btn-sm btn-warning"
+                       asp-controller="Reservation"
+                       asp-action="Edit"
+                       asp-route-id="@r.ReservationID">
+                        Edit
+                    </a>
+
+                    <a class="btn btn-sm btn-danger"
+                       asp-controller="Reservation"
+                       asp-action="CancelReservation"
+                       asp-route-id="@r.ReservationID">
+                        Cancel
+                    </a>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>

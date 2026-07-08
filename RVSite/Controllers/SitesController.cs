@@ -2,7 +2,6 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using RVSite.Models;
-using SiteDemo.Models;
 
 public class SitesController : Controller
 {
@@ -16,19 +15,20 @@ public class SitesController : Controller
     // GET: SITES
     public async Task<IActionResult> Index()    
     {
-        return View(await _context.Sites.ToListAsync());
+        return View(await _context.Sites.Include(s => s.SiteType).ToListAsync());
     }
 
     // GET: SITES/Details/5
-    public async Task<IActionResult> Details(int? siteid)
+    public async Task<IActionResult> Details(int id)
     {
-        if (siteid == null)
+        if (id == null)
         {
             return NotFound();
         }
 
         var site = await _context.Sites
-            .FirstOrDefaultAsync(m => m.SiteID == siteid);
+            .Include(s => s.SiteType)
+            .FirstOrDefaultAsync(m => m.SiteID == id);
         if (site == null)
         {
             return NotFound();
@@ -40,6 +40,7 @@ public class SitesController : Controller
     // GET: SITES/Create
     public IActionResult Create()
     {
+        ViewBag.SiteTypes = _context.SiteTypes.ToList();
         return View();
     }
 
@@ -48,7 +49,7 @@ public class SitesController : Controller
     // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Create([Bind("SiteID,SiteNumber,SiteType,SiteStatus,MaxRVLength,BaseRate")] Site site)
+    public async Task<IActionResult> Create([Bind("SiteID,SiteNumber,SiteTypeID,SiteStatus,MaxRVLength,BaseRate")] Site site)
     {
         if (ModelState.IsValid)
         {
@@ -56,22 +57,24 @@ public class SitesController : Controller
             await _context.SaveChangesAsync();
             return RedirectToAction(nameof(Index));
         }
+        ViewBag.SiteTypes = _context.SiteTypes.ToList();
         return View(site);
     }
 
     // GET: SITES/Edit/5
-    public async Task<IActionResult> Edit(int? siteid)
+    public async Task<IActionResult> Edit(int id)
     {
-        if (siteid == null)
+        if (id == null)
         {
             return NotFound();
         }
 
-        var site = await _context.Sites.FindAsync(siteid);
+        var site = await _context.Sites.FindAsync(id);
         if (site == null)
         {
             return NotFound();
         }
+        ViewBag.SiteTypes = _context.SiteTypes.ToList();
         return View(site);
     }
 
@@ -80,9 +83,9 @@ public class SitesController : Controller
     // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Edit(int? siteid, [Bind("SiteID,SiteNumber,SiteType,SiteStatus,MaxRVLength,BaseRate")] Site site)
+    public async Task<IActionResult> Edit(int id, [Bind("SiteID,SiteNumber,SiteTypeID,SiteStatus,MaxRVLength,BaseRate")] Site site)
     {
-        if (siteid != site.SiteID)
+        if (id != site.SiteID)
         {
             return NotFound();
         }
@@ -111,15 +114,15 @@ public class SitesController : Controller
     }
 
     // GET: SITES/Delete/5
-    public async Task<IActionResult> Delete(int? siteid)
+    public async Task<IActionResult> Delete(int id)
     {
-        if (siteid == null)
+        if (id == null)
         {
             return NotFound();
         }
 
         var site = await _context.Sites
-            .FirstOrDefaultAsync(m => m.SiteID == siteid);
+            .FirstOrDefaultAsync(m => m.SiteID == id);
         if (site == null)
         {
             return NotFound();
@@ -131,9 +134,9 @@ public class SitesController : Controller
     // POST: SITES/Delete/5
     [HttpPost, ActionName("Delete")]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> DeleteConfirmed(int? siteid)
+    public async Task<IActionResult> DeleteConfirmed(int id)
     {
-        var site = await _context.Sites.FindAsync(siteid);
+        var site = await _context.Sites.FindAsync(id);
         if (site != null)
         {
             _context.Sites.Remove(site);
@@ -143,8 +146,8 @@ public class SitesController : Controller
         return RedirectToAction(nameof(Index));
     }
 
-    private bool SiteExists(int? siteid)
+    private bool SiteExists(int id)
     {
-        return _context.Sites.Any(e => e.SiteID == siteid);
+        return _context.Sites.Any(e => e.SiteID == id);
     }
 }
