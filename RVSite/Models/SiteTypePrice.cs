@@ -9,7 +9,7 @@ namespace RVSite.Models
 
         [Required]
         public int SiteTypeID { get; set; }
-        public SiteType SiteType { get; set; }
+        public SiteType? SiteType { get; set; }
 
         [Required]
         public DateTime StartDate { get; set; }

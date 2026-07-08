@@ -8,7 +8,7 @@
 
 <h2>Edit Price Range</h2>
 
-<form asp-action="Edit">
+<form asp-action="Edit" asp-route-id="@Model.SiteTypeID">
     <input type="hidden" asp-for="SiteTypePriceID" />
     <input type="hidden" asp-for="SiteTypeID" />
 

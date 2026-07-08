@@ -11,6 +11,7 @@
 <div class="row">
     <div class="col-md-4">
         <form asp-action="Create">
+            <div asp-validation-summary="All" class="text-danger"></div>
             <div asp-validation-summary="ModelOnly" class="text-danger"></div>
 
             <div class="form-group">
@@ -20,9 +21,12 @@
             </div>
 
             <div class="form-group">
-                <label asp-for="SiteType" class="control-label"></label>
-                <input asp-for="SiteType" class="form-control" />
-                <span asp-validation-for="SiteType" class="text-danger"></span>
+                <label asp-for="SiteTypeID" class="control-label"></label>
+                <select asp-for="SiteTypeID" class="form-control"
+                        asp-items="@(new SelectList(ViewBag.SiteTypes, "SiteTypeID", "Name"))">
+                    <option value="">-- Select Site Type --</option>
+                </select>
+                <span asp-validation-for="SiteTypeID" class="text-danger"></span>
             </div>
 
             <div class="form-group">
