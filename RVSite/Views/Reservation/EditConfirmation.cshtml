@@ -1,0 +1,39 @@
+﻿@*
+    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
+*@
+@{
+}
+
+@model RVSite.Models.Reservation
+
+@{
+    ViewData["Title"] = "Reservation Updated";
+}
+
+<h2>Reservation Updated</h2>
+
+<div class="alert alert-success">
+    The reservation has been successfully updated.
+</div>
+
+<p><strong>Reservation ID:</strong> @Model.ReservationID</p>
+<p><strong>Customer:</strong> @Model.User.FirstName @Model.User.LastName</p>
+<p><strong>Site:</strong> @Model.Site.SiteNumber</p>
+<p><strong>Check-In:</strong> @Model.CheckInDate.ToShortDateString()</p>
+<p><strong>Check-Out:</strong> @Model.CheckOutDate.ToShortDateString()</p>
+<p><strong>Total Cost:</strong> $@Model.TotalCost</p>
+
+@if (ViewBag.BalanceDifference != null)
+{
+    var diff = (decimal)ViewBag.BalanceDifference;
+
+    <p>
+        <strong>Balance Difference:</strong>
+        <span class="@(diff >= 0 ? "text-success" : "text-danger")">
+            @(diff >= 0 ? "+" : "")@diff
+        </span>
+    </p>
+}
+
+<a class="btn btn-primary" asp-controller="Reservation" asp-action="Index">Back to Reservations</a>
+<a class="btn btn-secondary" asp-controller="Reservation" asp-action="Edit" asp-route-id="@Model.ReservationID">Edit Again</a>

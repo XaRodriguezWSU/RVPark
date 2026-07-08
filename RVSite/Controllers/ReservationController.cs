@@ -17,10 +17,21 @@ namespace RVSite.Controllers
             _costService = costService;
         }
 
+        public IActionResult Index()
+        {
+            var reservations = _context.Reservations
+                .Include(r => r.User)
+                .Include(r => r.Site)
+                .ToList();
+
+            return View(reservations);
+        }
+
         // Search page - GET
         public IActionResult Search()
         {
-            return View("~/Views/Admin/ReservationView/Search.cshtml");
+            //return View("~/Views/Admin/ReservationView/Search.cshtml");
+            return View();
         }
 
         // Search action - POST
@@ -45,7 +56,7 @@ namespace RVSite.Controllers
 
             var results = query.ToList();
 
-            return View("~/Views/Admin/ReservationView/SearchResults.cshtml", results);
+            return View("SearchResults", results);
         }
 
         // Edit Reservation - GET
@@ -61,7 +72,7 @@ namespace RVSite.Controllers
 
             ViewBag.AvailableSites = _context.Sites.ToList();
 
-            return View("~/Views/Admin/ReservationView/Edit.cshtml", reservation);
+            return View(reservation);
         }
 
         // Edit Reservation - POST
@@ -70,6 +81,7 @@ namespace RVSite.Controllers
         {
             var reservation = _context.Reservations
                 .Include(r => r.Site)
+                .Include(r => r.User)
                 .FirstOrDefault(r => r.ReservationID == updated.ReservationID);
 
             if (reservation == null)
@@ -87,7 +99,7 @@ namespace RVSite.Controllers
                 if (!available)
                 {
                     ModelState.AddModelError("", "Selected site is not available for these dates.");
-                    return View("~/Views/Admin/ReservationView/EditConfirmation.cshtml", reservation);
+                    return View(reservation);
                 }
 
                 reservation.SiteID = newSiteID.Value;
@@ -113,7 +125,10 @@ namespace RVSite.Controllers
         // Cancel Reservation - GET (?)
         public IActionResult CancelReservation(int id)
         {
-            var reservation = _context.Reservations.FirstOrDefault(r => r.ReservationID == id);
+            var reservation = _context.Reservations
+                .Include(r => r.Site)
+                .Include(r => r.User)
+                .FirstOrDefault(r => r.ReservationID == id);
 
             if (reservation == null)
                 return NotFound();
