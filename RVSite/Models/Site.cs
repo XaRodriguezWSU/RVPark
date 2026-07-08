@@ -10,9 +10,9 @@ namespace RVSite.Models
         [Required, StringLength(20)]
         public string SiteNumber { get; set; }
 
-        [Required, StringLength(50)]
+        [Required]
         public int SiteTypeID { get; set; }
-        public SiteType SiteType { get; set; }
+        public SiteType? SiteType { get; set; }
 
         [Required, StringLength(50)]
         public string SiteStatus { get; set; }
