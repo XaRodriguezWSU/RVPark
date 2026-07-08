@@ -21,5 +21,7 @@ namespace RVSite.Models
 
         [Required, Range(0, 9999)]
         public decimal BaseRate { get; set; }
+
+        public ICollection<SitePhoto> Photos { get; set; } = new List<SitePhoto>();
     }
 }
