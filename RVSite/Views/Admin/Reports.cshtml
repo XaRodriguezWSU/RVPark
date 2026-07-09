@@ -1,130 +1,177 @@
-﻿@*
-    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
-*@
-
-@model RVSite.Models.ReportsViewModel
+﻿@model RVSite.Models.ReportsViewModel
 
 @{
     ViewData["Title"] = "Reports Dashboard";
 }
 
-@* Report filter controls *@
-<div asp-validation-summary="All" class="text-danger mb-3"></div>
+<div class="reports-page">
 
-<form method="get" asp-controller="Admin" asp-action="Reports" class="border rounded p-4 mb-4">
-    <h4 class="text-center mb-4">Filters</h4>
+    <section class="card admin-hero mb-4">
+        <div class="card-body p-4 p-lg-5">
+            <span class="home-kicker">Administration</span>
+            <h1 class="page-title">Reports Dashboard</h1>
+            <p class="page-subtitle">
+                Generate arrivals, departures, occupancy, reservation history, and revenue reports.
+            </p>
+        </div>
+    </section>
 
-    <input type="hidden" name="reportType" value="@Model.ReportType" />
+    <div asp-validation-summary="All" class="text-danger mb-3"></div>
 
-    <div class="row align-items-end">
-        <div class="col-md-4">
-            <label class="form-label">Start date</label>
-            <input type="date" name="startDate" class="form-control" value="@Model.StartDate.ToString("yyyy-MM-dd")" />
+    <section class="card mb-4">
+        <div class="card-header">
+            <h2 class="h5 mb-0">Report Filters</h2>
         </div>
 
-        <div class="col-md-4">
-            <label class="form-label">End date</label>
-            <input type="date" name="endDate" class="form-control" value="@Model.EndDate.ToString("yyyy-MM-dd")" />
+        <div class="card-body">
+            <form method="get" asp-controller="Admin" asp-action="Reports">
+                <input type="hidden" name="reportType" value="@Model.ReportType" />
+
+                <div class="row g-3 align-items-end">
+                    <div class="col-md-4">
+                        <label class="form-label">Start Date</label>
+                        <input type="date"
+                               name="startDate"
+                               class="form-control"
+                               value="@Model.StartDate.ToString("yyyy-MM-dd")" />
+                    </div>
+
+                    <div class="col-md-4">
+                        <label class="form-label">End Date</label>
+                        <input type="date"
+                               name="endDate"
+                               class="form-control"
+                               value="@Model.EndDate.ToString("yyyy-MM-dd")" />
+                    </div>
+
+                    <div class="col-md-4">
+                        <button type="submit" class="btn btn-primary w-100">
+                            Generate Report
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </section>
+
+    <section class="row g-2 mb-4">
+        <div class="col-md">
+            <a class="btn w-100 @(Model.ReportType == "Arrivals" ? "btn-primary" : "btn-outline-secondary")"
+               asp-action="Reports"
+               asp-route-reportType="Arrivals"
+               asp-route-startDate="@Model.StartDate.ToString("yyyy-MM-dd")"
+               asp-route-endDate="@Model.EndDate.ToString("yyyy-MM-dd")">
+                Daily Arrivals
+            </a>
         </div>
 
-        <div class="col-md-4">
-            <button type="submit" class="btn btn-success w-100">
-                Generate Report
+        <div class="col-md">
+            <a class="btn w-100 @(Model.ReportType == "Departures" ? "btn-primary" : "btn-outline-secondary")"
+               asp-action="Reports"
+               asp-route-reportType="Departures"
+               asp-route-startDate="@Model.StartDate.ToString("yyyy-MM-dd")"
+               asp-route-endDate="@Model.EndDate.ToString("yyyy-MM-dd")">
+                Upcoming Departures
+            </a>
+        </div>
+
+        <div class="col-md">
+            <a class="btn w-100 @(Model.ReportType == "Occupancy" ? "btn-primary" : "btn-outline-secondary")"
+               asp-action="Reports"
+               asp-route-reportType="Occupancy"
+               asp-route-startDate="@Model.StartDate.ToString("yyyy-MM-dd")"
+               asp-route-endDate="@Model.EndDate.ToString("yyyy-MM-dd")">
+                Occupancy
+            </a>
+        </div>
+
+        <div class="col-md">
+            <a class="btn w-100 @(Model.ReportType == "Reservations" ? "btn-primary" : "btn-outline-secondary")"
+               asp-action="Reports"
+               asp-route-reportType="Reservations"
+               asp-route-startDate="@Model.StartDate.ToString("yyyy-MM-dd")"
+               asp-route-endDate="@Model.EndDate.ToString("yyyy-MM-dd")">
+                Reservation History
+            </a>
+        </div>
+
+        <div class="col-md">
+            <a class="btn w-100 @(Model.ReportType == "Revenue" ? "btn-primary" : "btn-outline-secondary")"
+               asp-action="Reports"
+               asp-route-reportType="Revenue"
+               asp-route-startDate="@Model.StartDate.ToString("yyyy-MM-dd")"
+               asp-route-endDate="@Model.EndDate.ToString("yyyy-MM-dd")">
+                Revenue / Payments
+            </a>
+        </div>
+    </section>
+
+    <section class="row g-3 mb-4">
+        <div class="col-sm-6 col-xl-3">
+            <div class="card stat-card">
+                <div class="card-body">
+                    <span>Arrivals</span>
+                    <strong>@Model.ArrivalsCount</strong>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-sm-6 col-xl-3">
+            <div class="card stat-card">
+                <div class="card-body">
+                    <span>Departures</span>
+                    <strong>@Model.DeparturesCount</strong>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-sm-6 col-xl-3">
+            <div class="card stat-card">
+                <div class="card-body">
+                    <span>Occupancy</span>
+                    <strong>@Model.OccupancyRate%</strong>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-sm-6 col-xl-3">
+            <div class="card stat-card">
+                <div class="card-body">
+                    <span>Revenue</span>
+                    <strong>@Model.RevenueTotal.ToString("C")</strong>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="card">
+        <div class="card-header d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-2">
+            <div>
+                <h2 class="h5 mb-1">@Model.ReportType Report Results</h2>
+                <p class="mb-0 text-muted">
+                    Showing <strong>@Model.Reservations.Count</strong> records from
+                    @Model.StartDate.ToShortDateString() to @Model.EndDate.ToShortDateString().
+                </p>
+            </div>
+
+            <button type="button" class="btn btn-sm btn-outline-secondary" onclick="window.print()">
+                Print
             </button>
         </div>
-    </div>
-</form>
 
-@* Report Type Selection *@
-<div class="btn-group w-100 mb-4" role="group" aria-label="Report Type">
-    <a class="btn @(Model.ReportType == "Arrivals" ? "btn-secondary" : "btn-outline-secondary")"
-       asp-action="Reports"
-       asp-route-reportType="Arrivals"
-       asp-route-startDate="@Model.StartDate.ToString("yyyy-MM-dd")"
-       asp-route-endDate="@Model.EndDate.ToString("yyyy-MM-dd")">
-        Daily Arrivals
-    </a>
-
-    <a class="btn @(Model.ReportType == "Departures" ? "btn-secondary" : "btn-outline-secondary")"
-       asp-action="Reports"
-       asp-route-reportType="Departures"
-       asp-route-startDate="@Model.StartDate.ToString("yyyy-MM-dd")"
-       asp-route-endDate="@Model.EndDate.ToString("yyyy-MM-dd")">
-        Upcoming Departures
-    </a>
-
-    <a class="btn @(Model.ReportType == "Occupancy" ? "btn-secondary" : "btn-outline-secondary")"
-       asp-action="Reports"
-       asp-route-reportType="Occupancy"
-       asp-route-startDate="@Model.StartDate.ToString("yyyy-MM-dd")"
-       asp-route-endDate="@Model.EndDate.ToString("yyyy-MM-dd")">
-        Occupancy
-    </a>
-
-    <a class="btn @(Model.ReportType == "Reservations" ? "btn-secondary" : "btn-outline-secondary")"
-       asp-action="Reports"
-       asp-route-reportType="Reservations"
-       asp-route-startDate="@Model.StartDate.ToString("yyyy-MM-dd")"
-       asp-route-endDate="@Model.EndDate.ToString("yyyy-MM-dd")">
-        Reservation History
-    </a>
-
-    <a class="btn @(Model.ReportType == "Revenue" ? "btn-secondary" : "btn-outline-secondary")"
-       asp-action="Reports"
-       asp-route-reportType="Revenue"
-       asp-route-startDate="@Model.StartDate.ToString("yyyy-MM-dd")"
-       asp-route-endDate="@Model.EndDate.ToString("yyyy-MM-dd")">
-        Revenue / Payments
-    </a>
-</div>
-
-@* Dashboard Summary cards *@
-<div class="border rounded p-4 mb-4">
-    <h4 class="text-center mb-4">Report Summary</h4>
-
-    <div class="row text-center">
-        <div class="col-md-3 border rounded p-3">
-            <h2>@Model.ArrivalsCount</h2>
-            <p class="mb-0">Arrivals</p>
-        </div>
-
-        <div class="col-md-3 border rounded p-3">
-            <h2>@Model.DeparturesCount</h2>
-            <p class="mb-0">Departures</p>
-        </div>
-
-        <div class="col-md-3 border rounded p-3">
-            <h2>@Model.OccupancyRate%</h2>
-            <p class="mb-0">Occupancy</p>
-        </div>
-
-        <div class="col-md-3 border rounded p-3">
-            <h2>@Model.RevenueTotal.ToString("C")</h2>
-            <p class="mb-0">Revenue</p>
-        </div>
-    </div>
-
-    @* Report Results table *@
-    <p>
-    Showing <strong>@Model.Reservations.Count</strong> records for
-    <strong>@Model.ReportType</strong>.
-    </p>
-
-    <div class="mt-4 p-4 border rounded text-center text-muted">
-        <h4 class="mb-3">@Model.ReportType Report Results</h4>
-        @* If there are no results, display a message for the user *@
-        @if (!Model.Reservations.Any())
-        {
-            <div class="alert alert-info">
-                No reservations were found for the selected date range.
-            </div>
-        }
-        else
-        {
-            @* Arrivals Report = Who will be arriving within the filtered date range*@
-            @if (Model.ReportType == "Arrivals")
+        <div class="card-body p-0">
+            @if (!Model.Reservations.Any())
             {
-                <table class="table table-striped table-bordered">
+            <div class="p-4">
+                <div class="alert alert-info mb-0">
+                    No reservations were found for the selected date range.
+                </div>
+            </div>
+            }
+            else if (Model.ReportType == "Arrivals")
+            {
+            <div class="table-responsive">
+                <table class="table table-hover align-middle admin-table">
                     <thead>
                         <tr>
                             <th>Guest</th>
@@ -135,21 +182,22 @@
                     </thead>
                     <tbody>
                         @foreach (var r in Model.Reservations)
-                        {
-                            <tr>
-                                <td>@r.User?.FirstName @r.User?.LastName</td>
-                                <td>@r.Site?.SiteNumber</td>
-                                <td>@r.CheckInDate.ToShortDateString()</td>
-                                <td>@r.ReservationStatus</td>
-                            </tr>
-                        }
+                            {
+                        <tr>
+                            <td>@r.User?.FirstName @r.User?.LastName</td>
+                            <td>@r.Site?.SiteNumber</td>
+                            <td>@r.CheckInDate.ToShortDateString()</td>
+                            <td>@r.ReservationStatus</td>
+                        </tr>
+                            }
                     </tbody>
                 </table>
+            </div>
             }
-             @* Departures Report = Who will be departing within the filtered date range*@
             else if (Model.ReportType == "Departures")
             {
-                <table class="table table-striped table-bordered">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle admin-table">
                     <thead>
                         <tr>
                             <th>Guest</th>
@@ -160,97 +208,114 @@
                     </thead>
                     <tbody>
                         @foreach (var r in Model.Reservations)
-                        {
-                            <tr>
-                                <td>@r.User?.FirstName @r.User?.LastName</td>
-                                <td>@r.Site?.SiteNumber</td>
-                                <td>@r.CheckOutDate.ToShortDateString()</td>
-                                <td>@r.ReservationStatus</td>
-                            </tr>
-                        }
+                            {
+                        <tr>
+                            <td>@r.User?.FirstName @r.User?.LastName</td>
+                            <td>@r.Site?.SiteNumber</td>
+                            <td>@r.CheckOutDate.ToShortDateString()</td>
+                            <td>@r.ReservationStatus</td>
+                        </tr>
+                            }
                     </tbody>
                 </table>
+            </div>
             }
-            @* Revenue Report = list of reservations with their charges, payments, and balances *@
             else if (Model.ReportType == "Revenue")
             {
-                <table class="table table-striped table-bordered">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle admin-table">
                     <thead>
                         <tr>
                             <th>Reservation ID</th>
                             <th>Guest</th>
-                            <th>Charges</th>
-                            <th>Payments</th>
-                            <th>Balance Due</th>
+                            <th class="text-end">Charges</th>
+                            <th class="text-end">Payments</th>
+                            <th class="text-end">Balance Due</th>
                             <th>Status</th>
                         </tr>
                     </thead>
                     <tbody>
                         @foreach (var r in Model.Reservations)
-                        {
-                            var charges = r.TotalCost;
-                            var balanceDue = r.BalanceDue;
-                            // TODO: THIS CALCULATION IS JERRY-RIGGED UNTIL WE CAN TIE PAYMENTS TO RESERVATIONS
-                            // LINDSEY ALERTED TEAM ON 7/8 AND WILL WORK ON SOLUTION :) 
-                            var payments = charges - balanceDue;
+                            {
+                                var charges = r.TotalCost;
+                                var balanceDue = r.BalanceDue;
+                                var payments = charges - balanceDue;
 
-                            <tr>
-                                <td>@r.ReservationID</td>
-                                <td>@r.User?.FirstName @r.User?.LastName</td>
-                                <td>@charges.ToString("C")</td>
-                                <td>@payments.ToString("C")</td>
-                                <td>@balanceDue.ToString("C")</td>
-                                <td>@r.ReservationStatus</td>
-                            </tr>
-                        }
+                        <tr>
+                            <td>@r.ReservationID</td>
+                            <td>@r.User?.FirstName @r.User?.LastName</td>
+                            <td class="text-end">@charges.ToString("C")</td>
+                            <td class="text-end">@payments.ToString("C")</td>
+                            <td class="text-end">@balanceDue.ToString("C")</td>
+                            <td>@r.ReservationStatus</td>
+                        </tr>
+                            }
                     </tbody>
                 </table>
+            </div>
             }
-            @* Ocupancy Report = How many sites will be reserved vs. available within date filter *@
             else if (Model.ReportType == "Occupancy")
             {
-                <h5 class="mb-3">Occupancy Summary</h5>
+            <div class="p-4">
+                <div class="row g-3 mb-3">
+                    <div class="col-md-3">
+                        <div class="card stat-card h-100">
+                            <div class="card-body">
+                                <span>Total Sites</span>
+                                <strong>@Model.TotalSites</strong>
+                            </div>
+                        </div>
+                    </div>
 
-                <table class="table table-bordered text-center">
+                    <div class="col-md-3">
+                        <div class="card stat-card h-100">
+                            <div class="card-body">
+                                <span>Occupied Sites</span>
+                                <strong>@Model.OccupiedSites</strong>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-md-3">
+                        <div class="card stat-card h-100">
+                            <div class="card-body">
+                                <span>Available Sites</span>
+                                <strong>@(Model.TotalSites - Model.OccupiedSites)</strong>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-md-3">
+                        <div class="card stat-card h-100">
+                            <div class="card-body">
+                                <span>Occupancy Rate</span>
+                                <strong>@Model.OccupancyRate%</strong>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            }
+            else
+            {
+            <div class="table-responsive">
+                <table class="table table-hover align-middle admin-table">
                     <thead>
                         <tr>
-                            <th>Total Sites</th>
-                            <th>Occupied Sites</th>
-                            <th>Available Sites</th>
-                            <th>Occupancy Rate</th>
+                            <th>Reservation ID</th>
+                            <th>Guest</th>
+                            <th>Email</th>
+                            <th>Phone</th>
+                            <th>Site</th>
+                            <th>Check-In</th>
+                            <th>Check-Out</th>
+                            <th>Status</th>
+                            <th class="text-end">Total Cost</th>
                         </tr>
                     </thead>
                     <tbody>
-                        <tr>
-                            <td>@Model.TotalSites</td>
-                            <td>@Model.OccupiedSites</td>
-                            <td>@(Model.TotalSites - Model.OccupiedSites)</td>
-                            <td>@Model.OccupancyRate%</td>
-                        </tr>
-                    </tbody>
-                </table>
-            }
-
-            else
-            {
-            @* Display reservation details in table format for selected report *@
-            <table class="table table-striped table-bordered">
-                <thead>
-                    <tr>
-                        <th>Reservation ID</th>
-                        <th>Guest</th>
-                        <th>Email</th>
-                        <th>Phone</th>
-                        <th>Site</th>
-                        <th>Check-In</th>
-                        <th>Check-Out</th>
-                        <th>Status</th>
-                        <th>Total Cost</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach (var reservation in Model.Reservations)
-                    {
+                        @foreach (var reservation in Model.Reservations)
+                            {
                         <tr>
                             <td>@reservation.ReservationID</td>
                             <td>@reservation.User?.FirstName @reservation.User?.LastName</td>
@@ -260,14 +325,14 @@
                             <td>@reservation.CheckInDate.ToShortDateString()</td>
                             <td>@reservation.CheckOutDate.ToShortDateString()</td>
                             <td>@reservation.ReservationStatus</td>
-                            <td>@reservation.TotalCost.ToString("C")</td>
+                            <td class="text-end">@reservation.TotalCost.ToString("C")</td>
                         </tr>
-                    }
-                </tbody>
-            </table>
+                            }
+                    </tbody>
+                </table>
+            </div>
             }
-            
-        }
-        
-    </div>
+        </div>
+    </section>
+
 </div>

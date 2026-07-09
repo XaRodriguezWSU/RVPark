@@ -1,26 +1,103 @@
-﻿@*
-    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
-*@
+﻿@model RVSite.Models.Site
+
 @{
+    ViewData["Title"] = $"Photos for Site {Model.SiteNumber}";
+    var photos = Model.Photos?.OrderBy(p => p.SortOrder).ToList() ?? new List<RVSite.Models.SitePhoto>();
 }
 
-@model RVSite.Models.Site
+<section class="card admin-hero mb-4">
+    <div class="card-body p-4 p-lg-5">
+        <div class="d-flex flex-column flex-lg-row justify-content-between align-items-lg-center gap-3">
+            <div>
+                <span class="home-kicker">Media Management</span>
+                <h1 class="page-title">Site @Model.SiteNumber Photos</h1>
+                <p class="page-subtitle">
+                    Manage captions, sort order, and uploaded photos for this site.
+                </p>
+            </div>
 
-<h2>Photos for @Model.SiteID</h2>
+            <div class="d-flex flex-column flex-sm-row gap-2">
+                <a asp-controller="SitePhoto"
+                   asp-action="Create"
+                   asp-route-id="@Model.SiteID"
+                   class="btn btn-primary">
+                    Add Photo
+                </a>
 
-<a class="btn btn-primary" href="/SitePhoto/Create/@Model.SiteID">Add Photo</a>
-
-<hr />
-
-<div class="row">
-@foreach (var p in Model.Photos.OrderBy(x => x.SortOrder))
-{
-    <div class="col-md-3 text-center mb-4">
-        <img src="@p.FilePath" class="img-fluid rounded" />
-        <p>@p.Caption</p>
-
-        <a class="btn btn-sm btn-warning" href="/SitePhoto/Edit/@p.SitePhotoID">Edit</a>
-        <a class="btn btn-sm btn-danger" href="/SitePhoto/Delete/@p.SitePhotoID">Delete</a>
+                <a asp-controller="SitePhoto"
+                   asp-action="Manage"
+                   class="btn btn-outline-secondary">
+                    All Site Photos
+                </a>
+            </div>
+        </div>
     </div>
+</section>
+
+@if (!photos.Any())
+{
+<section class="card">
+    <div class="card-body p-4 text-center">
+        <h2 class="h5 mb-2">No photos uploaded yet</h2>
+        <p class="text-muted mb-3">
+            Add the first image for Site @Model.SiteNumber.
+        </p>
+
+        <a asp-controller="SitePhoto"
+           asp-action="Create"
+           asp-route-id="@Model.SiteID"
+           class="btn btn-primary">
+            Upload Photo
+        </a>
+    </div>
+</section>
 }
-</div>
+else
+{
+<section class="row g-4">
+    @foreach (var p in photos)
+        {
+    <div class="col-md-6 col-xl-4">
+        <article class="card h-100 photo-gallery-card">
+
+            <img src="@p.FilePath"
+                 class="card-img-top photo-gallery-img"
+                 alt="@p.Caption" />
+
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-start gap-2 mb-2">
+                    <h2 class="h5 fw-bold mb-0">
+                        @(string.IsNullOrWhiteSpace(p.Caption) ? "Untitled Photo" : p.Caption)
+                    </h2>
+
+                    <span class="badge bg-secondary">
+                        Order @p.SortOrder
+                    </span>
+                </div>
+
+                <p class="text-muted mb-3">
+                    Uploaded @p.UploadedAt.ToShortDateString()
+                </p>
+
+                <div class="d-flex gap-2">
+                    <a asp-controller="SitePhoto"
+                       asp-action="Edit"
+                       asp-route-id="@p.SitePhotoID"
+                       class="btn btn-sm btn-outline-primary">
+                        Edit
+                    </a>
+
+                    <a asp-controller="SitePhoto"
+                       asp-action="Delete"
+                       asp-route-id="@p.SitePhotoID"
+                       class="btn btn-sm btn-outline-danger">
+                        Delete
+                    </a>
+                </div>
+            </div>
+
+        </article>
+    </div>
+        }
+</section>
+}

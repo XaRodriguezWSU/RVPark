@@ -1,54 +1,91 @@
 @model IEnumerable<RVSite.Models.User>
 
     @{
-    ViewData["Title"] = "Admin Employees";
+    ViewData["Title"] = "Employee Management";
     }
 
-    <h2>Employee Management</h2>
-    <a asp-action="CreateEmployee" class="btn btn-primary mb-3">+ Add Employee</a>
+    <section class="card admin-hero mb-4">
+        <div class="card-body p-4 p-lg-5">
+            <div class="d-flex flex-column flex-lg-row justify-content-between align-items-lg-center gap-3">
+                <div>
+                    <span class="home-kicker">Administration</span>
+                    <h1 class="page-title">Employee Management</h1>
+                    <p class="page-subtitle">
+                        Create, edit, lock, and unlock employee accounts.
+                    </p>
+                </div>
 
-    <table class="table">
-        <thead>
-            <tr>
-                <th>Name</th>
-                <th>Email</th>
-                <th>Phone</th>
-                <th>Role</th>
-                <th>Status</th>
-                <th>Actions</th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach (var emp in Model)
-        {
-            <tr>
-                <td>@emp.FirstName @emp.LastName</td>
-                <td>@emp.Email</td>
-                <td>@emp.PhoneNumber</td>
-                <td>@emp.Role?.GetRoleName()</td>
-                <td>
-                    @if (emp.IsLocked)
+                <a asp-action="CreateEmployee" class="btn btn-primary">
+                    Add Employee
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <section class="card">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <div>
+                <h2 class="h5 mb-1">Employee Accounts</h2>
+                <p class="mb-0 text-muted">@Model.Count() total employees</p>
+            </div>
+        </div>
+
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle admin-table mb-0">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Email</th>
+                            <th>Phone</th>
+                            <th>Role</th>
+                            <th>Status</th>
+                            <th class="text-end">Actions</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+                        @foreach (var emp in Model)
                     {
-                    <span class="badge bg-danger">Locked</span>
+                        <tr>
+                            <td class="fw-bold">@emp.FirstName @emp.LastName</td>
+                            <td>@emp.Email</td>
+                            <td>@emp.PhoneNumber</td>
+                            <td>@emp.Role?.GetRoleName()</td>
+                            <td>
+                                @if (emp.IsLocked)
+                                {
+                                <span class="badge bg-danger">Locked</span>
+                                }
+                                else
+                                {
+                                <span class="badge bg-success">Active</span>
+                                }
+                            </td>
+                            <td class="text-end">
+                                <div class="d-flex justify-content-end gap-2">
+                                    <a asp-action="EditEmployee"
+                                       asp-route-id="@emp.UserID"
+                                       class="btn btn-sm btn-outline-primary">
+                                        Edit
+                                    </a>
+
+                                    <form asp-action="ToggleLock"
+                                          asp-route-id="@emp.UserID"
+                                          method="post">
+                                        @Html.AntiForgeryToken()
+
+                                        <button type="submit"
+                                                class="btn btn-sm @(emp.IsLocked ? "btn-outline-success" : "btn-outline-danger")">
+                                            @(emp.IsLocked ? "Unlock" : "Lock")
+                                        </button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
                     }
-                    else
-                    {
-                    <span class="badge bg-success">Active</span>
-                    }
-                </td>
-                <td>
-                    <a asp-action="EditEmployee" asp-route-id="@emp.UserID"
-                       class="btn btn-sm btn-outline-secondary">Edit</a>
-                    <form asp-action="ToggleLock" asp-route-id="@emp.UserID"
-                          method="post" style="display:inline">
-                        @Html.AntiForgeryToken()
-                        <button type="submit" class="btn btn-sm
-                            @(emp.IsLocked ? "btn-outline-success" : "btn-outline-danger")">
-                            @(emp.IsLocked ? "Unlock" : "Lock")
-                        </button>
-                    </form>
-                </td>
-            </tr>
-        }
-        </tbody>
-    </table>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </section>

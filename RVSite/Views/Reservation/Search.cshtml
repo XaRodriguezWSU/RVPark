@@ -1,28 +1,47 @@
-﻿@*
-    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
-*@
-@{
-}
-
-@{
+﻿@{
     ViewData["Title"] = "Search Reservations";
 }
 
-<div class="container mt-4">
-    <div class="card shadow-sm">
-        <div class="card-header">
-            <h2 class="mb-0">Search Reservations</h2>
-        </div>
-        <div class="card-body">
-            <form asp-action="Search" method="post">
-                <label>Reservation Number:</label>
-                <input type="text" name="reservationNumber" class="form-control" />
-
-                <label>Customer Name:</label>
-                <input type="text" name="customerName" class="form-control" />
-
-                <button type="submit" class="btn btn-primary mt-3">Search</button>
-            </form>
-        </div>
+<section class="card admin-hero mb-4">
+    <div class="card-body p-4 p-lg-5">
+        <span class="home-kicker">Reservation Management</span>
+        <h1 class="page-title">Search Reservations</h1>
+        <p class="page-subtitle">
+            Find reservations by reservation number or customer name.
+        </p>
     </div>
-</div>
+</section>
+
+<section class="card">
+    <div class="card-header">
+        <h2 class="h5 mb-0">Search Criteria</h2>
+    </div>
+
+    <div class="card-body">
+        <form asp-action="Search" method="post">
+            <div class="row g-3 align-items-end">
+                <div class="col-md-5">
+                    <label class="form-label">Reservation Number</label>
+                    <input type="text"
+                           name="reservationNumber"
+                           class="form-control"
+                           placeholder="Example: 1024" />
+                </div>
+
+                <div class="col-md-5">
+                    <label class="form-label">Customer Name</label>
+                    <input type="text"
+                           name="customerName"
+                           class="form-control"
+                           placeholder="Example: John Doe" />
+                </div>
+
+                <div class="col-md-2">
+                    <button type="submit" class="btn btn-primary w-100">
+                        Search
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+</section>

@@ -1,24 +1,66 @@
-﻿@*
-    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
-*@
-@{
-}
-@model RVSite.Models.Reservation
+﻿@model RVSite.Models.Reservation
 
 @{
     ViewData["Title"] = "Reservation Cancelled";
 }
 
-<h2>Reservation Cancelled</h2>
+<section class="card admin-hero mb-4">
+    <div class="card-body p-4 p-lg-5">
+        <span class="home-kicker">Reservation Management</span>
+        <h1 class="page-title">Reservation Cancelled</h1>
+        <p class="page-subtitle">
+            Reservation #@Model.ReservationID has been marked as cancelled.
+        </p>
+    </div>
+</section>
 
-<div class="alert alert-warning">
-    This reservation has been marked as <strong>Cancelled</strong>.
-</div>
+<section class="card">
+    <div class="card-body p-4">
+        <div class="alert alert-warning">
+            This reservation has been marked as <strong>Cancelled</strong>.
+        </div>
 
-<p><strong>Reservation ID:</strong> @Model.ReservationID</p>
-<p><strong>Customer:</strong> @Model.User.FirstName @Model.User.LastName</p>
-<p><strong>Site:</strong> @Model.Site.SiteNumber</p>
-<p><strong>Original Check-In:</strong> @Model.CheckInDate.ToShortDateString()</p>
-<p><strong>Original Check-Out:</strong> @Model.CheckOutDate.ToShortDateString()</p>
+        <div class="row g-3 mb-4">
+            <div class="col-md-6 col-xl-4">
+                <div class="detail-box">
+                    <span>Reservation ID</span>
+                    <strong>@Model.ReservationID</strong>
+                </div>
+            </div>
 
-<a class="btn btn-primary" asp-controller="Reservation" asp-action="Index">Back to Reservations</a>
+            <div class="col-md-6 col-xl-4">
+                <div class="detail-box">
+                    <span>Customer</span>
+                    <strong>@Model.User.FirstName @Model.User.LastName</strong>
+                </div>
+            </div>
+
+            <div class="col-md-6 col-xl-4">
+                <div class="detail-box">
+                    <span>Site</span>
+                    <strong>@Model.Site.SiteNumber</strong>
+                </div>
+            </div>
+
+            <div class="col-md-6 col-xl-4">
+                <div class="detail-box">
+                    <span>Original Check-In</span>
+                    <strong>@Model.CheckInDate.ToShortDateString()</strong>
+                </div>
+            </div>
+
+            <div class="col-md-6 col-xl-4">
+                <div class="detail-box">
+                    <span>Original Check-Out</span>
+                    <strong>@Model.CheckOutDate.ToShortDateString()</strong>
+                </div>
+            </div>
+        </div>
+
+        <a class="btn btn-primary"
+           asp-controller="Reservation"
+           asp-action="Index">
+            Back to Reservations
+        </a>
+    </div>
+</section>

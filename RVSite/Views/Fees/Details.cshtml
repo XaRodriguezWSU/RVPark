@@ -1,47 +1,90 @@
 ﻿@model RVSite.Models.Fee
 
-@{
-    ViewData["Title"] = "Fee Details";
-}
+<section class="card admin-hero mb-4">
+    <div class="card-body p-5">
 
-<h1>Fee Details</h1>
+        <span class="home-kicker">Administration</span>
 
-<div>
-    <h4>Fee</h4>
-    <hr />
+        <h1 class="page-title">Fee Details</h1>
 
-    <dl class="row">
-        <dt class="col-sm-2">
-            Reservation
-        </dt>
-        <dd class="col-sm-10">
-            Reservation #@Model.ReservationID
-        </dd>
+        <p class="page-subtitle">
+            Review fee information.
+        </p>
 
-        <dt class="col-sm-2">
-            @Html.DisplayNameFor(model => model.NameCode)
-        </dt>
-        <dd class="col-sm-10">
-            @Html.DisplayFor(model => model.NameCode)
-        </dd>
+    </div>
+</section>
 
-        <dt class="col-sm-2">
-            @Html.DisplayNameFor(model => model.Amount)
-        </dt>
-        <dd class="col-sm-10">
-            @Model.Amount.ToString("C")
-        </dd>
+<section class="card">
 
-        <dt class="col-sm-2">
-            @Html.DisplayNameFor(model => model.EffectiveDate)
-        </dt>
-        <dd class="col-sm-10">
-            @Model.EffectiveDate.ToShortDateString()
-        </dd>
-    </dl>
-</div>
+    <div class="card-body">
 
-<div>
-    <a asp-action="Edit" asp-route-id="@Model?.FeeID">Edit</a> |
-    <a asp-action="Index">Back to List</a>
-</div>
+        <div class="row g-3">
+
+            <div class="col-md-6">
+
+                <div class="detail-box">
+
+                    <span>Reservation</span>
+
+                    <strong>Reservation #@Model.ReservationID</strong>
+
+                </div>
+
+            </div>
+
+            <div class="col-md-6">
+
+                <div class="detail-box">
+
+                    <span>Fee Type</span>
+
+                    <strong>@Model.NameCode</strong>
+
+                </div>
+
+            </div>
+
+            <div class="col-md-6">
+
+                <div class="detail-box">
+
+                    <span>Amount</span>
+
+                    <strong>@Model.Amount.ToString("C")</strong>
+
+                </div>
+
+            </div>
+
+            <div class="col-md-6">
+
+                <div class="detail-box">
+
+                    <span>Effective Date</span>
+
+                    <strong>@Model.EffectiveDate.ToShortDateString()</strong>
+
+                </div>
+
+            </div>
+
+        </div>
+
+        <div class="mt-4">
+
+            <a asp-action="Edit"
+               asp-route-id="@Model.FeeID"
+               class="btn btn-primary">
+                Edit
+            </a>
+
+            <a asp-action="Index"
+               class="btn btn-outline-secondary">
+                Back
+            </a>
+
+        </div>
+
+    </div>
+
+</section>

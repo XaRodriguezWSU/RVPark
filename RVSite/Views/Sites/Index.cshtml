@@ -1,59 +1,159 @@
 @model IEnumerable<RVSite.Models.Site>
 
-@{
-    ViewData["Title"] = "Index";
-}
+    @{
+    ViewData["Title"] = "Manage Sites";
+    }
 
-<h1>All Sites</h1>
+    <div class="sites-page">
 
-<p>
-    <a asp-action="Create">Create New</a>
-</p>
-<table class="table">
-    <thead>
-        <tr>
-            <th>
-                @Html.DisplayNameFor(model => model.SiteNumber)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.SiteType)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.SiteStatus)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.MaxRVLength)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.BaseRate)
-            </th>
-            <th></th>
-        </tr>
-    </thead>
-    <tbody>
-@foreach (var item in Model) {
-        <tr>
-            <td>
-                @Html.DisplayFor(model => item.SiteNumber)
-            </td>
-            <td>
-                @Html.DisplayFor(model => item.SiteType.Name)
-            </td>
-            <td>
-                @Html.DisplayFor(model => item.SiteStatus)
-            </td>
-            <td>
-                @Html.DisplayFor(model => item.MaxRVLength)
-            </td>
-            <td>
-                @Html.DisplayFor(model => item.BaseRate)
-            </td>
-            <td>
-                <a asp-controller="Sites" asp-action="Edit" asp-route-id="@item.SiteID">Edit</a> |
-                <a asp-controller="Sites" asp-action="Details" asp-route-id="@item.SiteID">Details</a> |
-                <a asp-controller="Sites" asp-action="Delete" asp-route-id="@item.SiteID">Delete</a>
-            </td>
-        </tr>
-}
-    </tbody>
-</table>
+        <section class="card admin-hero mb-4">
+            <div class="card-body p-4 p-lg-5">
+
+                <div class="d-flex flex-column flex-lg-row justify-content-between align-items-lg-center gap-3">
+
+                    <div>
+                        <span class="home-kicker">Administration</span>
+
+                        <h1 class="page-title">Manage RV Sites</h1>
+
+                        <p class="page-subtitle">
+                            Create, edit, review, and maintain all campground sites.
+                        </p>
+                    </div>
+
+                    <div class="d-flex gap-2">
+                        <a asp-action="Create" class="btn btn-primary">
+                            Add New Site
+                        </a>
+
+                        <a asp-controller="Admin"
+                           asp-action="Dashboard"
+                           class="btn btn-outline-secondary">
+                            Dashboard
+                        </a>
+                    </div>
+
+                </div>
+
+            </div>
+        </section>
+
+        <section class="card">
+
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <div>
+                    <h2 class="h5 mb-1">Campground Sites</h2>
+                    <p class="text-muted mb-0">
+                        @Model.Count() total sites
+                    </p>
+                </div>
+            </div>
+
+            <div class="card-body p-0">
+
+                <div class="table-responsive">
+
+                    <table class="table table-hover align-middle admin-table mb-0">
+
+                        <thead>
+                            <tr>
+                                <th>Site</th>
+                                <th>Type</th>
+                                <th>Status</th>
+                                <th>Max Length</th>
+                                <th>Nightly Rate</th>
+                                <th class="text-end">Actions</th>
+                            </tr>
+                        </thead>
+
+                        <tbody>
+
+                            @foreach (var item in Model)
+                        {
+                            <tr>
+
+                                <td class="fw-bold">
+                                    @item.SiteNumber
+                                </td>
+
+                                <td>
+                                    @item.SiteType?.Name
+                                </td>
+
+                                <td>
+
+                                    @if (item.SiteStatus == "Available")
+                                    {
+                                    <span class="badge bg-success">
+                                        Available
+                                    </span>
+                                    }
+                                    else if (item.SiteStatus == "Reserved")
+                                    {
+                                    <span class="badge bg-warning text-dark">
+                                        Reserved
+                                    </span>
+                                    }
+                                    else if (item.SiteStatus == "Maintenance")
+                                    {
+                                    <span class="badge bg-danger">
+                                        Maintenance
+                                    </span>
+                                    }
+                                    else
+                                    {
+                                    <span class="badge bg-secondary">
+                                        @item.SiteStatus
+                                    </span>
+                                    }
+
+                                </td>
+
+                                <td>
+                                    @item.MaxRVLength ft
+                                </td>
+
+                                <td>
+                                    @item.BaseRate.ToString("C")
+                                </td>
+
+                                <td class="text-end">
+
+                                    <div class="btn-group btn-group-sm">
+
+                                        <a asp-action="Edit"
+                                           asp-route-id="@item.SiteID"
+                                           class="btn btn-outline-primary">
+                                            Edit
+                                        </a>
+
+                                        <a asp-action="Details"
+                                           asp-route-id="@item.SiteID"
+                                           class="btn btn-outline-secondary">
+                                            Details
+                                        </a>
+
+                                        <a asp-action="Delete"
+                                           asp-route-id="@item.SiteID"
+                                           class="btn btn-outline-danger">
+                                            Delete
+                                        </a>
+
+                                    </div>
+
+                                </td>
+
+                            </tr>
+                        }
+
+                        </tbody>
+
+                    </table>
+
+                </div>
+
+            </div>
+
+        </section>
+
+    </div>
