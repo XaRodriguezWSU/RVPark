@@ -14,12 +14,8 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v4
 
-    - name: Show directory structure
-      run: |
-        echo "Current directory:"
-        pwd
-        echo "Listing files:"
-        ls -R .
+    - name: Move into repo directory
+      run: cd RVPark
 
     - name: Setup .NET
       uses: actions/setup-dotnet@v4
