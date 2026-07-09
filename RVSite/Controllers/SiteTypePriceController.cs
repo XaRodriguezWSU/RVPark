@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using RVSite.Models;
 
 namespace RVSite.Controllers
@@ -12,33 +13,45 @@ namespace RVSite.Controllers
             _context = context;
         }
 
-        public IActionResult Index(int siteTypeId)
+        public IActionResult Index(int id)
         {
             var prices = _context.SiteTypePrices
-                .Where(p => p.SiteTypeID == siteTypeId)
+                .Where(p => p.SiteTypeID == id)
+                .Include(p => p.SiteType)
                 .OrderBy(p => p.StartDate)
                 .ToList();
 
-            ViewBag.SiteType = _context.SiteTypes.Find(siteTypeId);
+            ViewBag.SiteType = _context.SiteTypes.Find(id);
 
             return View(prices);
         }
 
-        public IActionResult Create(int siteTypeId)
+        public IActionResult Create(int id)
         {
-            ViewBag.SiteTypeID = siteTypeId;
-            return View();
+            Console.WriteLine("DEBUG: Create GET received id = " + id);
+
+            if (id == 0)
+                return BadRequest("siteTypeId is required.");
+
+            var model = new SiteTypePrice
+            {
+                SiteTypeID = id
+            };
+
+            return View(model);
         }
 
         [HttpPost]
-        public IActionResult Create(SiteTypePrice price)
+        public IActionResult Create(SiteTypePrice model)
         {
-            if (!ModelState.IsValid)
-                return View(price);
+            Console.WriteLine("DEBUG: Posted SiteTypeID = " + model.SiteTypeID);
 
-            _context.SiteTypePrices.Add(price);
+            if (!ModelState.IsValid)
+                return View(model);
+
+            _context.SiteTypePrices.Add(model);
             _context.SaveChanges();
-            return RedirectToAction("Index", new { siteTypeId = price.SiteTypeID });
+            return RedirectToAction("Index", new { id = model.SiteTypeID });
         }
 
         public IActionResult Edit(int id)
@@ -49,15 +62,15 @@ namespace RVSite.Controllers
         }
 
         [HttpPost]
-        public IActionResult Edit(SiteTypePrice price)
+        public IActionResult Edit(SiteTypePrice model)
         {
             if (!ModelState.IsValid)
-                return View(price);
+                return View(model);
 
-            _context.SiteTypePrices.Update(price);
+            _context.SiteTypePrices.Update(model);
             _context.SaveChanges();
 
-            return RedirectToAction("Index", new { siteTypeId = price.SiteTypeID });
+            return RedirectToAction("Index", new { id = model.SiteTypeID });
         }
 
         public IActionResult Delete(int id)
@@ -76,7 +89,7 @@ namespace RVSite.Controllers
             _context.SiteTypePrices.Remove(price);
             _context.SaveChanges();
 
-            return RedirectToAction("Index", new { siteTypeId });
+            return RedirectToAction("Index", new { id = siteTypeId });
         }
     }
 }
