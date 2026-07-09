@@ -23,7 +23,7 @@ jobs:
       run: rm -rf ./publish
 
     - name: Publish project
-      run: dotnet publish ./RVPark/RVSite/RVSite.csproj -c Release -o ./publish
+      run: dotnet publish ./RVSite/RVSite.csproj -c Release -o ./publish
 
     - name: Create offline folder and app_offline.htm
       run: |
