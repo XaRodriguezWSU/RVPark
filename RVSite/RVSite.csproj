@@ -19,6 +19,7 @@
   <ItemGroup>
     <Folder Include="wwwroot\storage\photos\" />
     <Content Update="appsettings.Production.json" CopyToOutputDirectory="Always" />
+    <Content Update="web.config" CopyToOutputDirectory="Always" />
   </ItemGroup>
 
 </Project>
