@@ -32,6 +32,7 @@ namespace RVSite.Controllers
                 .CountAsync(s => s.SiteStatus == SiteStatus.Maintenance.ToString());
 
             var recentSites = await _context.Sites
+                .Include(s => s.SiteType)
                 .OrderBy(s => s.SiteNumber)
                 .Take(8)
                 .ToListAsync();

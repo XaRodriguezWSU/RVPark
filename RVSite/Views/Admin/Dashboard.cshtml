@@ -97,7 +97,7 @@
                                 {
                             <tr>
                                 <td>@site.SiteNumber</td>
-                                <td>@site.SiteType</td>
+                                <td>@site.SiteType?.Name</td>
                                 <td>
                                     @if (site.SiteStatus == SiteStatus.Available.ToString())
                                             {
