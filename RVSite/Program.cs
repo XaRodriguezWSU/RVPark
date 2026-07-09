@@ -48,13 +48,11 @@ using (var scope = app.Services.CreateScope())
 
 
 // Quick data seeding for demonstration purposes
-if (app.Environment.IsDevelopment())
+
+using (var scope = app.Services.CreateScope())
 {
-    using (var scope = app.Services.CreateScope())
-    {
-        var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-        DataSeeder.Seed(db);
-    }
+    var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+    DataSeeder.Seed(db);
 }
 
 // Configure the HTTP request pipeline.
