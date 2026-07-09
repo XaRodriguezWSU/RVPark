@@ -43,29 +43,27 @@ jobs:
         server: ${{ secrets.FTP_SERVER }}
         username: ${{ secrets.FTP_USERNAME }}
         password: ${{ secrets.FTP_PASSWORD }}
-        local-dir: ${{ github.workspace }}/offline
+        local-dir: ${{ github.workspace }}/offline/
         server-dir: ${{ secrets.FTP_PATH }}
-
+    
     - name: FTP Deploy published app
       uses: SamKirkland/FTP-Deploy-Action@v4.3.4
       with:
         server: ${{ secrets.FTP_SERVER }}
         username: ${{ secrets.FTP_USERNAME }}
         password: ${{ secrets.FTP_PASSWORD }}
-        local-dir: ${{ github.workspace }}/publish
+        local-dir: ${{ github.workspace }}/publish/
         server-dir: ${{ secrets.FTP_PATH }}
-
-    - name: Remove offline folder locally
-      run: rm -rf ${{ github.workspace }}/offline
-
+    
     - name: Delete app_offline.htm on server
       uses: SamKirkland/FTP-Deploy-Action@v4.3.4
       with:
         server: ${{ secrets.FTP_SERVER }}
         username: ${{ secrets.FTP_USERNAME }}
         password: ${{ secrets.FTP_PASSWORD }}
-        local-dir: ${{ github.workspace }}/publish
+        local-dir: ${{ github.workspace }}/publish/
         server-dir: ${{ secrets.FTP_PATH }}
         exclude: |
           **/*
         delete: true
+
