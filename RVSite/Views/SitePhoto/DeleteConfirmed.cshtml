@@ -1,0 +1,17 @@
+﻿@*
+    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
+*@
+@{
+}
+
+@model RVSite.Models.SitePhoto
+
+<h2>Photo Deleted</h2>
+
+<div class="alert alert-success">
+    <p>The photo has been successfully deleted.</p>
+</div>
+
+<a class="btn btn-primary" asp-action="Index" asp-route-id="@Model.SiteID">
+    Back to Photos
+</a>

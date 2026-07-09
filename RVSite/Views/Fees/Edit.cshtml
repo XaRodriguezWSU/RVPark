@@ -1,0 +1,58 @@
+﻿@model RVSite.Models.Fee
+
+@{
+    ViewData["Title"] = "Edit Fee";
+}
+
+<h1>Edit Fee</h1>
+
+<h4>Fee</h4>
+<hr />
+
+<div class="row">
+    <div class="col-md-4">
+        <form asp-action="Edit">
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+            <input type="hidden" asp-for="FeeID" />
+
+            <div class="form-group">
+                <label asp-for="ReservationID" class="control-label">Reservation</label>
+                <select asp-for="ReservationID" class="form-control" asp-items="ViewBag.ReservationID"></select>
+                <span asp-validation-for="ReservationID" class="text-danger"></span>
+            </div>
+
+            <div class="form-group">
+                <label asp-for="NameCode" class="control-label">Fee Type</label>
+                <select asp-for="NameCode" class="form-control" asp-items="Html.GetEnumSelectList<RVSite.Models.FeeCodes>()"></select>
+                <span asp-validation-for="NameCode" class="text-danger"></span>
+            </div>
+
+            <div class="form-group">
+                <label asp-for="Amount" class="control-label"></label>
+                <input asp-for="Amount" class="form-control" />
+                <span asp-validation-for="Amount" class="text-danger"></span>
+            </div>
+
+            <div class="form-group">
+                <label asp-for="EffectiveDate" class="control-label">Effective Date</label>
+                <input asp-for="EffectiveDate" class="form-control" type="date" />
+                <span asp-validation-for="EffectiveDate" class="text-danger"></span>
+            </div>
+
+            <div class="form-group">
+                <input type="submit" value="Save" class="btn btn-primary" />
+            </div>
+        </form>
+    </div>
+</div>
+
+<div>
+    <a asp-action="Index">Back to List</a>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}
+
+

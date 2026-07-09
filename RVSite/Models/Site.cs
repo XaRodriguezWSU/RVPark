@@ -10,8 +10,9 @@ namespace RVSite.Models
         [Required, StringLength(20)]
         public string SiteNumber { get; set; }
 
-        [Required, StringLength(50)]
-        public string SiteType { get; set; }
+        [Required]
+        public int SiteTypeID { get; set; }
+        public SiteType? SiteType { get; set; }
 
         [Required, StringLength(50)]
         public string SiteStatus { get; set; }
@@ -20,5 +21,7 @@ namespace RVSite.Models
 
         [Required, Range(0, 9999)]
         public decimal BaseRate { get; set; }
+
+        public ICollection<SitePhoto> Photos { get; set; } = new List<SitePhoto>();
     }
 }

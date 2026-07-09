@@ -1,0 +1,44 @@
+﻿@*
+    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
+*@
+@{
+}
+
+@model List<Reservation>
+
+
+    <div class="container mt-4">
+        <div class="card shadow-sm">
+            <div class="card-header">
+                <h2 class="mb-0">Search Results</h2>
+            </div>
+            <div class="card-body">
+                <table class="table table-bordered">
+                    <thead>
+                        <tr>
+                            <th>Reservation #</th>
+                            <th>Customer</th>
+                            <th>Site</th>
+                            <th>Dates</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+                        @foreach (var r in Model)
+        {
+                        <tr>
+                            <td>@r.ReservationID</td>
+                            <td>@r.User.FirstName @r.User.LastName</td>
+                            <td>@r.Site.SiteNumber</td>
+                            <td>@r.CheckInDate.ToShortDateString() - @r.CheckOutDate.ToShortDateString()</td>
+                            <td>
+                                <a asp-action="Edit" asp-route-id="@r.ReservationID" class="btn btn-warning">Edit</a>
+                            </td>
+                        </tr>
+        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>

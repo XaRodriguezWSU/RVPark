@@ -1,0 +1,28 @@
+﻿@*
+    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
+*@
+@{
+}
+
+@{
+    ViewData["Title"] = "Search Reservations";
+}
+
+<div class="container mt-4">
+    <div class="card shadow-sm">
+        <div class="card-header">
+            <h2 class="mb-0">Search Reservations</h2>
+        </div>
+        <div class="card-body">
+            <form asp-action="Search" method="post">
+                <label>Reservation Number:</label>
+                <input type="text" name="reservationNumber" class="form-control" />
+
+                <label>Customer Name:</label>
+                <input type="text" name="customerName" class="form-control" />
+
+                <button type="submit" class="btn btn-primary mt-3">Search</button>
+            </form>
+        </div>
+    </div>
+</div>
