@@ -9,8 +9,12 @@
 }
 
 @* Report filter controls *@
+<div asp-validation-summary="All" class="text-danger mb-3"></div>
+
 <form method="get" asp-controller="Admin" asp-action="Reports" class="border rounded p-4 mb-4">
     <h4 class="text-center mb-4">Filters</h4>
+
+    <input type="hidden" name="reportType" value="@Model.ReportType" />
 
     <div class="row align-items-end">
         <div class="col-md-4">
@@ -33,19 +37,43 @@
 
 @* Report Type Selection *@
 <div class="btn-group w-100 mb-4" role="group" aria-label="Report Type">
-    <a class="btn btn-outline-secondary" asp-action="Reports" asp-route-reportType="Arrivals">
+    <a class="btn @(Model.ReportType == "Arrivals" ? "btn-secondary" : "btn-outline-secondary")"
+       asp-action="Reports"
+       asp-route-reportType="Arrivals"
+       asp-route-startDate="@Model.StartDate.ToString("yyyy-MM-dd")"
+       asp-route-endDate="@Model.EndDate.ToString("yyyy-MM-dd")">
         Daily Arrivals
     </a>
-    <a class="btn btn-outline-secondary" asp-action="Reports" asp-route-reportType="Departures">
+
+    <a class="btn @(Model.ReportType == "Departures" ? "btn-secondary" : "btn-outline-secondary")"
+       asp-action="Reports"
+       asp-route-reportType="Departures"
+       asp-route-startDate="@Model.StartDate.ToString("yyyy-MM-dd")"
+       asp-route-endDate="@Model.EndDate.ToString("yyyy-MM-dd")">
         Upcoming Departures
     </a>
-    <a class="btn btn-outline-secondary" asp-action="Reports" asp-route-reportType="Occupancy">
+
+    <a class="btn @(Model.ReportType == "Occupancy" ? "btn-secondary" : "btn-outline-secondary")"
+       asp-action="Reports"
+       asp-route-reportType="Occupancy"
+       asp-route-startDate="@Model.StartDate.ToString("yyyy-MM-dd")"
+       asp-route-endDate="@Model.EndDate.ToString("yyyy-MM-dd")">
         Occupancy
     </a>
-    <a class="btn btn-outline-secondary" asp-action="Reports" asp-route-reportType="Reservations">
+
+    <a class="btn @(Model.ReportType == "Reservations" ? "btn-secondary" : "btn-outline-secondary")"
+       asp-action="Reports"
+       asp-route-reportType="Reservations"
+       asp-route-startDate="@Model.StartDate.ToString("yyyy-MM-dd")"
+       asp-route-endDate="@Model.EndDate.ToString("yyyy-MM-dd")">
         Reservation History
     </a>
-    <a class="btn btn-outline-secondary" asp-action="Reports" asp-route-reportType="Revenue">
+
+    <a class="btn @(Model.ReportType == "Revenue" ? "btn-secondary" : "btn-outline-secondary")"
+       asp-action="Reports"
+       asp-route-reportType="Revenue"
+       asp-route-startDate="@Model.StartDate.ToString("yyyy-MM-dd")"
+       asp-route-endDate="@Model.EndDate.ToString("yyyy-MM-dd")">
         Revenue / Payments
     </a>
 </div>
@@ -77,6 +105,11 @@
     </div>
 
     @* Report Results table *@
+    <p>
+    Showing <strong>@Model.Reservations.Count</strong> records for
+    <strong>@Model.ReportType</strong>.
+    </p>
+
     <div class="mt-4 p-4 border rounded text-center text-muted">
         <h4 class="mb-3">@Model.ReportType Report Results</h4>
         @* If there are no results, display a message for the user *@
@@ -88,12 +121,126 @@
         }
         else
         {
+            @* Arrivals Report = Who will be arriving within the filtered date range*@
+            @if (Model.ReportType == "Arrivals")
+            {
+                <table class="table table-striped table-bordered">
+                    <thead>
+                        <tr>
+                            <th>Guest</th>
+                            <th>Site</th>
+                            <th>Arrival Date</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var r in Model.Reservations)
+                        {
+                            <tr>
+                                <td>@r.User?.FirstName @r.User?.LastName</td>
+                                <td>@r.Site?.SiteNumber</td>
+                                <td>@r.CheckInDate.ToShortDateString()</td>
+                                <td>@r.ReservationStatus</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            }
+             @* Departures Report = Who will be departing within the filtered date range*@
+            else if (Model.ReportType == "Departures")
+            {
+                <table class="table table-striped table-bordered">
+                    <thead>
+                        <tr>
+                            <th>Guest</th>
+                            <th>Site</th>
+                            <th>Departure Date</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var r in Model.Reservations)
+                        {
+                            <tr>
+                                <td>@r.User?.FirstName @r.User?.LastName</td>
+                                <td>@r.Site?.SiteNumber</td>
+                                <td>@r.CheckOutDate.ToShortDateString()</td>
+                                <td>@r.ReservationStatus</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            }
+            @* Revenue Report = list of reservations with their charges, payments, and balances *@
+            else if (Model.ReportType == "Revenue")
+            {
+                <table class="table table-striped table-bordered">
+                    <thead>
+                        <tr>
+                            <th>Reservation ID</th>
+                            <th>Guest</th>
+                            <th>Charges</th>
+                            <th>Payments</th>
+                            <th>Balance Due</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var r in Model.Reservations)
+                        {
+                            var charges = r.TotalCost;
+                            var balanceDue = r.BalanceDue;
+                            // TODO: THIS CALCULATION IS JERRY-RIGGED UNTIL WE CAN TIE PAYMENTS TO RESERVATIONS
+                            // LINDSEY ALERTED TEAM ON 7/8 AND WILL WORK ON SOLUTION :) 
+                            var payments = charges - balanceDue;
+
+                            <tr>
+                                <td>@r.ReservationID</td>
+                                <td>@r.User?.FirstName @r.User?.LastName</td>
+                                <td>@charges.ToString("C")</td>
+                                <td>@payments.ToString("C")</td>
+                                <td>@balanceDue.ToString("C")</td>
+                                <td>@r.ReservationStatus</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            }
+            @* Ocupancy Report = How many sites will be reserved vs. available within date filter *@
+            else if (Model.ReportType == "Occupancy")
+            {
+                <h5 class="mb-3">Occupancy Summary</h5>
+
+                <table class="table table-bordered text-center">
+                    <thead>
+                        <tr>
+                            <th>Total Sites</th>
+                            <th>Occupied Sites</th>
+                            <th>Available Sites</th>
+                            <th>Occupancy Rate</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>@Model.TotalSites</td>
+                            <td>@Model.OccupiedSites</td>
+                            <td>@(Model.TotalSites - Model.OccupiedSites)</td>
+                            <td>@Model.OccupancyRate%</td>
+                        </tr>
+                    </tbody>
+                </table>
+            }
+
+            else
+            {
             @* Display reservation details in table format for selected report *@
             <table class="table table-striped table-bordered">
                 <thead>
                     <tr>
                         <th>Reservation ID</th>
                         <th>Guest</th>
+                        <th>Email</th>
+                        <th>Phone</th>
                         <th>Site</th>
                         <th>Check-In</th>
                         <th>Check-Out</th>
@@ -107,6 +254,8 @@
                         <tr>
                             <td>@reservation.ReservationID</td>
                             <td>@reservation.User?.FirstName @reservation.User?.LastName</td>
+                            <td>@reservation.User?.Email</td>
+                            <td>@reservation.User?.PhoneNumber</td>
                             <td>@reservation.Site?.SiteNumber</td>
                             <td>@reservation.CheckInDate.ToShortDateString()</td>
                             <td>@reservation.CheckOutDate.ToShortDateString()</td>
@@ -116,6 +265,8 @@
                     }
                 </tbody>
             </table>
+            }
+            
         }
         
     </div>
