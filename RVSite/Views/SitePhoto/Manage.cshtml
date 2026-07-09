@@ -1,0 +1,88 @@
+@model IEnumerable<RVSite.Models.Site>
+
+    @{
+    ViewData["Title"] = "Manage Site Photos";
+    }
+
+    <section class="card admin-hero mb-4">
+        <div class="card-body p-4 p-lg-5">
+            <div class="d-flex flex-column flex-lg-row justify-content-between align-items-lg-center gap-3">
+                <div>
+                    <span class="home-kicker">Media Management</span>
+                    <h1 class="page-title">Manage Site Photos</h1>
+                    <p class="page-subtitle">
+                        Preview current site photos and open each site’s photo gallery for editing.
+                    </p>
+                </div>
+
+                <a asp-controller="Admin" asp-action="Dashboard" class="btn btn-outline-secondary">
+                    Back to Dashboard
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <section class="row g-4">
+        @foreach (var site in Model)
+    {
+        var primaryPhoto = site.Photos?
+            .OrderBy(p => p.SortOrder)
+            .FirstOrDefault();
+
+        <div class="col-md-6 col-xl-4">
+            <div class="card h-100 photo-site-card">
+
+                @if (primaryPhoto != null)
+                {
+                <img src="@primaryPhoto.FilePath"
+                     class="card-img-top photo-site-img"
+                     alt="Photo for site @site.SiteNumber" />
+                }
+                else
+                {
+                <div class="photo-site-placeholder">
+                    No photo uploaded
+                </div>
+                }
+
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start gap-2 mb-3">
+                        <div>
+                            <span class="site-type">@site.SiteType?.Name</span>
+                            <h2 class="h4 fw-bold mb-0">Site @site.SiteNumber</h2>
+                        </div>
+
+                        <span class="badge bg-secondary">
+                            @(site.Photos?.Count ?? 0) Photos
+                        </span>
+                    </div>
+
+                    <p class="mb-1">
+                        <strong>Status:</strong> @site.SiteStatus
+                    </p>
+
+                    <p class="mb-3">
+                        <strong>Base Rate:</strong> @site.BaseRate.ToString("C") / night
+                    </p>
+
+                    <div class="d-grid gap-2">
+                        <a asp-controller="SitePhoto"
+                           asp-action="Index"
+                           asp-route-id="@site.SiteID"
+                           class="btn btn-primary">
+                            Edit Photos
+                        </a>
+
+                        <a asp-controller="SitePhoto"
+                           asp-action="Create"
+                           asp-route-id="@site.SiteID"
+                           class="btn btn-outline-secondary">
+                            Add Photo
+                        </a>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    }
+    </section>

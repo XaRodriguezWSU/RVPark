@@ -1,41 +1,73 @@
-
 @{
-ViewData["Title"] = "Create Employee";
+    ViewData["Title"] = "Create Employee";
 }
 
-<h2>Create Employee Account</h2>
-<form asp-action="CreateEmployee" method="post">
-    @Html.AntiForgeryToken()
-    <div class="mb-3">
-        <label for="firstName" class="form-label">First Name</label>
-        <input type="text" name="firstName" id="firstName" class="form-control" />
+<section class="card admin-hero mb-4">
+    <div class="card-body p-4 p-lg-5">
+        <span class="home-kicker">Administration</span>
+        <h1 class="page-title">Create Employee Account</h1>
+        <p class="page-subtitle">
+            Add a new employee account and assign their system role.
+        </p>
     </div>
-    <div class="mb-3">
-        <label for="lastName" class="form-label">Last Name</label>
-        <input type="text" name="lastName" id="lastName" class="form-control" />
+</section>
+
+<section class="card">
+    <div class="card-header">
+        <h2 class="h5 mb-0">Employee Information</h2>
     </div>
-    <div class="mb-3">
-        <label for="email" class="form-label">Email</label>
-        <input type="email" name="email" id="email" class="form-control" />
+
+    <div class="card-body">
+        <form asp-action="CreateEmployee" method="post">
+            @Html.AntiForgeryToken()
+
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <label for="firstName" class="form-label">First Name</label>
+                    <input type="text" name="firstName" id="firstName" class="form-control" />
+                </div>
+
+                <div class="col-md-6">
+                    <label for="lastName" class="form-label">Last Name</label>
+                    <input type="text" name="lastName" id="lastName" class="form-control" />
+                </div>
+
+                <div class="col-md-6">
+                    <label for="email" class="form-label">Email</label>
+                    <input type="email" name="email" id="email" class="form-control" />
+                </div>
+
+                <div class="col-md-6">
+                    <label for="phoneNumber" class="form-label">Phone Number</label>
+                    <input type="text" name="phoneNumber" id="phoneNumber" class="form-control" />
+                </div>
+
+                <div class="col-md-6">
+                    <label for="selectedRoleID" class="form-label">Role</label>
+                    <select name="selectedRoleID" id="selectedRoleID" class="form-select">
+                        <option value="">-- Select Role --</option>
+                        @foreach (var role in ViewBag.AvailableRoles)
+                        {
+                        <option value="@role.RoleID">@role.Type</option>
+                        }
+                    </select>
+                </div>
+
+                <div class="col-md-6">
+                    <label for="password" class="form-label">Temporary Password</label>
+                    <input type="text" name="password" id="password" class="form-control" />
+                </div>
+            </div>
+
+            <div class="d-flex gap-2 mt-4">
+                <button type="submit" class="btn btn-primary">
+                    Create Account
+                </button>
+
+                <a asp-action="Employees" class="btn btn-outline-secondary">
+                    Cancel
+                </a>
+            </div>
+        </form>
     </div>
-    <div class="mb-3">
-        <label for="phoneNumber" class="form-label">Phone Number</label>
-        <input type="text" name="phoneNumber" id="phoneNumber" class="form-control" />
-    </div>
-    <div class="mb-3">
-        <label for="selectedRoleID" class="form-label">Role</label>
-        <select name="selectedRoleID" id="selectedRoleID" class="form-select">
-            <option value="">-- Select Role --</option>
-            @foreach (var role in ViewBag.AvailableRoles)
-            {
-            <option value="@role.RoleID">@role.Type</option>
-            }
-        </select>
-    </div>
-    <div class="mb-3">
-        <label for="password" class="form-label">Password</label>
-        <input type="text" name="password" id="password" class="form-control" />
-    </div>
-    <button type="submit" class="btn btn-primary">Create Account</button>
-    <a asp-action="Employees" class="btn btn-secondary">Cancel</a>
-</form>
+</section>

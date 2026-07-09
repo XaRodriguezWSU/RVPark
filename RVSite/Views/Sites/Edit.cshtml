@@ -1,57 +1,74 @@
 @model RVSite.Models.Site
 
 @{
-    ViewData["Title"] = "Edit";
+    ViewData["Title"] = "Edit Site";
 }
 
-<h1>Edit</h1>
+<section class="card admin-hero mb-4">
+    <div class="card-body p-4 p-lg-5">
+        <span class="home-kicker">Site Management</span>
+        <h1 class="page-title">Edit Site @Model.SiteNumber</h1>
+        <p class="page-subtitle">Update site details, status, size, and nightly rate.</p>
+    </div>
+</section>
 
-<h4>Site</h4>
-<hr />
-<div class="row">
-    <div class="col-md-4">
+<section class="card">
+    <div class="card-header">
+        <h2 class="h5 mb-0">Site Details</h2>
+    </div>
+
+    <div class="card-body">
         <form asp-action="Edit">
-            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
             <input type="hidden" asp-for="SiteID" />
-            <div class="form-group">
-                <label asp-for="SiteNumber" class="control-label"></label>
-                <input asp-for="SiteNumber" class="form-control" />
-                <span asp-validation-for="SiteNumber" class="text-danger"></span>
+
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <label asp-for="SiteNumber" class="form-label"></label>
+                    <input asp-for="SiteNumber" class="form-control" />
+                    <span asp-validation-for="SiteNumber" class="text-danger"></span>
+                </div>
+
+                <div class="col-md-6">
+                    <label asp-for="SiteTypeID" class="form-label"></label>
+                    <select asp-for="SiteTypeID"
+                            class="form-select"
+                            asp-items="@(new SelectList(ViewBag.SiteTypes, "SiteTypeID", "Name"))">
+                        <option value="">-- Select Site Type --</option>
+                    </select>
+                    <span asp-validation-for="SiteTypeID" class="text-danger"></span>
+                </div>
+
+                <div class="col-md-6">
+                    <label asp-for="SiteStatus" class="form-label"></label>
+                    <input asp-for="SiteStatus" class="form-control" />
+                    <span asp-validation-for="SiteStatus" class="text-danger"></span>
+                </div>
+
+                <div class="col-md-6">
+                    <label asp-for="MaxRVLength" class="form-label"></label>
+                    <input asp-for="MaxRVLength" class="form-control" />
+                    <span asp-validation-for="MaxRVLength" class="text-danger"></span>
+                </div>
+
+                <div class="col-md-6">
+                    <label asp-for="BaseRate" class="form-label"></label>
+                    <input asp-for="BaseRate" class="form-control" />
+                    <span asp-validation-for="BaseRate" class="text-danger"></span>
+                </div>
             </div>
-            <div class="form-group">
-                <label asp-for="SiteTypeID" class="control-label"></label>
-                <select asp-for="SiteTypeID" class="form-control"
-                        asp-items="@(new SelectList(ViewBag.SiteTypes, "SiteTypeID", "Name"))">
-                    <option value="">-- Select Site Type --</option>
-                </select>
-                <span asp-validation-for="SiteTypeID" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="SiteStatus" class="control-label"></label>
-                <input asp-for="SiteStatus" class="form-control" />
-                <span asp-validation-for="SiteStatus" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="MaxRVLength" class="control-label"></label>
-                <input asp-for="MaxRVLength" class="form-control" />
-                <span asp-validation-for="MaxRVLength" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="BaseRate" class="control-label"></label>
-                <input asp-for="BaseRate" class="form-control" />
-                <span asp-validation-for="BaseRate" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <input type="submit" value="Save" class="btn btn-primary" />
+
+            <div class="d-flex gap-2 mt-4">
+                <button type="submit" class="btn btn-primary">Save Changes</button>
+                <a asp-action="Details" asp-route-id="@Model.SiteID" class="btn btn-outline-secondary">Details</a>
+                <a asp-action="Index" class="btn btn-outline-secondary">Back to Sites</a>
             </div>
         </form>
     </div>
-</div>
-
-<div>
-    <a asp-action="Index">Back to List</a>
-</div>
+</section>
 
 @section Scripts {
-    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
 }

@@ -15,6 +15,18 @@ namespace RVSite.Controllers
             _env = env;
         }
 
+        // GET: /SitePhoto/Manage
+        public async Task<IActionResult> Manage()
+        {
+            var sites = await _context.Sites
+                .Include(s => s.SiteType)
+                .Include(s => s.Photos)
+                .OrderBy(s => s.SiteNumber)
+                .ToListAsync();
+
+            return View(sites);
+        }
+
         // GET: /SitePhoto/Index/5
         public async Task<IActionResult> Index(int id)
         {

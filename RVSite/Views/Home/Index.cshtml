@@ -2,99 +2,159 @@
 
     @{
     ViewData["Title"] = "Home";
+    var sites = Model?.ToList() ?? new List<RVSite.Models.Site>();
     }
 
-    <!-- Hero Carousel Placeholder -->
-    <div id="homeCarousel" class="carousel slide mb-4" data-bs-ride="carousel">
-        <div class="carousel-inner rounded border shadow-sm">
-
-            <div class="carousel-item active">
-                <div class="d-flex align-items-center justify-content-center bg-light" style="height: 280px;">
-                    <h2 class="text-muted">Campground Image Coming Soon</h2>
-                </div>
+    <section class="home-hero mb-4">
+        <div id="homeCarousel" class="carousel slide" data-bs-ride="carousel">
+            @if (sites.Any())
+        {
+            <div class="carousel-indicators">
+                @for (int i = 0; i < sites.Count; i++)
+                {
+                <button type="button"
+                        data-bs-target="#homeCarousel"
+                        data-bs-slide-to="@i"
+                        class="@(i == 0 ? "active" : "")"
+                        aria-current="@(i == 0 ? "true" : "false")"
+                        aria-label="Slide @(i + 1)">
+                </button>
+                }
             </div>
 
-            <div class="carousel-item">
-                <div class="d-flex align-items-center justify-content-center bg-light" style="height: 280px;">
-                    <h2 class="text-muted">RV Site Image Coming Soon</h2>
+            <div class="carousel-inner">
+                @for (int i = 0; i < sites.Count; i++)
+                {
+                    var site = sites[i];
+                    var photo = site.Photos?.OrderBy(p => p.SortOrder).FirstOrDefault();
+
+                <div class="carousel-item @(i == 0 ? "active" : "")">
+                    @if (photo != null)
+                        {
+                    <img src="@photo.FilePath"
+                         class="d-block w-100 home-hero-img"
+                         alt="Site @site.SiteNumber" />
+                        }
+                        else
+                        {
+                    <div class="home-hero-placeholder">
+                        <span>Site @site.SiteNumber Image Coming Soon</span>
+                    </div>
+                        }
+
+                    <div class="home-hero-overlay"></div>
+
+                    <div class="carousel-caption home-hero-caption">
+                        <span class="home-kicker">Featured Site</span>
+                        <h1>Site @site.SiteNumber</h1>
+                        <p>
+                            @site.SiteType?.Name · @site.MaxRVLength ft max · @site.BaseRate.ToString("C") / night
+                        </p>
+                    </div>
                 </div>
+                }
             </div>
 
-            <div class="carousel-item">
-                <div class="d-flex align-items-center justify-content-center bg-light" style="height: 280px;">
-                    <h2 class="text-muted">Rv Site2 Image Coming Soon</h2>
-                </div>
+            <button class="carousel-control-prev" type="button" data-bs-target="#homeCarousel" data-bs-slide="prev">
+                <span class="carousel-control-prev-icon"></span>
+            </button>
+
+            <button class="carousel-control-next" type="button" data-bs-target="#homeCarousel" data-bs-slide="next">
+                <span class="carousel-control-next-icon"></span>
+            </button>
+        }
+        else
+        {
+            <div class="home-hero-placeholder">
+                <span>Campground Images Coming Soon</span>
             </div>
-
-        </div>
-
-        <button class="carousel-control-prev" type="button" data-bs-target="#homeCarousel" data-bs-slide="prev">
-            <span class="carousel-control-prev-icon"></span>
-        </button>
-
-        <button class="carousel-control-next" type="button" data-bs-target="#homeCarousel" data-bs-slide="next">
-            <span class="carousel-control-next-icon"></span>
-        </button>
-    </div>
-
-    <!-- Intro Blurb -->
-    <section class="card shadow-sm mb-4">
-        <div class="card-body text-center p-4">
-            <h1 class="mb-3">BASIC - Updated for Customer Facing next Sprint</h1>
-            <p class="lead mb-0">
-                This blurb will be updated, reservaiton buttons and images will be updated next sprint when we
-                focus on customer facing features.  This is a basic version of the site to show the 
-                functionality of the site and how it will work.  The next sprint will focus on making 
-                it look good and be user friendly.
-            </p>
+        }
         </div>
     </section>
 
-    <!-- Site List -->
-    <section class="card shadow-sm">
-        <div class="card-header" style="background-color:#b8d0c5;">
-            <h2 class="mb-0">Available RV Sites</h2>
+    <section class="home-intro card mb-4">
+        <div class="card-body p-4 p-lg-5">
+            <div class="row align-items-center g-4">
+                <div class="col-lg-8">
+                    <span class="home-kicker">RV Park Reservations</span>
+                    <h2 class="page-title">Plan your next stay with RVSite</h2>
+                    <p class="lead mb-0">
+                        Browse available RV sites, compare rates and site details, and begin a reservation from one clean overview.
+                    </p>
+                </div>
+
+                <div class="col-lg-4">
+                    <div class="home-summary-box">
+                        <span class="text-muted">Available Sites</span>
+                        <strong>@sites.Count</strong>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="card site-list-card">
+        <div class="card-header section-header d-flex justify-content-between align-items-center">
+            <div>
+                <h2 class="mb-0">Available RV Sites</h2>
+                <p class="mb-0 text-muted">Review current site options and nightly rates.</p>
+            </div>
         </div>
 
-        <div class="card-body">
-            @if (Model == null || !Model.Any())
+        <div class="card-body p-0">
+            @if (!sites.Any())
         {
-            <div class="alert alert-info mb-0">
-                No RV sites are currently available.
+            <div class="p-4">
+                <div class="alert alert-info mb-0">
+                    No RV sites are currently available.
+                </div>
             </div>
         }
         else
         {
-            @foreach (var site in Model)
-            {
-            <div class="row align-items-center border rounded p-3 mb-3">
-                <div class="col-md-2 mb-3 mb-md-0">
-                    <div class="bg-light border rounded d-flex align-items-center justify-content-center"
-                         style="height: 90px;">
-                        <span class="text-muted">Image</span>
+            <div class="site-list">
+                @foreach (var site in sites)
+                {
+                    var photo = site.Photos?.OrderBy(p => p.SortOrder).FirstOrDefault();
+
+                <article class="site-row">
+                    <div class="site-row-image">
+                        @if (photo != null)
+                            {
+                        <img src="@photo.FilePath"
+                             alt="Site @site.SiteNumber" />
+                            }
+                            else
+                            {
+                        <div class="site-image-placeholder">
+                            Image
+                        </div>
+                            }
                     </div>
-                </div>
 
-                <div class="col-md-7">
-                    <h4>RV Site @site.SiteNumber</h4>
-                    <p class="mb-1">
-                        @site.SiteType site · Max RV Length: @site.MaxRVLength ft
-                    </p>
-                    <p class="mb-0">
-                        Base Rate: @site.BaseRate.ToString("C") per night
-                    </p>
-                </div>
+                    <div class="site-row-main">
+                        <div>
+                            <span class="site-type">@site.SiteType?.Name</span>
+                            <h3>Site @site.SiteNumber</h3>
+                        </div>
 
-                <div class="col-md-3 text-md-end mt-3 mt-md-0">
-                    <a asp-controller="Reservations"
-                       asp-action="Create"
-                       asp-route-siteId="@site.SiteID"
-                       class="btn btn-outline-dark rounded-pill px-4">
-                        Reserve
-                    </a>
-                </div>
+                        <div class="site-meta">
+                            <span>@site.MaxRVLength ft max</span>
+                            <span>@site.BaseRate.ToString("C") / night</span>
+                        </div>
+                    </div>
+
+                    <div class="site-row-action">
+                        <a asp-controller="Reservation"
+                           asp-action="Create"
+                           asp-route-siteId="@site.SiteID"
+                           class="btn btn-primary">
+                            Reserve
+                        </a>
+                    </div>
+                </article>
+                }
             </div>
-            }
         }
         </div>
     </section>
