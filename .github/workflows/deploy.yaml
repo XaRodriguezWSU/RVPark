@@ -14,16 +14,23 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v4
 
+    - name: Show directory structure
+      run: |
+        echo "Current directory:"
+        pwd
+        echo "Listing files:"
+        ls -R .
+
     - name: Setup .NET
       uses: actions/setup-dotnet@v4
       with:
         dotnet-version: '8.0.x'
 
     - name: Clean publish folder
-      run: rm -rf ./publish
+      run: rm -rf publish
 
     - name: Publish project
-      run: dotnet publish ./RVSite/RVSite.csproj -c Release -o ./publish
+      run: dotnet publish RVSite/RVSite.csproj -c Release -o publish
 
     - name: Create offline folder and app_offline.htm
       run: |
@@ -36,7 +43,7 @@ jobs:
         server: ${{ secrets.FTP_SERVER }}
         username: ${{ secrets.FTP_USERNAME }}
         password: ${{ secrets.FTP_PASSWORD }}
-        local-dir: ./offline/
+        local-dir: offline/
         server-dir: ${{ secrets.FTP_PATH }}
 
     - name: FTP Deploy published app
@@ -45,7 +52,7 @@ jobs:
         server: ${{ secrets.FTP_SERVER }}
         username: ${{ secrets.FTP_USERNAME }}
         password: ${{ secrets.FTP_PASSWORD }}
-        local-dir: ./publish/
+        local-dir: publish/
         server-dir: ${{ secrets.FTP_PATH }}
 
     - name: Remove offline folder locally
@@ -57,7 +64,7 @@ jobs:
         server: ${{ secrets.FTP_SERVER }}
         username: ${{ secrets.FTP_USERNAME }}
         password: ${{ secrets.FTP_PASSWORD }}
-        local-dir: ./publish/
+        local-dir: publish/
         server-dir: ${{ secrets.FTP_PATH }}
         exclude: |
           **/*
