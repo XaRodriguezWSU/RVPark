@@ -3,13 +3,15 @@ using RVSite.Data;
 using RVSite.Models;
 using RVSite.Services;
 
-var builder = WebApplication.CreateBuilder(new WebApplicationOptions
-{
-    Args = args,
-    ContentRootPath = AppContext.BaseDirectory.Contains(@"\bin\")
-        ? Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, @"..\..\..\"))
-        : Directory.GetCurrentDirectory()
-});
+//var builder = WebApplication.CreateBuilder(new WebApplicationOptions
+//{
+//    Args = args,
+//    ContentRootPath = AppContext.BaseDirectory.Contains(@"\bin\")
+//        ? Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, @"..\..\..\"))
+//        : Directory.GetCurrentDirectory()
+//});
+var builder = WebApplication.CreateBuilder(args);
+
 
 // Add services to the container.
 builder.Services.AddControllersWithViews();
@@ -31,11 +33,12 @@ else
 var app = builder.Build();
 
 
-//using (var scope = app.Services.CreateScope())
-//{
-//    var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-//    db.Database.EnsureCreated();
-//}
+using (var scope = app.Services.CreateScope())
+{
+    var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+    //db.Database.EnsureCreated();
+    db.Database.Migrate();
+}
 
 
 // Quick data seeding for demonstration purposes
