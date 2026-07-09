@@ -19,6 +19,9 @@ namespace RVSite.Models
         public int DeparturesCount { get; set; }
         public decimal RevenueTotal { get; set; }
         public decimal OccupancyRate { get; set; }
+        public int TotalSites { get; set; }
+
+        public int OccupiedSites { get; set; }
 
         // Report results
         public List<Reservation> Reservations { get; set; } = new();

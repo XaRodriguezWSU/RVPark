@@ -141,6 +141,9 @@ namespace RVSite.Controllers
 
                 RevenueTotal = nonCancelledReservations.Sum(r => r.TotalCost),
 
+                TotalSites = totalSites,
+                OccupiedSites = occupiedSiteCount,
+
                 OccupancyRate = totalSites == 0
                     ? 0
                     : Math.Round((decimal)occupiedSiteCount / totalSites * 100, 1),

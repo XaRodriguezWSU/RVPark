@@ -121,7 +121,7 @@
         }
         else
         {
-            //
+            @* Arrivals Report = Who will be arriving within the filtered date range*@
             @if (Model.ReportType == "Arrivals")
             {
                 <table class="table table-striped table-bordered">
@@ -146,6 +146,7 @@
                     </tbody>
                 </table>
             }
+             @* Departures Report = Who will be departing within the filtered date range*@
             else if (Model.ReportType == "Departures")
             {
                 <table class="table table-striped table-bordered">
@@ -170,6 +171,7 @@
                     </tbody>
                 </table>
             }
+            @* Revenue Report = list of reservations with their charges, payments, and balances *@
             else if (Model.ReportType == "Revenue")
             {
                 <table class="table table-striped table-bordered">
@@ -177,31 +179,68 @@
                         <tr>
                             <th>Reservation ID</th>
                             <th>Guest</th>
-                            <th>Total Cost</th>
+                            <th>Charges</th>
+                            <th>Payments</th>
+                            <th>Balance Due</th>
                             <th>Status</th>
                         </tr>
                     </thead>
                     <tbody>
                         @foreach (var r in Model.Reservations)
                         {
+                            var charges = r.TotalCost;
+                            var balanceDue = r.BalanceDue;
+                            // TODO: THIS CALCULATION IS JERRY-RIGGED UNTIL WE CAN TIE PAYMENTS TO RESERVATIONS
+                            // LINDSEY ALERTED TEAM ON 7/8 AND WILL WORK ON SOLUTION :) 
+                            var payments = charges - balanceDue;
+
                             <tr>
                                 <td>@r.ReservationID</td>
                                 <td>@r.User?.FirstName @r.User?.LastName</td>
-                                <td>@r.TotalCost.ToString("C")</td>
+                                <td>@charges.ToString("C")</td>
+                                <td>@payments.ToString("C")</td>
+                                <td>@balanceDue.ToString("C")</td>
                                 <td>@r.ReservationStatus</td>
                             </tr>
                         }
                     </tbody>
                 </table>
             }
+            @* Ocupancy Report = How many sites will be reserved vs. available within date filter *@
+            else if (Model.ReportType == "Occupancy")
+            {
+                <h5 class="mb-3">Occupancy Summary</h5>
+
+                <table class="table table-bordered text-center">
+                    <thead>
+                        <tr>
+                            <th>Total Sites</th>
+                            <th>Occupied Sites</th>
+                            <th>Available Sites</th>
+                            <th>Occupancy Rate</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>@Model.TotalSites</td>
+                            <td>@Model.OccupiedSites</td>
+                            <td>@(Model.TotalSites - Model.OccupiedSites)</td>
+                            <td>@Model.OccupancyRate%</td>
+                        </tr>
+                    </tbody>
+                </table>
+            }
+
             else
             {
-                @* Display reservation details in table format for selected report *@
+            @* Display reservation details in table format for selected report *@
             <table class="table table-striped table-bordered">
                 <thead>
                     <tr>
                         <th>Reservation ID</th>
                         <th>Guest</th>
+                        <th>Email</th>
+                        <th>Phone</th>
                         <th>Site</th>
                         <th>Check-In</th>
                         <th>Check-Out</th>
@@ -215,6 +254,8 @@
                         <tr>
                             <td>@reservation.ReservationID</td>
                             <td>@reservation.User?.FirstName @reservation.User?.LastName</td>
+                            <td>@reservation.User?.Email</td>
+                            <td>@reservation.User?.PhoneNumber</td>
                             <td>@reservation.Site?.SiteNumber</td>
                             <td>@reservation.CheckInDate.ToShortDateString()</td>
                             <td>@reservation.CheckOutDate.ToShortDateString()</td>
