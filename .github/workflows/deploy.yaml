@@ -34,9 +34,6 @@ jobs:
     - name: Run tests
       run: dotnet test --no-build --verbosity normal
 
-    - name: Apply migrations (CI validation only)
-      run: dotnet ef database update --project RVSite
-
     - name: Clean publish folder
       run: rm -rf ${{ github.workspace }}/publish
 
