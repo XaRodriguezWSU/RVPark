@@ -186,6 +186,7 @@ publish/
 # Note: Comment the next line if you want to checkin your web deploy settings,
 # but database connection strings (with potential passwords) will be unencrypted
 *.pubxml
+*.pubxml.user
 *.publishproj
 
 # Microsoft Azure Web App publish settings. Comment the next line if you want to
@@ -369,3 +370,9 @@ FodyWeavers.xsd
 *.db-wal
 *.sqlite
 *.sqlite3
+
+# Build
+bin/
+obj/
+
+# IDE Stuff
