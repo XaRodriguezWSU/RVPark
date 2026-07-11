@@ -14,17 +14,22 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v4
 
-    - name: Show directory structure
-      run: |
-        echo "Current directory:"
-        pwd
-        echo "Listing files:"
-        ls -R .
-
     - name: Setup .NET
       uses: actions/setup-dotnet@v4
       with:
         dotnet-version: '8.0.x'
+
+    - name: Restore dependencies
+      run: dotnet restore RVSite/RVSite.csproj
+
+    - name: Build
+      run: dotnet build RVSite/RVSite.csproj --configuration Release --no-restore
+
+    - name: Run tests
+      run: dotnet test --no-build --verbosity normal
+
+    - name: Apply migrations (CI validation only)
+      run: dotnet ef database update --project RVSite
 
     - name: Clean publish folder
       run: rm -rf ${{ github.workspace }}/publish
@@ -45,7 +50,7 @@ jobs:
         password: ${{ secrets.FTP_PASSWORD }}
         local-dir: ${{ github.workspace }}/offline/
         server-dir: ${{ secrets.FTP_PATH }}
-    
+
     - name: FTP Deploy published app
       uses: SamKirkland/FTP-Deploy-Action@v4.3.4
       with:
@@ -54,7 +59,7 @@ jobs:
         password: ${{ secrets.FTP_PASSWORD }}
         local-dir: ${{ github.workspace }}/publish/
         server-dir: ${{ secrets.FTP_PATH }}
-    
+
     - name: Delete app_offline.htm on server
       uses: SamKirkland/FTP-Deploy-Action@v4.3.4
       with:
@@ -66,4 +71,3 @@ jobs:
         exclude: |
           **/*
         delete: true
-
