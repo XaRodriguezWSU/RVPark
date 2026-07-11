@@ -1,19 +1,67 @@
-﻿@*
-    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
-*@
+﻿@model RVSite.Models.SitePhoto
+
 @{
+    ViewData["Title"] = "Delete Site Photo";
 }
 
-@model RVSite.Models.SitePhoto
+<section class="card admin-hero mb-4">
+    <div class="card-body p-4 p-lg-5">
+        <span class="home-kicker">Media Management</span>
+        <h1 class="page-title">Delete Site Photo</h1>
+        <p class="page-subtitle">
+            Confirm before permanently removing this uploaded image.
+        </p>
+    </div>
+</section>
 
-<h2>Delete Photo</h2>
+<section class="card border-danger">
+    <div class="card-header bg-danger text-white">
+        <h2 class="h5 mb-0">Confirm Delete</h2>
+    </div>
 
-<img src="@Model.FilePath" class="img-fluid mb-3" />
+    <div class="card-body">
+        <div class="alert alert-warning">
+            Are you sure you want to delete this photo? This action cannot be undone.
+        </div>
 
-<p>Are you sure you want to delete this photo?</p>
+        <div class="row g-4 align-items-start">
+            <div class="col-lg-7">
+                <img src="@Model.FilePath"
+                     class="photo-preview-large"
+                     alt="@Model.Caption" />
+            </div>
 
-<form asp-action="DeleteConfirmed" asp-route-id="@Model.SitePhotoID" method="post">
-    <input type="hidden" asp-for="SitePhotoID" />
-    <button class="btn btn-danger">Delete</button>
-    <a class="btn btn-secondary" href="/SitePhoto/Index/@Model.SiteID">Cancel</a>
-</form>
+            <div class="col-lg-5">
+                <div class="detail-box mb-3">
+                    <span>Caption</span>
+                    <strong>@(string.IsNullOrWhiteSpace(Model.Caption) ? "Untitled Photo" : Model.Caption)</strong>
+                </div>
+
+                <div class="detail-box mb-4">
+                    <span>Sort Order</span>
+                    <strong>@Model.SortOrder</strong>
+                </div>
+
+                <form asp-action="DeleteConfirmed"
+                      asp-route-id="@Model.SitePhotoID"
+                      method="post">
+
+                    <input type="hidden" asp-for="SitePhotoID" />
+
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-danger">
+                            Delete Photo
+                        </button>
+
+                        <a asp-controller="SitePhoto"
+                           asp-action="Index"
+                           asp-route-id="@Model.SiteID"
+                           class="btn btn-outline-secondary">
+                            Cancel
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</section>

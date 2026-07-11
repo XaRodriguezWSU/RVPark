@@ -1,55 +1,105 @@
 ﻿@model IEnumerable<RVSite.Models.Fee>
 
-@{
+    @{
     ViewData["Title"] = "Manage Fees";
-}
+    }
 
-<h1>Manage Fees</h1>
+    <section class="card admin-hero mb-4">
+        <div class="card-body p-4 p-lg-5">
 
-<p>
-    <a asp-action="Create">Create New Fee</a>
-</p>
+            <div class="d-flex justify-content-between align-items-center">
 
-<table class="table">
-    <thead>
-        <tr>
-            <th>
-                Reservation
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.NameCode)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.Amount)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.EffectiveDate)
-            </th>
-            <th></th>
-        </tr>
-    </thead>
-    <tbody>
-@foreach (var item in Model)
-{
-        <tr>
-            <td>
-                Reservation #@item.ReservationID
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.NameCode)
-            </td>
-            <td>
-                @item.Amount.ToString("C")
-            </td>
-            <td>
-                @item.EffectiveDate.ToShortDateString()
-            </td>
-            <td>
-                <a asp-action="Edit" asp-route-id="@item.FeeID">Edit</a> |
-                <a asp-action="Details" asp-route-id="@item.FeeID">Details</a> |
-                <a asp-action="Delete" asp-route-id="@item.FeeID">Delete</a>
-            </td>
-        </tr>
-}
-    </tbody>
-</table>
+                <div>
+                    <span class="home-kicker">Administration</span>
+                    <h1 class="page-title">Manage Fees</h1>
+                    <p class="page-subtitle">
+                        Create and maintain reservation fees and additional charges.
+                    </p>
+                </div>
+
+                <a asp-action="Create"
+                   class="btn btn-primary">
+                    Add Fee
+                </a>
+
+            </div>
+
+        </div>
+    </section>
+
+    <section class="card shadow-sm">
+
+        <div class="card-header">
+            <h2 class="h5 mb-0">
+                Fee Records
+            </h2>
+        </div>
+
+        <div class="card-body p-0">
+
+            <div class="table-responsive">
+
+                <table class="table table-hover align-middle admin-table mb-0">
+
+                    <thead>
+                        <tr>
+                            <th>Reservation</th>
+                            <th>Fee Type</th>
+                            <th>Amount</th>
+                            <th>Effective Date</th>
+                            <th class="text-end">Actions</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+
+                        @foreach (var item in Model)
+                    {
+                        <tr>
+
+                            <td>Reservation #@item.ReservationID</td>
+
+                            <td>@item.NameCode</td>
+
+                            <td>@item.Amount.ToString("C")</td>
+
+                            <td>@item.EffectiveDate.ToShortDateString()</td>
+
+                            <td class="text-end">
+
+                                <div class="btn-group btn-group-sm">
+
+                                    <a asp-action="Edit"
+                                       asp-route-id="@item.FeeID"
+                                       class="btn btn-outline-primary">
+                                        Edit
+                                    </a>
+
+                                    <a asp-action="Details"
+                                       asp-route-id="@item.FeeID"
+                                       class="btn btn-outline-secondary">
+                                        Details
+                                    </a>
+
+                                    <a asp-action="Delete"
+                                       asp-route-id="@item.FeeID"
+                                       class="btn btn-outline-danger">
+                                        Delete
+                                    </a>
+
+                                </div>
+
+                            </td>
+
+                        </tr>
+                    }
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+        </div>
+
+    </section>

@@ -4,53 +4,93 @@
     ViewData["Title"] = "Create Fee";
 }
 
-<h1>Create Fee</h1>
+<section class="card admin-hero mb-4">
+    <div class="card-body p-5">
 
-<h4>Fee</h4>
-<hr />
+        <span class="home-kicker">Administration</span>
 
-<div class="row">
-    <div class="col-md-4">
-        <form asp-action="Create">
-            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+        <h1 class="page-title">Create Fee</h1>
 
-            <div class="form-group">
-                <label asp-for="ReservationID" class="control-label">Reservation</label>
-                <select asp-for="ReservationID" class="form-control" asp-items="ViewBag.ReservationID">
-                    <option value="">-- Select Reservation --</option>
-                </select>
-                <span asp-validation-for="ReservationID" class="text-danger"></span>
-            </div>
+        <p class="page-subtitle">
+            Add a new fee to a reservation.
+        </p>
 
-            <div class="form-group">
-                <label asp-for="NameCode" class="control-label">Fee Type</label>
-                <select asp-for="NameCode" class="form-control" asp-items="Html.GetEnumSelectList<RVSite.Models.FeeCodes>()"></select>
-                <span asp-validation-for="NameCode" class="text-danger"></span>
-            </div>
-
-            <div class="form-group">
-                <label asp-for="Amount" class="control-label"></label>
-                <input asp-for="Amount" class="form-control" />
-                <span asp-validation-for="Amount" class="text-danger"></span>
-            </div>
-
-            <div class="form-group">
-                <label asp-for="EffectiveDate" class="control-label">Effective Date</label>
-                <input asp-for="EffectiveDate" class="form-control" type="date" />
-                <span asp-validation-for="EffectiveDate" class="text-danger"></span>
-            </div>
-
-            <div class="form-group">
-                <input type="submit" value="Create" class="btn btn-primary" />
-            </div>
-        </form>
     </div>
-</div>
+</section>
 
-<div>
-    <a asp-action="Index">Back to List</a>
-</div>
+<section class="card">
 
-@section Scripts {
-    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
-}
+    <div class="card-header">
+        <h2 class="h5 mb-0">Fee Information</h2>
+    </div>
+
+    <div class="card-body">
+
+        <form asp-action="Create">
+
+            <div asp-validation-summary="ModelOnly"
+                 class="text-danger mb-3"></div>
+
+            <div class="row g-3">
+
+                <div class="col-md-6">
+                    <label asp-for="ReservationID" class="form-label"></label>
+
+                    <select asp-for="ReservationID"
+                            asp-items="ViewBag.ReservationID"
+                            class="form-select">
+
+                        <option value="">Select Reservation</option>
+
+                    </select>
+                </div>
+
+                <div class="col-md-6">
+
+                    <label asp-for="NameCode" class="form-label"></label>
+
+                    <select asp-for="NameCode"
+                            asp-items="Html.GetEnumSelectList<RVSite.Models.FeeCodes>()"
+                            class="form-select"></select>
+
+                </div>
+
+                <div class="col-md-6">
+
+                    <label asp-for="Amount" class="form-label"></label>
+
+                    <input asp-for="Amount"
+                           class="form-control" />
+
+                </div>
+
+                <div class="col-md-6">
+
+                    <label asp-for="EffectiveDate" class="form-label"></label>
+
+                    <input asp-for="EffectiveDate"
+                           type="date"
+                           class="form-control" />
+
+                </div>
+
+            </div>
+
+            <div class="mt-4">
+
+                <button class="btn btn-primary">
+                    Create Fee
+                </button>
+
+                <a asp-action="Index"
+                   class="btn btn-outline-secondary">
+                    Cancel
+                </a>
+
+            </div>
+
+        </form>
+
+    </div>
+
+</section>

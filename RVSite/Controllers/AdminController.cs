@@ -32,6 +32,7 @@ namespace RVSite.Controllers
                 .CountAsync(s => s.SiteStatus == SiteStatus.Maintenance.ToString());
 
             var recentSites = await _context.Sites
+                .Include(s => s.SiteType)
                 .OrderBy(s => s.SiteNumber)
                 .Take(8)
                 .ToListAsync();
@@ -65,16 +66,62 @@ namespace RVSite.Controllers
         {
             var start = startDate ?? DateTime.Today;
             var end = endDate ?? DateTime.Today;
+            var selectedReportType = reportType ?? "Reservations";
+
+            if (start > end)
+            {
+                ModelState.AddModelError("", "Start date cannot be after end date.");
+
+                return View(new ReportsViewModel
+                {
+                    StartDate = start,
+                    EndDate = end,
+                    ReportType = selectedReportType
+                });
+            }
 
             var reservations = await _context.Reservations
                 .Include(r => r.User)
                 .Include(r => r.Site)
-                .Where(r => r.CheckInDate.Date <= end.Date && r.CheckOutDate.Date >= start.Date)
+                .Where(r => r.CheckInDate.Date <= end.Date &&
+                            r.CheckOutDate.Date >= start.Date)
                 .ToListAsync();
 
-            var totalSites = await _context.Sites.CountAsync();
-            var occupiedSites = reservations
+            var nonCancelledReservations = reservations
                 .Where(r => r.ReservationStatus != ReservationStatus.Cancelled)
+                .ToList();
+
+            var filteredReservations = selectedReportType switch
+            {
+                "Arrivals" => nonCancelledReservations
+                    .Where(r => r.CheckInDate.Date >= start.Date &&
+                                r.CheckInDate.Date <= end.Date)
+                    .OrderBy(r => r.CheckInDate)
+                    .ToList(),
+
+                "Departures" => nonCancelledReservations
+                    .Where(r => r.CheckOutDate.Date >= start.Date &&
+                                r.CheckOutDate.Date <= end.Date)
+                    .OrderBy(r => r.CheckOutDate)
+                    .ToList(),
+
+                "Revenue" => nonCancelledReservations
+                    .OrderByDescending(r => r.TotalCost)
+                    .ToList(),
+
+                "Occupancy" => nonCancelledReservations
+                    .OrderBy(r => r.SiteID)
+                    .ThenBy(r => r.CheckInDate)
+                    .ToList(),
+
+                _ => reservations
+                    .OrderBy(r => r.CheckInDate)
+                    .ToList()
+            };
+
+            var totalSites = await _context.Sites.CountAsync();
+
+            var occupiedSiteCount = nonCancelledReservations
                 .Select(r => r.SiteID)
                 .Distinct()
                 .Count();
@@ -83,27 +130,29 @@ namespace RVSite.Controllers
             {
                 StartDate = start,
                 EndDate = end,
-                ReportType = reportType ?? "Reservations",
+                ReportType = selectedReportType,
 
-                ArrivalsCount = reservations.Count(r =>
+                ArrivalsCount = nonCancelledReservations.Count(r =>
                     r.CheckInDate.Date >= start.Date &&
                     r.CheckInDate.Date <= end.Date),
 
-                DeparturesCount = reservations.Count(r =>
+                DeparturesCount = nonCancelledReservations.Count(r =>
                     r.CheckOutDate.Date >= start.Date &&
                     r.CheckOutDate.Date <= end.Date),
 
-                RevenueTotal = reservations.Sum(r => r.TotalCost),
+                RevenueTotal = nonCancelledReservations.Sum(r => r.TotalCost),
+
+                TotalSites = totalSites,
+                OccupiedSites = occupiedSiteCount,
 
                 OccupancyRate = totalSites == 0
                     ? 0
-                    : Math.Round((decimal)occupiedSites / totalSites * 100, 1),
+                    : Math.Round((decimal)occupiedSiteCount / totalSites * 100, 1),
 
-                Reservations = reservations
+                Reservations = filteredReservations
             };
 
             return View(model);
-
         }
 
         [HttpPost]

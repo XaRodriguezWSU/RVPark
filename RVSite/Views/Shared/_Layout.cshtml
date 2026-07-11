@@ -4,44 +4,38 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>@ViewData["Title"] - RVSite</title>
+
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/RVSite.styles.css" asp-append-version="true" />
 </head>
+
 <body>
     <partial name="_Navbar" />
-    <main class="container flex-grow-1 py-3">
-        @RenderBody()
+
+    <main class="app-main">
+        <div class="app-container">
+            @RenderBody()
+        </div>
     </main>
 
-    <footer class="border rounded shadow-sm mt-4" style="background-color:#b8d0c5;">
-        <div class="container-fluid py-3">
-            <div class="d-flex justify-content-around align-items-center">
+    <footer class="app-footer">
+        <div class="app-container">
+            <div class="footer-inner">
+                <span>&copy; @DateTime.Now.Year RVSite</span>
 
-                <span class="text-dark">
-                    &copy; @DateTime.Now.Year RVSite
-                </span>
-
-                <div>
-                    <a asp-controller="Home"
-                       asp-action="Privacy"
-                       class="text-decoration-none text-dark me-3">
-                        Privacy
-                    </a>
-
-                    <a asp-controller="Home"
-                       asp-action="Contact"
-                       class="text-decoration-none text-dark">
-                        Contact
-                    </a>
+                <div class="footer-links">
+                    <a asp-controller="Home" asp-action="Privacy">Privacy</a>
+                    <a asp-controller="Home" asp-action="Contact">Contact</a>
                 </div>
-
             </div>
         </div>
     </footer>
+
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>
+
     @await RenderSectionAsync("Scripts", required: false)
 </body>
 </html>

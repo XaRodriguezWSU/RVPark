@@ -20,7 +20,10 @@ namespace RVSite.Controllers
         public async Task<IActionResult> Index()
         {
             var sites = await _context.Sites
+                .Include(s => s.SiteType)
+                .Include(s => s.Photos)
                 .Where(s => s.SiteStatus == SiteStatus.Available.ToString())
+                .OrderBy(s => s.SiteNumber)
                 .ToListAsync();
 
             return View(sites);

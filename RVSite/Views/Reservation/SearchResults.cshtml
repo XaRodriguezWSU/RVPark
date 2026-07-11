@@ -1,44 +1,77 @@
-﻿@*
-    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
-*@
-@{
-}
+﻿@model List<RVSite.Models.Reservation>
 
-@model List<Reservation>
+    @{
+    ViewData["Title"] = "Reservation Search Results";
+    }
 
+    <section class="card admin-hero mb-4">
+        <div class="card-body p-4 p-lg-5">
+            <div class="d-flex flex-column flex-lg-row justify-content-between align-items-lg-center gap-3">
+                <div>
+                    <span class="home-kicker">Reservation Management</span>
+                    <h1 class="page-title">Search Results</h1>
+                    <p class="page-subtitle">
+                        Showing @Model.Count reservation result(s).
+                    </p>
+                </div>
 
-    <div class="container mt-4">
-        <div class="card shadow-sm">
-            <div class="card-header">
-                <h2 class="mb-0">Search Results</h2>
+                <a asp-controller="Reservation"
+                   asp-action="Search"
+                   class="btn btn-outline-secondary">
+                    New Search
+                </a>
             </div>
-            <div class="card-body">
-                <table class="table table-bordered">
+        </div>
+    </section>
+
+    <section class="card">
+        <div class="card-header">
+            <h2 class="h5 mb-0">Matching Reservations</h2>
+        </div>
+
+        <div class="card-body p-0">
+            @if (!Model.Any())
+        {
+            <div class="p-4">
+                <div class="alert alert-info mb-0">
+                    No reservations matched your search.
+                </div>
+            </div>
+        }
+        else
+        {
+            <div class="table-responsive">
+                <table class="table table-hover align-middle admin-table mb-0">
                     <thead>
                         <tr>
                             <th>Reservation #</th>
                             <th>Customer</th>
                             <th>Site</th>
                             <th>Dates</th>
-                            <th></th>
+                            <th class="text-end">Action</th>
                         </tr>
                     </thead>
 
                     <tbody>
                         @foreach (var r in Model)
-        {
+                        {
                         <tr>
-                            <td>@r.ReservationID</td>
+                            <td class="fw-bold">@r.ReservationID</td>
                             <td>@r.User.FirstName @r.User.LastName</td>
                             <td>@r.Site.SiteNumber</td>
                             <td>@r.CheckInDate.ToShortDateString() - @r.CheckOutDate.ToShortDateString()</td>
-                            <td>
-                                <a asp-action="Edit" asp-route-id="@r.ReservationID" class="btn btn-warning">Edit</a>
+                            <td class="text-end">
+                                <a asp-action="Edit"
+                                   asp-route-id="@r.ReservationID"
+                                   class="btn btn-sm btn-outline-primary">
+                                    Edit
+                                </a>
                             </td>
                         </tr>
-        }
+                        }
                     </tbody>
                 </table>
             </div>
+        }
         </div>
-    </div>
+    </section>

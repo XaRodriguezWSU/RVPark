@@ -1,54 +1,113 @@
-﻿@*
-    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
-*@
+﻿@model RVSite.Models.Reservation
+
 @{
+    ViewData["Title"] = "Edit Reservation";
 }
 
-@model Reservation
-<div class="container mt-4">
-    <div class="card shadow-sm">
-        <div class="card-header">
-            <h2 class="mb-0">Edit Reservation</h2>
-        </div>
-        <div class="card-body">
-            <form asp-action="Edit" asp-route-id="@Model.ReservationID" method="post">
-                <input type="hidden" asp-for="ReservationID" />
+<section class="card admin-hero mb-4">
+    <div class="card-body p-4 p-lg-5">
+        <span class="home-kicker">Reservation Management</span>
+        <h1 class="page-title">Edit Reservation #@Model.ReservationID</h1>
+        <p class="page-subtitle">
+            Update reservation dates or move the reservation to another available site.
+        </p>
+    </div>
+</section>
 
-                <div class="form-group">
-                    <label>Customer</label>
-                    <input class="form-control" value="@Model.User.FirstName @Model.User.LastName" disabled />
+<section class="row g-4">
+    <div class="col-lg-4">
+        <div class="card">
+            <div class="card-header">
+                <h2 class="h5 mb-0">Current Reservation</h2>
+            </div>
+
+            <div class="card-body">
+                <div class="row g-3">
+                    <div class="col-12">
+                        <div class="detail-box">
+                            <span>Customer</span>
+                            <strong>@Model.User.FirstName @Model.User.LastName</strong>
+                        </div>
+                    </div>
+
+                    <div class="col-12">
+                        <div class="detail-box">
+                            <span>Current Site</span>
+                            <strong>@Model.Site.SiteNumber</strong>
+                        </div>
+                    </div>
+
+                    <div class="col-12">
+                        <div class="detail-box">
+                            <span>Status</span>
+                            <strong>@Model.ReservationStatus</strong>
+                        </div>
+                    </div>
                 </div>
-
-                <div class="form-group">
-                    <label>Current Site</label>
-                    <input class="form-control" value="@Model.Site.SiteNumber" disabled />
-                </div>
-
-                <div class="form-group">
-                    <label>Start Date</label>
-                    <input asp-for="CheckInDate" type="date" class="form-control" />
-                </div>
-
-                <div class="form-group">
-                    <label>End Date</label>
-                    <input asp-for="CheckOutDate" type="date" class="form-control" />
-                </div>
-
-                <div class="form-group">
-                    <label>Change Site</label>
-                    <select name="newSiteID" class="form-control">
-                        <option value="">Keep Current Site</option>
-                        @foreach (var site in ViewBag.AvailableSites)
-            {
-                        <option value="@site.SiteID">@site.SiteNumber</option>
-            }
-                    </select>
-                </div>
-
-                <button type="submit" class="btn btn-success mt-3">Save Changes</button>
-
-                <a asp-action="CancelReservation" asp-route-id="@Model.ReservationID" class="btn btn-danger mt-3">Cancel Reservation</a>
-            </form>
+            </div>
         </div>
     </div>
-</div>
+
+    <div class="col-lg-8">
+        <div class="card h-100">
+            <div class="card-header">
+                <h2 class="h5 mb-0">Edit Details</h2>
+            </div>
+
+            <div class="card-body">
+                <form asp-action="Edit" asp-route-id="@Model.ReservationID" method="post">
+                    <input type="hidden" asp-for="ReservationID" />
+
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label asp-for="CheckInDate" class="form-label">Start Date</label>
+                            <input asp-for="CheckInDate" type="date" class="form-control" />
+                            <span asp-validation-for="CheckInDate" class="text-danger"></span>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label asp-for="CheckOutDate" class="form-label">End Date</label>
+                            <input asp-for="CheckOutDate" type="date" class="form-control" />
+                            <span asp-validation-for="CheckOutDate" class="text-danger"></span>
+                        </div>
+
+                        <div class="col-12">
+                            <label class="form-label">Change Site</label>
+                            <select name="newSiteID" class="form-select">
+                                <option value="">Keep Current Site</option>
+                                @foreach (var site in ViewBag.AvailableSites)
+                                {
+                                <option value="@site.SiteID">@site.SiteNumber</option>
+                                }
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="d-flex flex-wrap gap-2 mt-4">
+                        <button type="submit" class="btn btn-primary">
+                            Save Changes
+                        </button>
+
+                        <a asp-action="CancelReservation"
+                           asp-route-id="@Model.ReservationID"
+                           class="btn btn-outline-danger">
+                            Cancel Reservation
+                        </a>
+
+                        <a asp-controller="Reservation"
+                           asp-action="Index"
+                           class="btn btn-outline-secondary">
+                            Back to Reservations
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</section>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}
