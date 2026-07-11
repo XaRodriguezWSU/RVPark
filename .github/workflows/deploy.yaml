@@ -22,6 +22,12 @@ jobs:
     - name: Restore dependencies
       run: dotnet restore RVSite/RVSite.csproj
 
+    - name: Install dotnet-ef
+      run: dotnet tool install --global dotnet-ef
+
+    - name: Add dotnet tools to PATH
+      run: echo "$HOME/.dotnet/tools" >> $GITHUB_PATH
+
     - name: Build
       run: dotnet build RVSite/RVSite.csproj --configuration Release --no-restore
 
