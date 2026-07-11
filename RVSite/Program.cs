@@ -3,55 +3,31 @@ using RVSite.Data;
 using RVSite.Models;
 using RVSite.Services;
 
-//var builder = WebApplication.CreateBuilder(new WebApplicationOptions
-//{
-//    Args = args,
-//    ContentRootPath = AppContext.BaseDirectory.Contains(@"\bin\")
-//        ? Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, @"..\..\..\"))
-//        : Directory.GetCurrentDirectory()
-//});
 var builder = WebApplication.CreateBuilder(args);
-
 
 // Add services to the container.
 builder.Services.AddControllersWithViews();
 
 builder.Services.AddScoped<CostService>();
 
-if (builder.Environment.IsDevelopment())
+builder.Services.AddDbContext<AppDbContext>(options =>
 {
-    builder.Services.AddDbContext<AppDbContext>(options =>
-        options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection")));
-}
-else
-{
-    builder.Services.AddDbContext<AppDbContext>(options =>
-        options.UseSqlServer(builder.Configuration.GetConnectionString("ProductionConnection")));
-}
-
-
-var app = builder.Build();
-
-
-using (var scope = app.Services.CreateScope())
-{
-    var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-    if (app.Environment.IsDevelopment())
+    if (builder.Environment.IsDevelopment())
     {
-        db.Database.Migrate();
+        options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"));
     }
     else
     {
-        db.Database.EnsureCreated();
+        options.UseSqlServer(builder.Configuration.GetConnectionString("ProductionConnection"));
     }
-}
+});
 
-
-// Quick data seeding for demonstration purposes
+var app = builder.Build();
 
 using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+    db.Database.Migrate();
     DataSeeder.Seed(db);
 }
 
