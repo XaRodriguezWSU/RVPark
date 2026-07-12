@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using RVSite.Data;
@@ -8,6 +9,7 @@ using System.Threading.Tasks;
 
 namespace RVSite.Controllers
 {
+    [Authorize(Roles = "Admin")]
     public class AdminController : Controller
     {
         private readonly AppDbContext _context;

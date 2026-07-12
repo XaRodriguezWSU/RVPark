@@ -1,7 +1,6 @@
 ﻿using RVSite.Models;
 using Microsoft.EntityFrameworkCore;
 
-
 namespace RVSite.Data
 {
     public class DataSeeder
@@ -76,6 +75,18 @@ namespace RVSite.Data
 
             if (!db.Users.Any())
             {
+                var adminRole = db.Role.First(r => r.Type == RoleType.Admin);
+
+                db.Users.Add(new User
+                {
+                    FirstName = "Boston",
+                    LastName = "Peterson",
+                    Email = "admin@rvpark.com",
+                    PhoneNumber = "123-456",
+                    PasswordHash = "admin123", // hash later
+                    RoleID = adminRole.RoleID
+                });
+
                 db.Users.AddRange(new[]
                 {
                     new User { FirstName = "John", LastName = "Doe", Email = "john@example.com", PhoneNumber = "555-5678", PasswordHash = "devHash1", RoleID = customerRole.RoleID },
