@@ -1,24 +1,99 @@
-﻿@*
-    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
-*@
-@{
-    ViewBag.Title = "Login";
+﻿@{
+    ViewData["Title"] = "Sign In";
 }
 
-<h2>Login</h2>
+<div class="row justify-content-center mt-5">
 
-<form method="post">
-    <div>
-        <label>Email</label>
-        <input type="text" name="email" required />
+    <div class="col-lg-5 col-md-7">
+
+        <div class="text-center mb-4">
+
+            <span class="home-kicker">RVSite</span>
+
+            <h1 class="page-title">
+                Welcome Back
+            </h1>
+
+            <p class="page-subtitle">
+                Sign in to manage your reservations or access employee tools.
+            </p>
+
+        </div>
+
+        <div class="card shadow-sm">
+
+            <div class="card-body p-4">
+
+                @if (!string.IsNullOrWhiteSpace(ViewBag.Error))
+                {
+                <div class="alert alert-danger">
+                    @ViewBag.Error
+                </div>
+                }
+
+                <form method="post">
+
+                    <div class="mb-3">
+
+                        <label for="email" class="form-label">
+                            Email Address
+                        </label>
+
+                        <input id="email"
+                               name="email"
+                               type="email"
+                               class="form-control form-control-lg"
+                               placeholder="you@example.com"
+                               required />
+
+                    </div>
+
+                    <div class="mb-4">
+
+                        <label for="password" class="form-label">
+                            Password
+                        </label>
+
+                        <input id="password"
+                               name="password"
+                               type="password"
+                               class="form-control form-control-lg"
+                               placeholder="Password"
+                               required />
+
+                    </div>
+
+                    <div class="d-grid">
+
+                        <button type="submit"
+                                class="btn btn-primary btn-lg">
+                            Sign In
+                        </button>
+
+                    </div>
+
+                </form>
+
+                <hr class="my-4" />
+
+                <div class="text-center">
+
+                    <p class="text-muted mb-2">
+                        Don't have an account?
+                    </p>
+
+                    <a asp-controller="Login"
+                       asp-action="Register"
+                       class="btn btn-outline-secondary">
+                        Create Account
+                    </a>
+
+                </div>
+
+            </div>
+
+        </div>
+
     </div>
 
-    <div>
-        <label>Password</label>
-        <input type="password" name="password" required />
-    </div>
-
-    <button type="submit">Login</button>
-
-    <p style="color:red">@ViewBag.Error</p>
-</form>
+</div>

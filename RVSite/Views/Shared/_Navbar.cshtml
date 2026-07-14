@@ -37,6 +37,10 @@
                         </a>
                     </li>
 
+                    @if (User.Identity?.IsAuthenticated ?? false)
+    {
+                    @if (User.IsInRole("Admin") || User.IsInRole("Staff"))
+        {
                     <li class="nav-item">
                         <a class="nav-link app-nav-link"
                            asp-controller="Admin"
@@ -44,6 +48,38 @@
                             Dashboard
                         </a>
                     </li>
+        }
+
+                    <li class="nav-item ms-lg-3 d-flex align-items-center">
+                        <span class="text-muted me-3">
+                            Hello, @User.FindFirst(System.Security.Claims.ClaimTypes.GivenName)?.Value
+                        </span>
+
+                        <form asp-controller="Login"
+                              asp-action="Logout"
+                              method="post"
+                              class="d-inline">
+
+                            @Html.AntiForgeryToken()
+
+                            <button type="submit"
+                                    class="btn rounded-pill px-4">
+                                Log Out
+                            </button>
+
+                        </form>
+                    </li>
+    }
+    else
+    {
+                    <li class="nav-item ms-lg-3">
+                        <a asp-controller="Login"
+                           asp-action="Index"
+                           class="btn btn-primary rounded-pill px-4">
+                            Sign In
+                        </a>
+                    </li>
+    }
 
                 </ul>
             </div>
