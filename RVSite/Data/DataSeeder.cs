@@ -83,7 +83,7 @@ namespace RVSite.Data
                     LastName = "Peterson",
                     Email = "admin@rvpark.com",
                     PhoneNumber = "123-456",
-                    PasswordHash = "admin123", // hash later
+                    PasswordHash = "admin123",
                     RoleID = adminRole.RoleID
                 });
 

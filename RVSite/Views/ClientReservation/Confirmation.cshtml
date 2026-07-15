@@ -1,0 +1,42 @@
+﻿@*
+    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
+*@
+@model RVSite.Models.Reservation
+
+@{
+    ViewData["Title"] = "Reservation Confirmed";
+}
+
+<h2>Reservation Confirmed</h2>
+
+<div class="alert alert-success">
+    Your reservation has been successfully created!
+</div>
+
+<p><strong>Reservation Number:</strong> @Model.ReservationID</p>
+
+<h4>Guest Information</h4>
+<p><strong>Name:</strong> @Model.User.FirstName @Model.User.LastName</p>
+
+<h4>Site Information</h4>
+<p><strong>Site:</strong> @Model.Site.SiteNumber</p>
+<p><strong>Site Type:</strong> @Model.Site.SiteType.Name</p>
+
+<h4>Stay Details</h4>
+<p><strong>Check-In:</strong> @Model.CheckInDate.ToShortDateString()</p>
+<p><strong>Check-Out:</strong> @Model.CheckOutDate.ToShortDateString()</p>
+<p><strong>Adults:</strong> @Model.NumberOfAdults</p>
+<p><strong>Children:</strong> @Model.NumberOfChildren</p>
+<p><strong>Pets:</strong> @Model.NumberOfPets</p>
+
+<h4>Cost</h4>
+<p><strong>Total Cost:</strong> $@Model.TotalCost</p>
+<p><strong>Balance Due:</strong> $@Model.BalanceDue</p>
+
+@if (!string.IsNullOrEmpty(Model.SpecialRequests))
+{
+    <h4>Special Requests</h4>
+    <p>@Model.SpecialRequests</p>
+}
+
+<a class="btn btn-primary" href="/ClientReservation/Book">Make Another Reservation</a>
