@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using RVSite.Models;
+using RVSite.Services;
 using System.Collections.Generic;
 using System.Security.Claims;
 using System.Threading.Tasks;
@@ -14,13 +15,16 @@ namespace RVSite.Controllers
     {
         private readonly AppDbContext _db;
         private readonly IPasswordHasher<User> _passwordHasher;
+        private readonly EmailService _emailService;
 
         public LoginController(
             AppDbContext db,
-            IPasswordHasher<User> passwordHasher)
+            IPasswordHasher<User> passwordHasher,
+            EmailService emailService)
         {
             _db = db;
             _passwordHasher = passwordHasher;
+            _emailService = emailService;
         }
 
         // GET: /Login
@@ -175,6 +179,8 @@ namespace RVSite.Controllers
                 return View();
             }
 
+            var token = Guid.NewGuid().ToString("N"); // random 32-char token
+
             var user = new User
             {
                 FirstName = firstName,
@@ -183,13 +189,17 @@ namespace RVSite.Controllers
                 PhoneNumber = phoneNumber,
                 RoleID = customerRole!.RoleID,
                 IsLocked = false,
-                PasswordHash = ""
+                PasswordHash = "",
+                EmailConfirmed = false,
+                EmailConfirmationToken = token
             };
 
             user.PasswordHash = _passwordHasher.HashPassword(user, password);
 
             _db.Users.Add(user);
             await _db.SaveChangesAsync();
+
+            await SendConfirmationEmail(user);
 
             user.Role = customerRole;
 
@@ -231,6 +241,39 @@ namespace RVSite.Controllers
             await HttpContext.SignInAsync(
                 CookieAuthenticationDefaults.AuthenticationScheme,
                 principal);
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> ConfirmEmail(int userId, string token)
+        {
+            var user = await _db.Users.FirstOrDefaultAsync(u => u.UserID == userId);
+
+            if (user == null || user.EmailConfirmationToken != token)
+                return BadRequest("Invalid confirmation link.");
+
+            user.EmailConfirmed = true;
+            user.EmailConfirmationToken = null;
+
+            await _db.SaveChangesAsync();
+
+            return View("EmailConfirmed");
+        }
+
+        private async Task SendConfirmationEmail(User user)
+        {
+            var url = Url.Action(
+                "ConfirmEmail",
+                "Login",
+                new { userId = user.UserID, token = user.EmailConfirmationToken },
+                Request.Scheme);
+
+            var body = $@"
+                <h2>Confirm Your Email</h2>
+                <p>Click the link below to activate your account:</p>
+                <p><a href='{url}'>Confirm Email</a></p>
+            ";
+
+            await _emailService.SendAsync(user.Email, "Confirm Your Email", body);
         }
     }
 }

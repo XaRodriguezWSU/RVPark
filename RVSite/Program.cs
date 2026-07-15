@@ -14,6 +14,7 @@ builder.Services.AddControllersWithViews();
 builder.Services.AddScoped<IPasswordHasher<User>, PasswordHasher<User>>();
 
 builder.Services.AddScoped<CostService>();
+builder.Services.AddScoped<EmailService>();
 
 builder.Services.AddDbContext<AppDbContext>(options =>
 {
