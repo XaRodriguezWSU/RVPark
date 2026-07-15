@@ -1,0 +1,57 @@
+﻿@*
+    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
+*@
+@model RVSite.Models.Reservation
+
+<form method="post">
+
+    <!-- Step 1: Search fields -->
+    <label>Check-In</label>
+    <input asp-for="CheckInDate" type="date" />
+
+    <label>Check-Out</label>
+    <input asp-for="CheckOutDate" type="date" />
+
+    <label>Site Type</label>
+    <select name="siteType">
+        @foreach (var type in ViewBag.SiteTypes)
+        {
+            <option value="@type.Name">@type.Name</option>
+        }
+    </select>
+
+    <label>RV Length (optional)</label>
+    <input name="rvLength" type="number" />
+
+    <button type="submit" name="search" value="true">Search Sites</button>
+
+    <hr />
+
+    <!-- Step 2: Show available sites -->
+    @if (ViewBag.AvailableSites != null)
+    {
+        <label>Select Site</label>
+        <select asp-for="SiteID">
+            @foreach (var site in ViewBag.AvailableSites)
+            {
+                <option value="@site.SiteID">
+                    @site.SiteNumber (Max RV: @site.MaxRVLength)
+                </option>
+            }
+        </select>
+
+        <label>Adults</label>
+        <input asp-for="NumberOfAdults" type="number" />
+
+        <label>Children</label>
+        <input asp-for="NumberOfChildren" type="number" />
+
+        <label>Pets</label>
+        <input asp-for="NumberOfPets" type="number" />
+
+        <label>Special Requests</label>
+        <textarea asp-for="SpecialRequests"></textarea>
+
+        <button type="submit" @(ViewBag.AvailableSites == null ? "disabled" : "")>Reserve</button>
+    }
+</form>
