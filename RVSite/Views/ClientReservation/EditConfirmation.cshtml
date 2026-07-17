@@ -1,0 +1,40 @@
+﻿@*
+    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
+*@
+@{
+}
+@model RVSite.Models.Reservation
+
+@{
+    ViewData["Title"] = "Reservation Updated";
+}
+
+<h2>Reservation Updated</h2>
+
+<div class="alert alert-success">
+    Your reservation has been successfully updated.
+</div>
+
+<h4>Updated Details</h4>
+<p><strong>Reservation ID:</strong> @Model.ReservationID</p>
+<p><strong>Site:</strong> @Model.Site.SiteNumber</p>
+<p><strong>Site Type:</strong> @Model.Site.SiteType.Name</p>
+<p><strong>Check-In:</strong> @Model.CheckInDate.ToShortDateString()</p>
+<p><strong>Check-Out:</strong> @Model.CheckOutDate.ToShortDateString()</p>
+
+<h4>Cost Summary</h4>
+<p><strong>New Total:</strong> $@Model.TotalCost</p>
+
+@if (ViewBag.PriceDifference != null)
+{
+    var diff = (decimal)ViewBag.PriceDifference;
+
+    <p>
+        <strong>Difference:</strong>
+        <span class="@(diff >= 0 ? "text-success" : "text-danger")">
+            @(diff >= 0 ? "+" : "")@diff
+        </span>
+    </p>
+}
+
+<a class="btn btn-primary" href="/ClientReservation/MyReservations">Back to My Reservations</a>

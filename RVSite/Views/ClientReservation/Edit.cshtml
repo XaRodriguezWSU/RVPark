@@ -1,0 +1,104 @@
+﻿@*
+    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
+*@
+@{
+}
+@model RVSite.Models.Reservation
+
+@{
+    ViewData["Title"] = "Edit Reservation";
+}
+
+<h2>Edit Reservation</h2>
+
+<div class="alert alert-info">
+    Update your reservation details below. Availability will be rechecked.
+</div>
+
+<form asp-action="Edit" method="post">
+    <input type="hidden" asp-for="ReservationID" />
+
+    <div class="mb-3">
+        <label class="form-label">Check-In Date</label>
+        <input asp-for="CheckInDate" class="form-control" type="date" />
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label">Check-Out Date</label>
+        <input asp-for="CheckOutDate" class="form-control" type="date" />
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label">Site Type</label>
+        <select name="siteType" class="form-select">
+            @foreach (var type in ViewBag.SiteTypes)
+            {
+                <option value="@type.Name" selected="@(Model.Site.SiteType.Name == type.Name)">
+                    @type.Name
+                </option>
+            }
+        </select>
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label">RV Length (optional)</label>
+        <input name="rvLength" class="form-control" type="number" />
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label">Adults</label>
+        <input asp-for="NumberOfAdults" class="form-control" type="number" />
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label">Children</label>
+        <input asp-for="NumberOfChildren" class="form-control" type="number" />
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label">Pets</label>
+        <input asp-for="NumberOfPets" class="form-control" type="number" />
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label">Special Requests</label>
+        <textarea asp-for="SpecialRequests" class="form-control"></textarea>
+    </div>
+
+    <button type="submit" class="btn btn-primary">Search Availability</button>
+</form>
+
+@if (ViewBag.AvailableSites != null)
+{
+    <hr />
+    <h4>Available Sites</h4>
+
+    @if (((List<RVSite.Models.Site>)ViewBag.AvailableSites).Count == 0)
+    {
+        <p class="text-danger">No sites available for the updated criteria.</p>
+    }
+    else
+    {
+        <form asp-action="Edit" method="post">
+            <input type="hidden" asp-for="ReservationID" />
+            <input type="hidden" asp-for="CheckInDate" />
+            <input type="hidden" asp-for="CheckOutDate" />
+            <input type="hidden" asp-for="NumberOfAdults" />
+            <input type="hidden" asp-for="NumberOfChildren" />
+            <input type="hidden" asp-for="NumberOfPets" />
+            <input type="hidden" asp-for="SpecialRequests" />
+
+            <div class="mb-3">
+                <label class="form-label">Select a Site</label>
+                <select asp-for="SiteID" class="form-select">
+                    @foreach (var site in ViewBag.AvailableSites)
+                    {
+                        <option value="@site.SiteID">@site.SiteName (@site.SiteType.Name)</option>
+                    }
+                </select>
+            </div>
+
+            <button type="submit" class="btn btn-success">Update Reservation</button>
+        </form>
+    }
+}
