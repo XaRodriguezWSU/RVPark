@@ -1,104 +1,241 @@
-﻿@*
-    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
-*@
-@{
-}
-@model RVSite.Models.Reservation
+﻿@model RVSite.Models.Reservation
 
 @{
     ViewData["Title"] = "Edit Reservation";
+    var availableSites = ViewBag.AvailableSites as List<RVSite.Models.Site>;
 }
 
-<h2>Edit Reservation</h2>
-
-<div class="alert alert-info">
-    Update your reservation details below. Availability will be rechecked.
-</div>
-
-<form asp-action="Edit" method="post">
-    <input type="hidden" asp-for="ReservationID" />
-
-    <div class="mb-3">
-        <label class="form-label">Check-In Date</label>
-        <input asp-for="CheckInDate" class="form-control" type="date" />
+<section class="card admin-hero mb-4">
+    <div class="card-body p-4 p-lg-5">
+        <span class="home-kicker">Your Reservation</span>
+        <h1 class="page-title">Edit Reservation #@Model.ReservationID</h1>
+        <p class="page-subtitle">
+            Update your stay details. Site availability will be checked before changes are confirmed.
+        </p>
     </div>
+</section>
 
-    <div class="mb-3">
-        <label class="form-label">Check-Out Date</label>
-        <input asp-for="CheckOutDate" class="form-control" type="date" />
-    </div>
-
-    <div class="mb-3">
-        <label class="form-label">Site Type</label>
-        <select name="siteType" class="form-select">
-            @foreach (var type in ViewBag.SiteTypes)
-            {
-                <option value="@type.Name" selected="@(Model.Site.SiteType.Name == type.Name)">
-                    @type.Name
-                </option>
-            }
-        </select>
-    </div>
-
-    <div class="mb-3">
-        <label class="form-label">RV Length (optional)</label>
-        <input name="rvLength" class="form-control" type="number" />
-    </div>
-
-    <div class="mb-3">
-        <label class="form-label">Adults</label>
-        <input asp-for="NumberOfAdults" class="form-control" type="number" />
-    </div>
-
-    <div class="mb-3">
-        <label class="form-label">Children</label>
-        <input asp-for="NumberOfChildren" class="form-control" type="number" />
-    </div>
-
-    <div class="mb-3">
-        <label class="form-label">Pets</label>
-        <input asp-for="NumberOfPets" class="form-control" type="number" />
-    </div>
-
-    <div class="mb-3">
-        <label class="form-label">Special Requests</label>
-        <textarea asp-for="SpecialRequests" class="form-control"></textarea>
-    </div>
-
-    <button type="submit" class="btn btn-primary">Search Availability</button>
-</form>
-
-@if (ViewBag.AvailableSites != null)
-{
-    <hr />
-    <h4>Available Sites</h4>
-
-    @if (((List<RVSite.Models.Site>)ViewBag.AvailableSites).Count == 0)
-    {
-        <p class="text-danger">No sites available for the updated criteria.</p>
-    }
-    else
-    {
-        <form asp-action="Edit" method="post">
-            <input type="hidden" asp-for="ReservationID" />
-            <input type="hidden" asp-for="CheckInDate" />
-            <input type="hidden" asp-for="CheckOutDate" />
-            <input type="hidden" asp-for="NumberOfAdults" />
-            <input type="hidden" asp-for="NumberOfChildren" />
-            <input type="hidden" asp-for="NumberOfPets" />
-            <input type="hidden" asp-for="SpecialRequests" />
-
-            <div class="mb-3">
-                <label class="form-label">Select a Site</label>
-                <select asp-for="SiteID" class="form-select">
-                    @foreach (var site in ViewBag.AvailableSites)
-                    {
-                        <option value="@site.SiteID">@site.SiteName (@site.SiteType.Name)</option>
-                    }
-                </select>
+<section class="row g-4">
+    <div class="col-lg-4">
+        <div class="card">
+            <div class="card-header">
+                <h2 class="h5 mb-0">Current Stay</h2>
             </div>
 
-            <button type="submit" class="btn btn-success">Update Reservation</button>
-        </form>
+            <div class="card-body">
+                <div class="detail-box mb-3">
+                    <span>Site</span>
+                    <strong>Site @Model.Site?.SiteNumber</strong>
+                </div>
+
+                <div class="detail-box mb-3">
+                    <span>Site Type</span>
+                    <strong>@Model.Site?.SiteType?.Name</strong>
+                </div>
+
+                <div class="detail-box">
+                    <span>Current Total</span>
+                    <strong>@Model.TotalCost.ToString("C")</strong>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-8">
+        <div class="card mb-4">
+            <div class="card-header">
+                <h2 class="h5 mb-0">Search Updated Availability</h2>
+            </div>
+
+            <div class="card-body">
+                <div class="alert alert-info">
+                    Update your criteria below. Your current reservation will not change until you select an available site.
+                </div>
+
+                <form asp-controller="ClientReservation"
+                      asp-action="Edit"
+                      asp-route-id="@Model.ReservationID"
+                      method="post">
+
+                    <input type="hidden" asp-for="ReservationID" />
+
+                    <div asp-validation-summary="All" class="text-danger mb-3"></div>
+
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label asp-for="CheckInDate" class="form-label">
+                                Check-In Date
+                            </label>
+
+                            <input asp-for="CheckInDate"
+                                   class="form-control"
+                                   type="date" />
+
+                            <span asp-validation-for="CheckInDate" class="text-danger"></span>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label asp-for="CheckOutDate" class="form-label">
+                                Check-Out Date
+                            </label>
+
+                            <input asp-for="CheckOutDate"
+                                   class="form-control"
+                                   type="date" />
+
+                            <span asp-validation-for="CheckOutDate" class="text-danger"></span>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label for="siteType" class="form-label">Site Type</label>
+
+                            <select id="siteType"
+                                    name="siteType"
+                                    class="form-select">
+
+                                @foreach (var type in ViewBag.SiteTypes)
+                                {
+                                    if (Model.Site?.SiteType?.Name == type.Name)
+                                    {
+                                <option value="@type.Name" selected>
+                                    @type.Name
+                                </option>
+                                    }
+                                    else
+                                    {
+                                <option value="@type.Name">
+                                    @type.Name
+                                </option>
+                                    }
+                                }
+                            </select>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label for="rvLength" class="form-label">
+                                RV Length
+                                <span class="text-muted fw-normal">(optional)</span>
+                            </label>
+
+                            <div class="input-group">
+                                <input id="rvLength"
+                                       name="rvLength"
+                                       class="form-control"
+                                       type="number"
+                                       min="0" />
+
+                                <span class="input-group-text">ft</span>
+                            </div>
+                        </div>
+
+                        <div class="col-md-4">
+                            <label asp-for="NumberOfAdults" class="form-label">Adults</label>
+                            <input asp-for="NumberOfAdults"
+                                   class="form-control"
+                                   type="number"
+                                   min="1" />
+                        </div>
+
+                        <div class="col-md-4">
+                            <label asp-for="NumberOfChildren" class="form-label">Children</label>
+                            <input asp-for="NumberOfChildren"
+                                   class="form-control"
+                                   type="number"
+                                   min="0" />
+                        </div>
+
+                        <div class="col-md-4">
+                            <label asp-for="NumberOfPets" class="form-label">Pets</label>
+                            <input asp-for="NumberOfPets"
+                                   class="form-control"
+                                   type="number"
+                                   min="0" />
+                        </div>
+
+                        <div class="col-12">
+                            <label asp-for="SpecialRequests" class="form-label">
+                                Special Requests
+                            </label>
+
+                            <textarea asp-for="SpecialRequests"
+                                      class="form-control"
+                                      rows="4"></textarea>
+                        </div>
+                    </div>
+
+                    <div class="d-flex flex-wrap gap-2 mt-4">
+                        <button type="submit" class="btn btn-primary">
+                            Search Availability
+                        </button>
+
+                        <a asp-controller="ClientReservation"
+                           asp-action="MyReservations"
+                           class="btn btn-outline-secondary">
+                            Back to My Reservations
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        @if (ViewBag.AvailableSites != null)
+        {
+        <div class="card">
+            <div class="card-header">
+                <h2 class="h5 mb-0">Available Sites</h2>
+            </div>
+
+            <div class="card-body">
+                @if (availableSites == null || availableSites.Count == 0)
+                    {
+                <div class="alert alert-warning mb-0">
+                    No sites are available for the updated criteria.
+                </div>
+                    }
+                    else
+                    {
+                <form asp-controller="ClientReservation"
+                      asp-action="Edit"
+                      asp-route-id="@Model.ReservationID"
+                      method="post">
+
+                    <input type="hidden" asp-for="ReservationID" />
+                    <input type="hidden" asp-for="CheckInDate" />
+                    <input type="hidden" asp-for="CheckOutDate" />
+                    <input type="hidden" asp-for="NumberOfAdults" />
+                    <input type="hidden" asp-for="NumberOfChildren" />
+                    <input type="hidden" asp-for="NumberOfPets" />
+                    <input type="hidden" asp-for="SpecialRequests" />
+
+                    <div class="mb-3">
+                        <label asp-for="SiteID" class="form-label">
+                            Select a Site
+                        </label>
+
+                        <select asp-for="SiteID" class="form-select">
+                            @foreach (var site in availableSites)
+                                    {
+                            <option value="@site.SiteID">
+                                Site @site.SiteNumber · @site.SiteType?.Name ·
+                                @site.MaxRVLength ft max · @site.BaseRate.ToString("C") / night
+                            </option>
+                                    }
+                        </select>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary">
+                        Update Reservation
+                    </button>
+                </form>
+                    }
+            </div>
+        </div>
+        }
+    </div>
+</section>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
     }
 }

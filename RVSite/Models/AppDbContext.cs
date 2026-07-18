@@ -15,5 +15,6 @@ namespace RVSite.Models
         public DbSet<SiteType> SiteTypes { get; set; }
         public DbSet<SiteTypePrice> SiteTypePrices { get; set; }
         public DbSet<SitePhoto> SitePhoto { get; set; }
+        public DbSet<MaintenanceTask> MaintenanceTasks { get; set; }
     }
 }

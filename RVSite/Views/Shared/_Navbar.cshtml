@@ -18,7 +18,9 @@
                 <span class="navbar-toggler-icon"></span>
             </button>
 
-            <div class="collapse navbar-collapse justify-content-end" id="mainNavbar">
+            <div class="collapse navbar-collapse justify-content-end"
+                 id="mainNavbar">
+
                 <ul class="navbar-nav align-items-lg-center gap-lg-2">
 
                     <li class="nav-item">
@@ -29,18 +31,10 @@
                         </a>
                     </li>
 
-                    <li class="nav-item">
-                        <a class="nav-link app-nav-link"
-                           asp-controller="Sites"
-                           asp-action="Index">
-                            RV Sites
-                        </a>
-                    </li>
-
                     @if (User.Identity?.IsAuthenticated ?? false)
-    {
+                    {
                     @if (User.IsInRole("Admin") || User.IsInRole("Staff"))
-        {
+                        {
                     <li class="nav-item">
                         <a class="nav-link app-nav-link"
                            asp-controller="Admin"
@@ -48,13 +42,67 @@
                             Dashboard
                         </a>
                     </li>
-        }
 
-                    <li class="nav-item ms-lg-3 d-flex align-items-center">
-                        <span class="text-muted me-3">
-                            Hello, @User.FindFirst(System.Security.Claims.ClaimTypes.GivenName)?.Value
-                        </span>
+                    <li class="nav-item dropdown">
+                        <a class="nav-link app-nav-link dropdown-toggle"
+                           href="#"
+                           id="employeeToolsDropdown"
+                           role="button"
+                           data-bs-toggle="dropdown"
+                           aria-expanded="false">
+                            Employee Tools
+                        </a>
 
+                        <ul class="dropdown-menu dropdown-menu-end"
+                            aria-labelledby="employeeToolsDropdown">
+
+                            <li>
+                                <a class="dropdown-item"
+                                   asp-controller="Admin"
+                                   asp-action="Reports">
+                                    Reports
+                                </a>
+                            </li>
+
+                            <li>
+                                <a class="dropdown-item"
+                                   asp-controller="Maintenance"
+                                   asp-action="Index">
+                                    Maintenance Tasks
+                                </a>
+                            </li>
+
+                            <li>
+                                <a class="dropdown-item"
+                                   asp-controller="Reservations"
+                                   asp-action="Index">
+                                    Reservation List
+                                </a>
+                            </li>
+
+                        </ul>
+                    </li>
+                        }
+                        else
+                        {
+                    <li class="nav-item">
+                        <a class="nav-link app-nav-link"
+                           asp-controller="ClientReservation"
+                           asp-action="MyReservations">
+                            My Reservations
+                        </a>
+                    </li>
+
+                    <li class="nav-item ms-lg-2">
+                        <a asp-controller="ClientReservation"
+                           asp-action="Book"
+                           class="btn btn-primary rounded-pill px-4">
+                            Reserve Now
+                        </a>
+                    </li>
+                        }
+
+                    <li class="nav-item ms-lg-3">
                         <form asp-controller="Login"
                               asp-action="Logout"
                               method="post"
@@ -63,23 +111,30 @@
                             @Html.AntiForgeryToken()
 
                             <button type="submit"
-                                    class="btn rounded-pill px-4">
+                                    class="btn btn-outline-dark rounded-pill px-4">
                                 Log Out
                             </button>
-
                         </form>
                     </li>
-    }
-    else
-    {
-                    <li class="nav-item ms-lg-3">
+                    }
+                    else
+                    {
+                    <li class="nav-item ms-lg-2">
+                        <a asp-controller="ClientReservation"
+                           asp-action="Book"
+                           class="btn btn-outline-dark rounded-pill px-4">
+                            Reserve Now
+                        </a>
+                    </li>
+
+                    <li class="nav-item ms-lg-1">
                         <a asp-controller="Login"
                            asp-action="Index"
                            class="btn btn-primary rounded-pill px-4">
                             Sign In
                         </a>
                     </li>
-    }
+                    }
 
                 </ul>
             </div>
