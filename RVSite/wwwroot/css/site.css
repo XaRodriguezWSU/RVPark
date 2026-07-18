@@ -536,3 +536,66 @@ img {
     padding: 1rem 1.25rem;
     width: 100%;
 }
+
+/* Customer reservation pages */
+
+.confirmation-mark {
+    width: 72px;
+    height: 72px;
+    margin-inline: auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    background: var(--rv-primary-dark);
+    color: #fff;
+    font-size: 2.25rem;
+    font-weight: 800;
+}
+
+.navbar-user-name {
+    color: var(--rv-text);
+    font-size: 0.9rem;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+@media (max-width: 991.98px) {
+    .app-navbar .navbar-collapse {
+        padding: 1rem 0;
+    }
+
+    .app-navbar .navbar-nav {
+        align-items: stretch;
+    }
+
+    .app-navbar .nav-item .btn {
+        width: 100%;
+        margin-top: 0.25rem;
+    }
+
+    .navbar-user-name {
+        padding: 0.5rem 0;
+    }
+}
+
+/* Access Denied */
+
+.access-denied-card {
+    overflow: hidden;
+}
+
+.access-denied-icon {
+    width: 78px;
+    height: 78px;
+    margin-inline: auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    background: #fff3cd;
+    border: 1px solid #ffecb5;
+    color: #997404;
+    font-size: 2.25rem;
+    font-weight: 800;
+}

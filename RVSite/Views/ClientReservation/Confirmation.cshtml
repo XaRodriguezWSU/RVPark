@@ -1,42 +1,133 @@
-﻿@*
-    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
-*@
-@model RVSite.Models.Reservation
+﻿@model RVSite.Models.Reservation
 
 @{
     ViewData["Title"] = "Reservation Confirmed";
 }
 
-<h2>Reservation Confirmed</h2>
+<div class="row justify-content-center py-4">
+    <div class="col-xl-9">
+        <section class="card">
+            <div class="card-body p-4 p-lg-5">
+                <div class="text-center mb-4">
+                    <div class="confirmation-mark mb-3">✓</div>
 
-<div class="alert alert-success">
-    Your reservation has been successfully created!
+                    <span class="home-kicker">Booking Complete</span>
+
+                    <h1 class="page-title">Reservation Confirmed</h1>
+
+                    <p class="page-subtitle">
+                        Your stay has been successfully reserved.
+                        Keep reservation #@Model.ReservationID for your records.
+                    </p>
+                </div>
+
+                <div class="row g-3 mb-4">
+                    <div class="col-md-6 col-xl-4">
+                        <div class="detail-box">
+                            <span>Reservation Number</span>
+                            <strong>#@Model.ReservationID</strong>
+                        </div>
+                    </div>
+
+                    <div class="col-md-6 col-xl-4">
+                        <div class="detail-box">
+                            <span>Guest</span>
+                            <strong>
+                                @Model.User?.FirstName @Model.User?.LastName
+                            </strong>
+                        </div>
+                    </div>
+
+                    <div class="col-md-6 col-xl-4">
+                        <div class="detail-box">
+                            <span>Site</span>
+                            <strong>
+                                Site @Model.Site?.SiteNumber
+                            </strong>
+                        </div>
+                    </div>
+
+                    <div class="col-md-6 col-xl-4">
+                        <div class="detail-box">
+                            <span>Site Type</span>
+                            <strong>@Model.Site?.SiteType?.Name</strong>
+                        </div>
+                    </div>
+
+                    <div class="col-md-6 col-xl-4">
+                        <div class="detail-box">
+                            <span>Check-In</span>
+                            <strong>@Model.CheckInDate.ToShortDateString()</strong>
+                        </div>
+                    </div>
+
+                    <div class="col-md-6 col-xl-4">
+                        <div class="detail-box">
+                            <span>Check-Out</span>
+                            <strong>@Model.CheckOutDate.ToShortDateString()</strong>
+                        </div>
+                    </div>
+
+                    <div class="col-md-4">
+                        <div class="detail-box">
+                            <span>Adults</span>
+                            <strong>@Model.NumberOfAdults</strong>
+                        </div>
+                    </div>
+
+                    <div class="col-md-4">
+                        <div class="detail-box">
+                            <span>Children</span>
+                            <strong>@Model.NumberOfChildren</strong>
+                        </div>
+                    </div>
+
+                    <div class="col-md-4">
+                        <div class="detail-box">
+                            <span>Pets</span>
+                            <strong>@Model.NumberOfPets</strong>
+                        </div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <div class="detail-box">
+                            <span>Total Cost</span>
+                            <strong>@Model.TotalCost.ToString("C")</strong>
+                        </div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <div class="detail-box">
+                            <span>Balance Due</span>
+                            <strong>@Model.BalanceDue.ToString("C")</strong>
+                        </div>
+                    </div>
+                </div>
+
+                @if (!string.IsNullOrWhiteSpace(Model.SpecialRequests))
+                {
+                <div class="card bg-light shadow-none mb-4">
+                    <div class="card-body">
+                        <h2 class="h6 fw-bold">Special Requests</h2>
+                        <p class="mb-0">@Model.SpecialRequests</p>
+                    </div>
+                </div>
+                }
+
+                <div class="d-flex flex-wrap justify-content-center gap-2">
+                    <a asp-controller="ClientReservation"
+                       asp-action="MyReservations"
+                       class="btn btn-primary">
+                        View My Reservations
+                    </a>
+
+                    <a asp-controller="ClientReservation"
+                       asp-action="Book"
+                       class="btn btn-outline-secondary">
+                        Make Another Reservation
+                    </a>
+                </div>
+            </div>
+        </section>
+    </div>
 </div>
-
-<p><strong>Reservation Number:</strong> @Model.ReservationID</p>
-
-<h4>Guest Information</h4>
-<p><strong>Name:</strong> @Model.User.FirstName @Model.User.LastName</p>
-
-<h4>Site Information</h4>
-<p><strong>Site:</strong> @Model.Site.SiteNumber</p>
-<p><strong>Site Type:</strong> @Model.Site.SiteType.Name</p>
-
-<h4>Stay Details</h4>
-<p><strong>Check-In:</strong> @Model.CheckInDate.ToShortDateString()</p>
-<p><strong>Check-Out:</strong> @Model.CheckOutDate.ToShortDateString()</p>
-<p><strong>Adults:</strong> @Model.NumberOfAdults</p>
-<p><strong>Children:</strong> @Model.NumberOfChildren</p>
-<p><strong>Pets:</strong> @Model.NumberOfPets</p>
-
-<h4>Cost</h4>
-<p><strong>Total Cost:</strong> $@Model.TotalCost</p>
-<p><strong>Balance Due:</strong> $@Model.BalanceDue</p>
-
-@if (!string.IsNullOrEmpty(Model.SpecialRequests))
-{
-    <h4>Special Requests</h4>
-    <p>@Model.SpecialRequests</p>
-}
-
-<a class="btn btn-primary" href="/ClientReservation/Book">Make Another Reservation</a>

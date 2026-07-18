@@ -33,7 +33,7 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
     .AddCookie(options =>
     {
         options.LoginPath = "/Login";
-        options.AccessDeniedPath = "/AccessDenied";
+        options.AccessDeniedPath = "/Home/AccessDenied";
     });
 
 builder.Services.AddAuthorization();
