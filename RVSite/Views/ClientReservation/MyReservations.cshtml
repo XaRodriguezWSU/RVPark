@@ -1,0 +1,60 @@
+﻿@*
+    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
+*@
+@{
+}
+@model List<RVSite.Models.Reservation>
+
+@{
+    ViewData["Title"] = "My Reservations";
+}
+
+<h2>My Reservations</h2>
+
+@if (Model.Count == 0)
+{
+    <p>You have no reservations.</p>
+}
+else
+{
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>Reservation ID</th>
+                <th>Site</th>
+                <th>Check-In</th>
+                <th>Check-Out</th>
+                <th>Status</th>
+                <th>Total Cost</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+
+        <tbody>
+            @foreach (var r in Model)
+            {
+                <tr>
+                    <td>@r.ReservationID</td>
+                    <td>@r.Site.SiteNumber</td>
+                    <td>@r.CheckInDate.ToShortDateString()</td>
+                    <td>@r.CheckOutDate.ToShortDateString()</td>
+                    <td>@r.ReservationStatus</td>
+                    <td>$@r.TotalCost</td>
+
+                    <td>
+                        @if (r.ReservationStatus != RVSite.Models.ReservationStatus.Cancelled &&
+                             r.CheckInDate > DateTime.Today)
+                        {
+                            <a class="btn btn-warning btn-sm" href="/ClientReservation/Edit/@r.ReservationID">Edit</a>
+                            <a class="btn btn-danger btn-sm" href="/ClientReservation/Cancel/@r.ReservationID">Cancel</a>
+                        }
+                        else
+                        {
+                            <span class="text-muted">No actions available</span>
+                        }
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
