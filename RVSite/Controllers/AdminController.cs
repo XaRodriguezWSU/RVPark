@@ -94,6 +94,7 @@ namespace RVSite.Controllers
             var reservations = await _context.Reservations
                 .Include(r => r.User)
                 .Include(r => r.Site)
+                    .ThenInclude(s => s.SiteType)
                 .Where(r => r.CheckInDate.Date <= end.Date &&
                             r.CheckOutDate.Date >= start.Date)
                 .ToListAsync();
@@ -125,6 +126,11 @@ namespace RVSite.Controllers
                     .ThenBy(r => r.CheckInDate)
                     .ToList(),
 
+                "SiteUsage" => nonCancelledReservations
+                    .OrderBy(r => r.Site != null ? r.Site.SiteNumber : "")
+                    .ThenBy(r => r.CheckInDate)
+                    .ToList(),
+
                 _ => reservations
                     .OrderBy(r => r.CheckInDate)
                     .ToList()
@@ -136,6 +142,43 @@ namespace RVSite.Controllers
                 .Select(r => r.SiteID)
                 .Distinct()
                 .Count();
+
+            var sites = await _context.Sites
+                .Include(s => s.SiteType)
+                .OrderBy(s => s.SiteNumber)
+                .ToListAsync();
+
+            var reportEndExclusive = end.Date.AddDays(1);
+
+            var siteUsageRows = sites.Select(site =>
+            {
+                var siteReservations = nonCancelledReservations
+                    .Where(r => r.SiteID == site.SiteID)
+                    .ToList();
+
+                return new SiteUsageReportRow
+                {
+                    SiteID = site.SiteID,
+                    SiteNumber = site.SiteNumber,
+                    SiteTypeName = site.SiteType != null ? site.SiteType.Name : "Unknown",
+                    ReservationCount = siteReservations.Count,
+                    ReservedNights = siteReservations.Sum(r =>
+                    {
+                        var overlapStart = r.CheckInDate.Date > start.Date
+                            ? r.CheckInDate.Date
+                            : start.Date;
+
+                        var overlapEnd = r.CheckOutDate.Date < reportEndExclusive
+                            ? r.CheckOutDate.Date
+                            : reportEndExclusive;
+
+                        var nights = (overlapEnd - overlapStart).Days;
+
+                        return nights < 0 ? 0 : nights;
+                    }),
+                    RevenueTotal = siteReservations.Sum(r => r.TotalCost)
+                };
+            }).ToList();
 
             var model = new ReportsViewModel
             {
@@ -160,7 +203,9 @@ namespace RVSite.Controllers
                     ? 0
                     : Math.Round((decimal)occupiedSiteCount / totalSites * 100, 1),
 
-                Reservations = filteredReservations
+                Reservations = filteredReservations,
+
+                SiteUsageRows = siteUsageRows
             };
 
             return View(model);
