@@ -1,0 +1,188 @@
+﻿@model RVSite.Models.Reservation
+
+@{
+    ViewData["Title"] = "Book a Site";
+    var availableSites = ViewBag.AvailableSites as IEnumerable<RVSite.Models.Site>;
+}
+
+<section class="card admin-hero mb-4">
+    <div class="card-body p-4 p-lg-5">
+        <span class="home-kicker">Plan Your Stay</span>
+        <h1 class="page-title">Book an RV Site</h1>
+        <p class="page-subtitle">
+            Choose your dates and site requirements, then select from the available sites.
+        </p>
+    </div>
+</section>
+
+<form asp-controller="ClientReservation"
+      asp-action="Book"
+      method="post">
+
+    <section class="card mb-4">
+        <div class="card-header">
+            <h2 class="h5 mb-0">1. Search Availability</h2>
+        </div>
+
+        <div class="card-body">
+            <div asp-validation-summary="All" class="text-danger mb-3"></div>
+
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <label asp-for="CheckInDate" class="form-label">Check-In</label>
+                    <input asp-for="CheckInDate"
+                           type="date"
+                           class="form-control" />
+                    <span asp-validation-for="CheckInDate" class="text-danger"></span>
+                </div>
+
+                <div class="col-md-6">
+                    <label asp-for="CheckOutDate" class="form-label">Check-Out</label>
+                    <input asp-for="CheckOutDate"
+                           type="date"
+                           class="form-control" />
+                    <span asp-validation-for="CheckOutDate" class="text-danger"></span>
+                </div>
+
+                <div class="col-md-6">
+                    <label for="siteType" class="form-label">Site Type</label>
+                    <select id="siteType"
+                            name="siteType"
+                            class="form-select">
+                        <option value="">-- Select Site Type --</option>
+
+                        @foreach (var type in ViewBag.SiteTypes)
+                        {
+                        <option value="@type.Name">@type.Name</option>
+                        }
+                    </select>
+                </div>
+
+                <div class="col-md-6">
+                    <label for="rvLength" class="form-label">
+                        RV Length
+                        <span class="text-muted fw-normal">(optional)</span>
+                    </label>
+
+                    <div class="input-group">
+                        <input id="rvLength"
+                               name="rvLength"
+                               type="number"
+                               min="0"
+                               class="form-control"
+                               placeholder="Example: 35" />
+
+                        <span class="input-group-text">ft</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="mt-4">
+                <button type="submit"
+                        name="search"
+                        value="true"
+                        class="btn btn-primary">
+                    Search Available Sites
+                </button>
+            </div>
+        </div>
+    </section>
+
+    @if (ViewBag.AvailableSites != null)
+    {
+    <section class="card">
+        <div class="card-header">
+            <h2 class="h5 mb-0">2. Complete Your Reservation</h2>
+        </div>
+
+        <div class="card-body">
+            @if (availableSites == null || !availableSites.Any())
+                {
+            <div class="alert alert-info mb-0">
+                No sites matched the selected dates and requirements.
+            </div>
+                }
+                else
+                {
+            <div class="row g-3">
+                <div class="col-12">
+                    <label asp-for="SiteID" class="form-label">Select Site</label>
+
+                    <select asp-for="SiteID" class="form-select">
+                        <option value="">-- Select an Available Site --</option>
+
+                        @foreach (var site in availableSites)
+                                {
+                        <option value="@site.SiteID">
+                            Site @site.SiteNumber · @site.SiteType?.Name ·
+                            @site.MaxRVLength ft max · @site.BaseRate.ToString("C") / night
+                        </option>
+                                }
+                    </select>
+
+                    <span asp-validation-for="SiteID" class="text-danger"></span>
+                </div>
+
+                <div class="col-md-4">
+                    <label asp-for="NumberOfAdults" class="form-label">Adults</label>
+                    <input asp-for="NumberOfAdults"
+                           type="number"
+                           min="1"
+                           class="form-control" />
+                    <span asp-validation-for="NumberOfAdults" class="text-danger"></span>
+                </div>
+
+                <div class="col-md-4">
+                    <label asp-for="NumberOfChildren" class="form-label">Children</label>
+                    <input asp-for="NumberOfChildren"
+                           type="number"
+                           min="0"
+                           class="form-control" />
+                    <span asp-validation-for="NumberOfChildren" class="text-danger"></span>
+                </div>
+
+                <div class="col-md-4">
+                    <label asp-for="NumberOfPets" class="form-label">Pets</label>
+                    <input asp-for="NumberOfPets"
+                           type="number"
+                           min="0"
+                           class="form-control" />
+                    <span asp-validation-for="NumberOfPets" class="text-danger"></span>
+                </div>
+
+                <div class="col-12">
+                    <label asp-for="SpecialRequests" class="form-label">
+                        Special Requests
+                    </label>
+
+                    <textarea asp-for="SpecialRequests"
+                              class="form-control"
+                              rows="4"
+                              placeholder="Accessibility needs, arrival notes, or other requests"></textarea>
+
+                    <span asp-validation-for="SpecialRequests" class="text-danger"></span>
+                </div>
+            </div>
+
+            <div class="d-flex flex-wrap gap-2 mt-4">
+                <button type="submit" class="btn btn-primary">
+                    Reserve Site
+                </button>
+
+                <a asp-controller="Home"
+                   asp-action="Index"
+                   class="btn btn-outline-secondary">
+                    Back to Available Sites
+                </a>
+            </div>
+                }
+        </div>
+    </section>
+    }
+</form>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}

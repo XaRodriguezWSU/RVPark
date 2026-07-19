@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using RVSite.Data;
@@ -8,6 +9,7 @@ using System.Threading.Tasks;
 
 namespace RVSite.Controllers
 {
+    [Authorize(Roles = "Admin")]
     public class AdminController : Controller
     {
         private readonly AppDbContext _context;
@@ -20,16 +22,25 @@ namespace RVSite.Controllers
         [HttpGet]
         public async Task<IActionResult> Dashboard()
         {
+            var today = DateTime.Today;
+
             var totalSites = await _context.Sites.CountAsync();
 
-            var availableSites = await _context.Sites
-                .CountAsync(s => s.SiteStatus == SiteStatus.Available.ToString());
+            var reservedSites = await _context.Reservations
+                .Where(r =>
+                    r.ReservationStatus != ReservationStatus.Cancelled &&
+                    r.CheckInDate.Date <= today &&
+                    r.CheckOutDate.Date >= today)
+                .Select(r => r.SiteID)
+                .Distinct()
+                .CountAsync();
 
-            var reservedSites = await _context.Sites
-                .CountAsync(s => s.SiteStatus == SiteStatus.Reserved.ToString());
+            var maintenanceTasks = await _context.MaintenanceTasks
+                .CountAsync(t =>
+                    t.Status == MaintenanceTaskStatus.Open ||
+                    t.Status == MaintenanceTaskStatus.InProgress);
 
-            var maintenanceSites = await _context.Sites
-                .CountAsync(s => s.SiteStatus == SiteStatus.Maintenance.ToString());
+            var availableSites = totalSites - reservedSites;
 
             var recentSites = await _context.Sites
                 .Include(s => s.SiteType)
@@ -40,7 +51,7 @@ namespace RVSite.Controllers
             ViewBag.TotalSites = totalSites;
             ViewBag.AvailableSites = availableSites;
             ViewBag.ReservedSites = reservedSites;
-            ViewBag.MaintenanceSites = maintenanceSites;
+            ViewBag.MaintenanceSites = maintenanceTasks;
             ViewBag.RecentSites = recentSites;
 
             return View();

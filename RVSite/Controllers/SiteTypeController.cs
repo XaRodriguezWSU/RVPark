@@ -1,8 +1,10 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using RVSite.Models;
 
 namespace RVSite.Controllers
 {
+    [Authorize(Roles = "Admin")]
     public class SiteTypeController : Controller
     {
         private readonly AppDbContext _context;

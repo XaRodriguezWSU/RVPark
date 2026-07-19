@@ -1,11 +1,13 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using RVSite.Models;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using RVSite.Models;
 using RVSite.Services;
 
 
 namespace RVSite.Controllers
 {
+    [Authorize(Roles = "Admin")]
     public class ReservationController : Controller
     {
         private readonly AppDbContext _context;
