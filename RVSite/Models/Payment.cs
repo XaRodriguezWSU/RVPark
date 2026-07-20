@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace RVSite.Models
 {
@@ -6,6 +7,11 @@ namespace RVSite.Models
     {
         [Key]
         public int PaymentID { get; set; }
+
+        [Required]
+        public int ReservationID { get; set; }
+        [ForeignKey("ReservationID")]
+        public Reservation? Reservation { get; set; }
 
         [Required]
         public decimal AmountPaid { get; set; }
@@ -16,7 +22,10 @@ namespace RVSite.Models
         [Required]
         public PaymentStatus Status { get; set; }
 
-        public string? PaymentMethod { get; set; }
+        [Required]
+        public PaymentMethodType Method { get; set; }
 
+        // Stripe session id, check number, or manual-entry auth code
+        public string? TransactionReference { get; set; }
     }
 }
