@@ -1,0 +1,149 @@
+﻿@model RVSite.Models.ReservationPolicy
+
+@{
+    ViewData["Title"] = "Reservation Policies";
+    var activeSpecialEvents = ViewBag.ActiveSpecialEventPolicies as List<RVSite.Models.SpecialEventPolicy>;
+}
+
+<div class="admin-page">
+
+    <section class="card admin-hero mb-4">
+        <div class="card-body p-4 p-lg-5">
+            <span class="home-kicker">Administration</span>
+            <h1 class="page-title">Reservation Policies</h1>
+            <p class="page-subtitle">
+                View the current default reservation rules and manage special event policy overrides.
+            </p>
+
+            <div class="d-flex gap-2 flex-wrap mt-3">
+                <a asp-action="EditReservationPolicy" class="btn btn-primary">
+                    Edit General Policy
+                </a>
+
+                <a asp-action="SpecialEventPolicies" class="btn btn-outline-secondary">
+                    Manage Special Event Policies
+                </a>
+            </div>
+        </div>
+    </section>
+
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success">
+            @TempData["SuccessMessage"]
+        </div>
+    }
+
+    <section class="card mb-4">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h2 class="h5 mb-0">Current General Policy</h2>
+            <span class="badge bg-success">Active</span>
+        </div>
+
+        <div class="card-body">
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <strong>Maximum Advance Booking</strong>
+                    <p class="mb-0">
+                        @Model.MaximumAdvanceBookingMonths month(s)
+                        (@Model.MaximumAdvanceBookingDays days)
+                    </p>
+                </div>
+
+                <div class="col-md-6">
+                    <strong>Peak-Season Maximum Stay</strong>
+                    <p class="mb-0">@Model.PeakSeasonMaximumStayNights night(s)</p>
+                </div>
+
+                <div class="col-md-6">
+                    <strong>Required Time Away Before Return</strong>
+                    <p class="mb-0">@Model.RequiredDaysAwayBeforeReturn day(s)</p>
+                </div>
+
+                <div class="col-md-6">
+                    <strong>Late Cancellation Window</strong>
+                    <p class="mb-0">@Model.LateCancellationWindowDays day(s)</p>
+                </div>
+
+                <div class="col-md-6">
+                    <strong>Last Updated</strong>
+                    <p class="mb-0">@Model.LastUpdated.ToString("MMMM d, yyyy")</p>
+                </div>
+            </div>
+
+            @if (!string.IsNullOrWhiteSpace(Model.GeneralPolicyNotes))
+            {
+                <hr />
+                <strong>General Notes</strong>
+                <p class="mb-0">@Model.GeneralPolicyNotes</p>
+            }
+        </div>
+    </section>
+
+    <section class="card">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h2 class="h5 mb-0">Active & Upcoming Special Event Policies</h2>
+            <a asp-action="SpecialEventPolicies" class="btn btn-sm btn-outline-primary">
+                View All
+            </a>
+        </div>
+
+        <div class="card-body p-0">
+            @if (activeSpecialEvents == null || !activeSpecialEvents.Any())
+            {
+                <div class="p-4">
+                    <div class="alert alert-info mb-0">
+                        No active or upcoming special event policies are currently set.
+                    </div>
+                </div>
+            }
+            else
+            {
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle admin-table text-center">
+                        <thead>
+                            <tr>
+                                <th>Status</th>
+                                <th>Event</th>
+                                <th>Dates</th>
+                                <th>Site Type</th>
+                                <th>Max Stay</th>
+                                <th>Cancel Window</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var policy in activeSpecialEvents)
+                            {
+                                var today = DateTime.Today;
+                                var isCurrentlyActive = policy.StartDate.Date <= today && policy.EndDate.Date >= today;
+
+                                <tr>
+                                    <td>
+                                        @if (isCurrentlyActive)
+                                        {
+                                            <span class="badge bg-success">Active</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-info text-dark">Upcoming</span>
+                                        }
+                                    </td>
+                                    <td>@policy.EventName</td>
+                                    <td>
+                                        @policy.StartDate.ToShortDateString()
+                                        -
+                                        @policy.EndDate.ToShortDateString()
+                                    </td>
+                                    <td>@(policy.SiteType?.Name ?? "All Site Types")</td>
+                                    <td>@(policy.MaximumStayNights?.ToString() ?? "Default")</td>
+                                    <td>@(policy.CancellationWindowDays?.ToString() ?? "Default")</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+        </div>
+    </section>
+
+</div>
