@@ -1,0 +1,367 @@
+﻿@model RVSite.Models.Reservation
+
+@{
+    ViewData["Title"] = "Reservation Confirmation";
+
+    int nights =
+        (Model.CheckOutDate - Model.CheckInDate).Days;
+}
+
+<section class="card admin-hero mb-4">
+    <div class="card-body p-4 p-lg-5">
+        <div class="d-flex flex-column flex-lg-row justify-content-between align-items-lg-center gap-3">
+            <div>
+                <span class="home-kicker">
+                    Employee Reservation Management
+                </span>
+
+                <h1 class="page-title">
+                    Reservation Created
+                </h1>
+
+                <p class="page-subtitle mb-0">
+                    The walk-in reservation was created successfully.
+                </p>
+            </div>
+
+            <a asp-controller="Reservation"
+               asp-action="Index"
+               class="btn btn-outline-secondary">
+                Back to Reservations
+            </a>
+        </div>
+    </div>
+</section>
+
+@if (TempData["SuccessMessage"] != null)
+{
+    <div class="alert alert-success"
+         role="alert">
+        @TempData["SuccessMessage"]
+    </div>
+}
+
+<section class="card mb-4">
+    <div class="card-header">
+        <h2 class="h5 mb-1">
+            Reservation Summary
+        </h2>
+
+        <p class="mb-0 text-muted">
+            Review the reservation details below.
+        </p>
+    </div>
+
+    <div class="card-body">
+        <div class="row g-3">
+            <div class="col-md-4">
+                <div class="border rounded p-3 h-100">
+                    <div class="small text-muted mb-1">
+                        Reservation Number
+                    </div>
+
+                    <div class="fw-semibold">
+                        #@Model.ReservationID
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-4">
+                <div class="border rounded p-3 h-100">
+                    <div class="small text-muted mb-1">
+                        Reservation Status
+                    </div>
+
+                    <div class="fw-semibold">
+                        @Model.ReservationStatus
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-4">
+                <div class="border rounded p-3 h-100">
+                    <div class="small text-muted mb-1">
+                        Reservation Date
+                    </div>
+
+                    <div class="fw-semibold">
+                        @Model.ReservationDate.ToString("MMM d, yyyy h:mm tt")
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<div class="row g-4">
+    <div class="col-lg-6">
+        <section class="card h-100">
+            <div class="card-header">
+                <h2 class="h5 mb-1">
+                    Customer Information
+                </h2>
+
+                <p class="mb-0 text-muted">
+                    Customer associated with this reservation.
+                </p>
+            </div>
+
+            <div class="card-body">
+                <div class="mb-3">
+                    <div class="small text-muted mb-1">
+                        Customer Name
+                    </div>
+
+                    <div class="fw-semibold">
+                        @Model.User?.FirstName
+                        @Model.User?.LastName
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <div class="small text-muted mb-1">
+                        Email Address
+                    </div>
+
+                    <div class="fw-semibold text-break">
+                        @Model.User?.Email
+                    </div>
+                </div>
+
+                <div>
+                    <div class="small text-muted mb-1">
+                        Phone Number
+                    </div>
+
+                    <div class="fw-semibold">
+                        @Model.User?.PhoneNumber
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <div class="col-lg-6">
+        <section class="card h-100">
+            <div class="card-header">
+                <h2 class="h5 mb-1">
+                    Site Information
+                </h2>
+
+                <p class="mb-0 text-muted">
+                    Assigned site and rate information.
+                </p>
+            </div>
+
+            <div class="card-body">
+                <div class="mb-3">
+                    <div class="small text-muted mb-1">
+                        Site Number
+                    </div>
+
+                    <div class="fw-semibold">
+                        @Model.Site?.SiteNumber
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <div class="small text-muted mb-1">
+                        Site Type
+                    </div>
+
+                    <div class="fw-semibold">
+                        @(Model.Site?.SiteType?.Name ?? "Not Available")
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <div class="small text-muted mb-1">
+                        Nightly Rate
+                    </div>
+
+                    <div class="fw-semibold">
+                        @(Model.Site?.BaseRate.ToString("C") ?? "$0.00")
+                    </div>
+                </div>
+
+                <div>
+                    <div class="small text-muted mb-1">
+                        Site Status
+                    </div>
+
+                    <div class="fw-semibold">
+                        @Model.Site?.SiteStatus
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div>
+</div>
+
+<section class="card mt-4">
+    <div class="card-header">
+        <h2 class="h5 mb-1">
+            Stay Details
+        </h2>
+
+        <p class="mb-0 text-muted">
+            Dates, guest counts and special requests.
+        </p>
+    </div>
+
+    <div class="card-body">
+        <div class="row g-3">
+            <div class="col-md-4">
+                <div class="border rounded p-3 h-100">
+                    <div class="small text-muted mb-1">
+                        Check-In Date
+                    </div>
+
+                    <div class="fw-semibold">
+                        @Model.CheckInDate.ToString("MMM d, yyyy")
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-4">
+                <div class="border rounded p-3 h-100">
+                    <div class="small text-muted mb-1">
+                        Check-Out Date
+                    </div>
+
+                    <div class="fw-semibold">
+                        @Model.CheckOutDate.ToString("MMM d, yyyy")
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-4">
+                <div class="border rounded p-3 h-100">
+                    <div class="small text-muted mb-1">
+                        Number of Nights
+                    </div>
+
+                    <div class="fw-semibold">
+                        @nights
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-4">
+                <div class="border rounded p-3 h-100">
+                    <div class="small text-muted mb-1">
+                        Adults
+                    </div>
+
+                    <div class="fw-semibold">
+                        @Model.NumberOfAdults
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-4">
+                <div class="border rounded p-3 h-100">
+                    <div class="small text-muted mb-1">
+                        Children
+                    </div>
+
+                    <div class="fw-semibold">
+                        @Model.NumberOfChildren
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-4">
+                <div class="border rounded p-3 h-100">
+                    <div class="small text-muted mb-1">
+                        Pets
+                    </div>
+
+                    <div class="fw-semibold">
+                        @Model.NumberOfPets
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="border rounded p-3 mt-3">
+            <div class="small text-muted mb-1">
+                Special Requests
+            </div>
+
+            @if (string.IsNullOrWhiteSpace(Model.SpecialRequests))
+            {
+                <div class="fw-semibold">
+                    None
+                </div>
+            }
+            else
+            {
+                <div class="fw-semibold">
+                    @Model.SpecialRequests
+                </div>
+            }
+        </div>
+    </div>
+</section>
+
+<section class="card mt-4 mb-5">
+    <div class="card-header">
+        <h2 class="h5 mb-1">
+            Payment Summary
+        </h2>
+
+        <p class="mb-0 text-muted">
+            Current reservation cost and unpaid balance.
+        </p>
+    </div>
+
+    <div class="card-body">
+        <div class="row g-3">
+            <div class="col-md-6">
+                <div class="border rounded p-3 h-100">
+                    <div class="small text-muted mb-1">
+                        Total Cost
+                    </div>
+
+                    <div class="fs-4 fw-semibold">
+                        @Model.TotalCost.ToString("C")
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-6">
+                <div class="border rounded p-3 h-100">
+                    <div class="small text-muted mb-1">
+                        Balance Due
+                    </div>
+
+                    <div class="fs-4 fw-semibold">
+                        @Model.BalanceDue.ToString("C")
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="d-flex flex-wrap gap-2 mt-4">
+            <a asp-controller="Reservation"
+               asp-action="Edit"
+               asp-route-id="@Model.ReservationID"
+               class="btn btn-primary">
+                Edit Reservation
+            </a>
+
+            <a asp-controller="Reservation"
+               asp-action="WalkIn"
+               class="btn btn-outline-primary">
+                Create Another Walk-In Reservation
+            </a>
+
+            <a asp-controller="Reservation"
+               asp-action="Index"
+               class="btn btn-outline-secondary">
+                View All Reservations
+            </a>
+        </div>
+    </div>
+</section>

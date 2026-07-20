@@ -6,61 +6,142 @@
 
 <section class="card admin-hero mb-4">
     <div class="card-body p-4 p-lg-5">
-        <span class="home-kicker">Reservation Management</span>
-        <h1 class="page-title">Reservation Cancelled</h1>
-        <p class="page-subtitle">
-            Reservation #@Model.ReservationID has been marked as cancelled.
-        </p>
+        <div class="d-flex flex-column flex-lg-row justify-content-between align-items-lg-center gap-3">
+            <div>
+                <span class="home-kicker">
+                    Reservation Management
+                </span>
+
+                <h1 class="page-title">
+                    Reservation Cancelled
+                </h1>
+
+                <p class="page-subtitle mb-0">
+                    Reservation #@Model.ReservationID was successfully cancelled.
+                </p>
+            </div>
+
+            <a asp-controller="Reservation"
+               asp-action="Index"
+               class="btn btn-outline-secondary">
+                Back to Reservations
+            </a>
+        </div>
     </div>
 </section>
 
-<section class="card">
-    <div class="card-body p-4">
-        <div class="alert alert-warning">
-            This reservation has been marked as <strong>Cancelled</strong>.
+<div class="alert alert-success"
+     role="alert">
+
+    <h2 class="h5">
+        Cancellation Complete
+    </h2>
+
+    <p class="mb-0">
+        This reservation has been marked as
+        <strong>Cancelled</strong>.
+    </p>
+</div>
+
+<section class="card mb-5">
+    <div class="card-header">
+        <h2 class="h5 mb-1">
+            Cancelled Reservation Details
+        </h2>
+
+        <p class="mb-0 text-muted">
+            The reservation remains available in the system for recordkeeping.
+        </p>
+    </div>
+
+    <div class="card-body">
+        <div class="row g-3">
+            <div class="col-md-6 col-xl-4">
+                <div class="border rounded p-3 h-100">
+                    <div class="small text-muted mb-1">
+                        Reservation ID
+                    </div>
+
+                    <div class="fw-semibold">
+                        #@Model.ReservationID
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-6 col-xl-4">
+                <div class="border rounded p-3 h-100">
+                    <div class="small text-muted mb-1">
+                        Customer
+                    </div>
+
+                    <div class="fw-semibold">
+                        @(Model.User?.FirstName ?? "Unknown")
+                        @(Model.User?.LastName ?? "Customer")
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-6 col-xl-4">
+                <div class="border rounded p-3 h-100">
+                    <div class="small text-muted mb-1">
+                        Site
+                    </div>
+
+                    <div class="fw-semibold">
+                        @(Model.Site?.SiteNumber ?? "Unknown")
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-6 col-xl-4">
+                <div class="border rounded p-3 h-100">
+                    <div class="small text-muted mb-1">
+                        Original Check-In
+                    </div>
+
+                    <div class="fw-semibold">
+                        @Model.CheckInDate.ToString("MMM d, yyyy")
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-6 col-xl-4">
+                <div class="border rounded p-3 h-100">
+                    <div class="small text-muted mb-1">
+                        Original Check-Out
+                    </div>
+
+                    <div class="fw-semibold">
+                        @Model.CheckOutDate.ToString("MMM d, yyyy")
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-6 col-xl-4">
+                <div class="border rounded p-3 h-100">
+                    <div class="small text-muted mb-1">
+                        Status
+                    </div>
+
+                    <div class="fw-semibold">
+                        @Model.ReservationStatus
+                    </div>
+                </div>
+            </div>
         </div>
 
-        <div class="row g-3 mb-4">
-            <div class="col-md-6 col-xl-4">
-                <div class="detail-box">
-                    <span>Reservation ID</span>
-                    <strong>@Model.ReservationID</strong>
-                </div>
-            </div>
+        <div class="d-flex flex-wrap gap-2 mt-4">
+            <a class="btn btn-primary"
+               asp-controller="Reservation"
+               asp-action="Index">
+                Back to Reservations
+            </a>
 
-            <div class="col-md-6 col-xl-4">
-                <div class="detail-box">
-                    <span>Customer</span>
-                    <strong>@Model.User.FirstName @Model.User.LastName</strong>
-                </div>
-            </div>
-
-            <div class="col-md-6 col-xl-4">
-                <div class="detail-box">
-                    <span>Site</span>
-                    <strong>@Model.Site.SiteNumber</strong>
-                </div>
-            </div>
-
-            <div class="col-md-6 col-xl-4">
-                <div class="detail-box">
-                    <span>Original Check-In</span>
-                    <strong>@Model.CheckInDate.ToShortDateString()</strong>
-                </div>
-            </div>
-
-            <div class="col-md-6 col-xl-4">
-                <div class="detail-box">
-                    <span>Original Check-Out</span>
-                    <strong>@Model.CheckOutDate.ToShortDateString()</strong>
-                </div>
-            </div>
+            <a class="btn btn-outline-primary"
+               asp-controller="Reservation"
+               asp-action="WalkIn">
+                Create New Reservation
+            </a>
         </div>
-
-        <a class="btn btn-primary"
-           asp-controller="Reservation"
-           asp-action="Index">
-            Back to Reservations
-        </a>
     </div>
 </section>

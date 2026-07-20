@@ -1,87 +1,168 @@
 ﻿@model IEnumerable<RVSite.Models.Reservation>
 
-    @{
+@{
     ViewData["Title"] = "Reservations";
-    }
+}
 
-    <section class="card admin-hero mb-4">
-        <div class="card-body p-4 p-lg-5">
-            <div class="d-flex flex-column flex-lg-row justify-content-between align-items-lg-center gap-3">
-                <div>
-                    <span class="home-kicker">Reservation Management</span>
-                    <h1 class="page-title">Reservations</h1>
-                    <p class="page-subtitle">
-                        Review, edit, cancel, and search current reservation records.
-                    </p>
-                </div>
+<section class="card admin-hero mb-4">
+    <div class="card-body p-4 p-lg-5">
+        <div class="d-flex flex-column flex-lg-row justify-content-between align-items-lg-center gap-3">
+            <div>
+                <span class="home-kicker">Employee Reservation Management</span>
 
-                <a class="btn btn-primary"
+                <h1 class="page-title">Reservations</h1>
+
+                <p class="page-subtitle">
+                    Review, edit, cancel, search, and create reservations for walk-in customers.
+                </p>
+            </div>
+
+            <div class="d-flex flex-wrap gap-2">
+                <a class="btn btn-outline-primary"
                    asp-controller="Reservation"
                    asp-action="Search">
                     Search Reservations
                 </a>
+
+                <a class="btn btn-primary"
+                   asp-controller="Reservation"
+                   asp-action="WalkIn">
+                    Create Walk-In Reservation
+                </a>
             </div>
         </div>
-    </section>
+    </div>
+</section>
 
-    <section class="card">
-        <div class="card-header d-flex justify-content-between align-items-center">
-            <div>
-                <h2 class="h5 mb-1">Reservation Records</h2>
-                <p class="mb-0 text-muted">@Model.Count() total reservations</p>
-            </div>
+<section class="card">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <div>
+            <h2 class="h5 mb-1">Reservation Records</h2>
+            <p class="mb-0 text-muted">
+                @Model.Count() total reservations
+            </p>
         </div>
+    </div>
 
-        <div class="card-body p-0">
-            <div class="table-responsive">
-                <table class="table table-hover align-middle admin-table mb-0">
-                    <thead>
-                        <tr>
-                            <th>Reservation ID</th>
-                            <th>Customer</th>
-                            <th>Site</th>
-                            <th>Check-In</th>
-                            <th>Check-Out</th>
-                            <th class="text-end">Total Cost</th>
-                            <th>Status</th>
-                            <th class="text-end">Actions</th>
-                        </tr>
-                    </thead>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle admin-table mb-0">
+                <thead>
+                    <tr>
+                        <th>Reservation ID</th>
+                        <th>Customer</th>
+                        <th>Contact</th>
+                        <th>Site</th>
+                        <th>Check-In</th>
+                        <th>Check-Out</th>
+                        <th class="text-end">Total Cost</th>
+                        <th>Status</th>
+                        <th class="text-end">Actions</th>
+                    </tr>
+                </thead>
 
-                    <tbody>
-                        @foreach (var r in Model)
+                <tbody>
+                    @if (Model.Any())
+                    {
+                        foreach (var reservation in Model)
+                        {
+                            <tr>
+                                <td class="fw-bold">
+                                    #@reservation.ReservationID
+                                </td>
+
+                                <td>
+                                    @if (reservation.User != null)
+                                    {
+                                        <div class="fw-semibold">
+                                            @reservation.User.FirstName
+                                            @reservation.User.LastName
+                                        </div>
+
+                                        <small class="text-muted">
+                                            @reservation.User.Email
+                                        </small>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-muted">Unknown customer</span>
+                                    }
+                                </td>
+
+                                <td>
+                                    @(reservation.User?.PhoneNumber ?? "Not provided")
+                                </td>
+
+                                <td>
+                                    @(reservation.Site?.SiteNumber ?? "Unknown")
+                                </td>
+
+                                <td>
+                                    @reservation.CheckInDate.ToString("MMM d, yyyy")
+                                </td>
+
+                                <td>
+                                    @reservation.CheckOutDate.ToString("MMM d, yyyy")
+                                </td>
+
+                                <td class="text-end">
+                                    @reservation.TotalCost.ToString("C")
+                                </td>
+
+                                <td>
+                                    @if (reservation.ReservationStatus == ReservationStatus.Cancelled)
+                                    {
+                                        <span class="badge bg-danger">
+                                            Cancelled
+                                        </span>
+                                    }
+                                    else if (reservation.ReservationStatus == ReservationStatus.Completed)
+                                    {
+                                        <span class="badge bg-secondary">
+                                            Completed
+                                        </span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-success">
+                                            @reservation.ReservationStatus
+                                        </span>
+                                    }
+                                </td>
+
+                                <td class="text-end">
+                                    <div class="btn-group btn-group-sm">
+                                        <a class="btn btn-outline-primary"
+                                           asp-controller="Reservation"
+                                           asp-action="Edit"
+                                           asp-route-id="@reservation.ReservationID">
+                                            Edit
+                                        </a>
+
+                                        @if (reservation.ReservationStatus != ReservationStatus.Cancelled)
+                                        {
+                                            <a class="btn btn-outline-danger"
+                                               asp-controller="Reservation"
+                                               asp-action="CancelReservation"
+                                               asp-route-id="@reservation.ReservationID">
+                                                Cancel
+                                            </a>
+                                        }
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    }
+                    else
                     {
                         <tr>
-                            <td class="fw-bold">@r.ReservationID</td>
-                            <td>@(r.User != null ? $"{r.User.FirstName} {r.User.LastName}" : "Unknown")</td>
-                            <td>@(r.Site != null ? r.Site.SiteNumber : "Unknown")</td>
-                            <td>@r.CheckInDate.ToShortDateString()</td>
-                            <td>@r.CheckOutDate.ToShortDateString()</td>
-                            <td class="text-end">@r.TotalCost.ToString("C")</td>
-                            <td>
-                                <span class="badge bg-secondary">@r.ReservationStatus</span>
-                            </td>
-                            <td class="text-end">
-                                <div class="btn-group btn-group-sm">
-                                    <a class="btn btn-outline-primary"
-                                       asp-controller="Reservation"
-                                       asp-action="Edit"
-                                       asp-route-id="@r.ReservationID">
-                                        Edit
-                                    </a>
-
-                                    <a class="btn btn-outline-danger"
-                                       asp-controller="Reservation"
-                                       asp-action="CancelReservation"
-                                       asp-route-id="@r.ReservationID">
-                                        Cancel
-                                    </a>
-                                </div>
+                            <td colspan="9" class="text-center text-muted py-5">
+                                No reservations were found.
                             </td>
                         </tr>
                     }
-                    </tbody>
-                </table>
-            </div>
+                </tbody>
+            </table>
         </div>
-    </section>
+    </div>
+</section>
