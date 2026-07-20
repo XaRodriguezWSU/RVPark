@@ -1,0 +1,92 @@
+﻿@model RVSite.Models.ReservationPolicy
+
+@{
+    ViewData["Title"] = "Edit Reservation Policy";
+}
+
+<div class="admin-page">
+
+    <section class="card admin-hero mb-4">
+        <div class="card-body p-4 p-lg-5">
+            <span class="home-kicker">Administration</span>
+            <h1 class="page-title">Edit Reservation Policy</h1>
+            <p class="page-subtitle">
+                Update the default reservation rules used when no special event policy applies.
+            </p>
+        </div>
+    </section>
+
+    <section class="card">
+        <div class="card-header">
+            <h2 class="h5 mb-0">General Policy Settings</h2>
+        </div>
+
+        <div class="card-body">
+            <form asp-action="EditReservationPolicy" method="post">
+                <input type="hidden" asp-for="ReservationPolicyID" />
+
+                <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+                <div class="mb-3">
+                    <label asp-for="MaximumAdvanceBookingMonths" class="form-label">
+                        Maximum Advance Booking (months)
+                    </label>
+                    <input asp-for="MaximumAdvanceBookingMonths" class="form-control" />
+                    <span asp-validation-for="MaximumAdvanceBookingMonths" class="text-danger"></span>
+                    <div class="form-text">
+                        This is stored as days for reservation rule checks.
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label asp-for="PeakSeasonMaximumStayNights" class="form-label">
+                        Peak-Season Maximum Stay (nights)
+                    </label>
+                    <input asp-for="PeakSeasonMaximumStayNights" class="form-control" />
+                    <span asp-validation-for="PeakSeasonMaximumStayNights" class="text-danger"></span>
+                </div>
+
+                <div class="mb-3">
+                    <label asp-for="RequiredDaysAwayBeforeReturn" class="form-label">
+                        Required Time Away Before Return (days)
+                    </label>
+                    <input asp-for="RequiredDaysAwayBeforeReturn" class="form-control" />
+                    <span asp-validation-for="RequiredDaysAwayBeforeReturn" class="text-danger"></span>
+                </div>
+
+                <div class="mb-3">
+                    <label asp-for="LateCancellationWindowDays" class="form-label">
+                        Late Cancellation Window (days)
+                    </label>
+                    <input asp-for="LateCancellationWindowDays" class="form-control" />
+                    <span asp-validation-for="LateCancellationWindowDays" class="text-danger"></span>
+                </div>
+
+                <div class="mb-3">
+                    <label asp-for="GeneralPolicyNotes" class="form-label">
+                        Notes
+                    </label>
+                    <textarea asp-for="GeneralPolicyNotes" class="form-control" rows="4"></textarea>
+                    <span asp-validation-for="GeneralPolicyNotes" class="text-danger"></span>
+                </div>
+
+                <div class="d-flex gap-2">
+                    <button type="submit" class="btn btn-primary">
+                        Save Changes
+                    </button>
+
+                    <a asp-action="ReservationPolicies" class="btn btn-outline-secondary">
+                        Cancel
+                    </a>
+                </div>
+            </form>
+        </div>
+    </section>
+
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}
