@@ -659,8 +659,6 @@ namespace RVSite.Controllers
                 "EditConfirmation",
                 reservation);
         }
-
-        [HttpGet]
         [HttpGet]
         public async Task<IActionResult> CancelReservation(int id)
         {
