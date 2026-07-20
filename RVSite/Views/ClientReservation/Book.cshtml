@@ -3,6 +3,8 @@
 @{
     ViewData["Title"] = "Book a Site";
     var availableSites = ViewBag.AvailableSites as IEnumerable<RVSite.Models.Site>;
+    var selectedSiteType = ViewBag.SelectedSiteType as string;
+    var selectedRvLength = ViewBag.RvLength as int?;
 }
 
 <section class="card admin-hero mb-4">
@@ -25,7 +27,7 @@
         </div>
 
         <div class="card-body">
-            <div asp-validation-summary="All" class="text-danger mb-3"></div>
+            <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
 
             <div class="row g-3">
                 <div class="col-md-6">
@@ -53,7 +55,14 @@
 
                         @foreach (var type in ViewBag.SiteTypes)
                         {
-                        <option value="@type.Name">@type.Name</option>
+                            if (selectedSiteType == type.Name)
+                            {
+                                <option value="@type.Name" selected>@type.Name</option>
+                            }
+                            else
+                            {
+                                <option value="@type.Name">@type.Name</option>
+                            }
                         }
                     </select>
                 </div>
@@ -70,6 +79,7 @@
                                type="number"
                                min="0"
                                class="form-control"
+                               value="@selectedRvLength"
                                placeholder="Example: 35" />
 
                         <span class="input-group-text">ft</span>

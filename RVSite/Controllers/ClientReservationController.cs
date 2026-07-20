@@ -11,11 +11,13 @@ namespace RVSite.Controllers
     {
         private readonly AppDbContext _context;
         private readonly CostService _costService;
+        private readonly ReservationPolicyService _reservationPolicyService;
 
-        public ClientReservationController(AppDbContext context, CostService costService)
+        public ClientReservationController(AppDbContext context, CostService costService, ReservationPolicyService reservationPolicyService)
         {
             _context = context;
             _costService = costService;
+            _reservationPolicyService = reservationPolicyService;
         }
 
         // Step 1: Show booking form
@@ -26,13 +28,45 @@ namespace RVSite.Controllers
         }
 
         [HttpPost]
-        public IActionResult Book(Reservation model, string siteType, int? rvLength, bool search = false)
+        public async Task<IActionResult> Book(Reservation model, string? siteType, int? rvLength, bool search = false)
         {
             ViewBag.SiteTypes = _context.SiteTypes.ToList();
+            ViewBag.SelectedSiteType = siteType;
+            ViewBag.RvLength = rvLength;
 
             if (search)
             {
                 // Step 1: User clicked "Search"
+                ModelState.Remove(nameof(Reservation.SiteID));
+                ModelState.Remove(nameof(Reservation.NumberOfAdults));
+                ModelState.Remove(nameof(Reservation.NumberOfChildren));
+                ModelState.Remove(nameof(Reservation.NumberOfPets));
+                ModelState.Remove(nameof(Reservation.SpecialRequests));
+
+                model.CheckInDate = model.CheckInDate.Date;
+                model.CheckOutDate = model.CheckOutDate.Date;
+
+                if (string.IsNullOrWhiteSpace(siteType))
+                {
+                    ModelState.AddModelError("siteType", "Please select a site type.");
+                }
+
+                if (model.CheckInDate < DateTime.Today)
+                {
+                    ModelState.AddModelError(nameof(Reservation.CheckInDate), "The check-in date cannot be in the past.");
+                }
+
+                if (model.CheckOutDate <= model.CheckInDate)
+                {
+                    ModelState.AddModelError(nameof(Reservation.CheckOutDate), "The check-out date must be after the check-in date.");
+                }
+
+                if (!ModelState.IsValid)
+                {
+                    return View(model);
+                }
+
+                // get available sites
                 var availableSites = _context.Sites
                     .Where(s => s.SiteType.Name == siteType &&
                                 (rvLength == null || s.MaxRVLength >= rvLength))
@@ -49,12 +83,41 @@ namespace RVSite.Controllers
             // Step 2: User clicked "Reserve"
             model.UserID = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier).Value);
             model.Site = _context.Sites.FirstOrDefault(s => s.SiteID == model.SiteID);
+
+            // Step 3: Confirm reservation meets policy requirements
+            if (!int.TryParse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value, out int userId))
+            {
+                return Challenge();
+            }
+
+            model.UserID = userId;
+            model.CheckInDate = model.CheckInDate.Date;
+            model.CheckOutDate = model.CheckOutDate.Date;
+
+            var policyValidation = await _reservationPolicyService.ValidateReservationAsync(
+                model.CheckInDate,
+                model.CheckOutDate,
+                model.UserID,
+                model.SiteID);
+
+            if (!policyValidation.IsValid)
+            {
+                foreach (var error in policyValidation.Errors)
+                {
+                    ModelState.AddModelError("", error);
+                }
+
+                ViewBag.SiteTypes = _context.SiteTypes.ToList();
+                return View(model);
+            }
+
+            // Step 4: Calculate cost and save reservation
             model.TotalCost = _costService.CalculateCost(model);
             model.BalanceDue = model.TotalCost;
             model.ReservationStatus = ReservationStatus.Confirmed;
 
             _context.Reservations.Add(model);
-            _context.SaveChanges();
+            await _context.SaveChangesAsync();
 
             return RedirectToAction("Confirmation", new { id = model.ReservationID });
         }
