@@ -1,0 +1,128 @@
+﻿@model List<RVSite.Models.Reservation>
+
+    @{
+    ViewData["Title"] = "My Reservations";
+    }
+
+    <section class="card admin-hero mb-4">
+        <div class="card-body p-4 p-lg-5">
+            <div class="d-flex flex-column flex-lg-row justify-content-between align-items-lg-center gap-3">
+                <div>
+                    <span class="home-kicker">Your Account</span>
+                    <h1 class="page-title">My Reservations</h1>
+                    <p class="page-subtitle">
+                        Review upcoming stays and manage your current reservations.
+                    </p>
+                </div>
+
+                <a asp-controller="ClientReservation"
+                   asp-action="Book"
+                   class="btn btn-primary">
+                    Book Another Stay
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <section class="card">
+        <div class="card-header">
+            <h2 class="h5 mb-0">Reservation History</h2>
+        </div>
+
+        <div class="card-body p-0">
+            @if (Model == null || Model.Count == 0)
+        {
+            <div class="p-4 text-center">
+                <h3 class="h5 mb-2">No reservations yet</h3>
+                <p class="text-muted mb-3">
+                    Your future and past reservations will appear here.
+                </p>
+
+                <a asp-controller="ClientReservation"
+                   asp-action="Book"
+                   class="btn btn-primary">
+                    Book Your First Stay
+                </a>
+            </div>
+        }
+        else
+        {
+            <div class="table-responsive">
+                <table class="table table-hover align-middle admin-table mb-0">
+                    <thead>
+                        <tr>
+                            <th>Reservation</th>
+                            <th>Site</th>
+                            <th>Check-In</th>
+                            <th>Check-Out</th>
+                            <th>Status</th>
+                            <th class="text-end">Total</th>
+                            <th class="text-end">Actions</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+                        @foreach (var r in Model)
+                        {
+                        <tr>
+                            <td class="fw-bold">#@r.ReservationID</td>
+                            <td>Site @r.Site?.SiteNumber</td>
+                            <td>@r.CheckInDate.ToShortDateString()</td>
+                            <td>@r.CheckOutDate.ToShortDateString()</td>
+
+                            <td>
+                                @if (r.ReservationStatus == RVSite.Models.ReservationStatus.Confirmed)
+                                    {
+                                <span class="badge bg-success">Confirmed</span>
+                                    }
+                                    else if (r.ReservationStatus == RVSite.Models.ReservationStatus.Cancelled)
+                                    {
+                                <span class="badge bg-danger">Cancelled</span>
+                                    }
+                                    else
+                                    {
+                                <span class="badge bg-secondary">
+                                    @r.ReservationStatus
+                                </span>
+                                    }
+                            </td>
+
+                            <td class="text-end">
+                                @r.TotalCost.ToString("C")
+                            </td>
+
+                            <td class="text-end">
+                                @if (r.ReservationStatus != RVSite.Models.ReservationStatus.Cancelled &&
+                                         r.CheckInDate > DateTime.Today)
+                                    {
+                                <div class="btn-group btn-group-sm">
+                                    <a asp-controller="ClientReservation"
+                                       asp-action="Edit"
+                                       asp-route-id="@r.ReservationID"
+                                       class="btn btn-outline-primary">
+                                        Edit
+                                    </a>
+
+                                    <a asp-controller="ClientReservation"
+                                       asp-action="Cancel"
+                                       asp-route-id="@r.ReservationID"
+                                       class="btn btn-outline-danger">
+                                        Cancel
+                                    </a>
+                                </div>
+                                    }
+                                    else
+                                    {
+                            <span class="text-muted small">
+                                For assistance, please contact our support team.
+                            </span>
+                                    }
+                            </td>
+                        </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+        </div>
+    </section>

@@ -1,0 +1,156 @@
+@{
+    ViewData["Title"] = "Create Account";
+}
+
+<div class="row justify-content-center py-4">
+    <div class="col-xl-7 col-lg-8">
+
+        <div class="text-center mb-4">
+            <span class="home-kicker">RVSite</span>
+
+            <h1 class="page-title">
+                Create Your Account
+            </h1>
+
+            <p class="page-subtitle">
+                Register to manage reservations and plan your upcoming stay.
+            </p>
+        </div>
+
+        <section class="card">
+            <div class="card-header">
+                <h2 class="h5 mb-0">Customer Information</h2>
+            </div>
+
+            <div class="card-body p-4">
+
+                <div asp-validation-summary="All"
+                     class="text-danger mb-3">
+                </div>
+
+                <form asp-controller="Login"
+                      asp-action="Register"
+                      method="post">
+
+                    <div class="row g-3">
+
+                        <div class="col-md-6">
+                            <label for="firstName" class="form-label">
+                                First Name
+                            </label>
+
+                            <input id="firstName"
+                                   name="firstName"
+                                   type="text"
+                                   value="@ViewBag.FirstName"
+                                   class="form-control"
+                                   autocomplete="given-name"
+                                   required />
+                        </div>
+
+                        <div class="col-md-6">
+                            <label for="lastName" class="form-label">
+                                Last Name
+                            </label>
+
+                            <input id="lastName"
+                                   name="lastName"
+                                   type="text"
+                                   value="@ViewBag.LastName"
+                                   class="form-control"
+                                   autocomplete="family-name"
+                                   required />
+                        </div>
+
+                        <div class="col-md-6">
+                            <label for="email" class="form-label">
+                                Email Address
+                            </label>
+
+                            <input id="email"
+                                   name="email"
+                                   type="email"
+                                   value="@ViewBag.Email"
+                                   class="form-control"
+                                   autocomplete="email"
+                                   placeholder="you@example.com"
+                                   required />
+                        </div>
+
+                        <div class="col-md-6">
+                            <label for="phoneNumber" class="form-label">
+                                Phone Number
+                            </label>
+
+                            <input id="phoneNumber"
+                                   name="phoneNumber"
+                                   type="tel"
+                                   value="@ViewBag.PhoneNumber"
+                                   class="form-control"
+                                   autocomplete="tel"
+                                   placeholder="555-555-5555"
+                                   required />
+                        </div>
+
+                        <div class="col-md-6">
+                            <label for="password" class="form-label">
+                                Password
+                            </label>
+
+                            <input id="password"
+                                   name="password"
+                                   type="password"
+                                   class="form-control"
+                                   autocomplete="new-password"
+                                   minlength="8"
+                                   required />
+
+                            <div class="form-text">
+                                Use at least 8 characters.
+                            </div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label for="confirmPassword" class="form-label">
+                                Confirm Password
+                            </label>
+
+                            <input id="confirmPassword"
+                                   name="confirmPassword"
+                                   type="password"
+                                   class="form-control"
+                                   autocomplete="new-password"
+                                   minlength="8"
+                                   required />
+                        </div>
+
+                    </div>
+
+                    <div class="d-grid mt-4">
+                        <button type="submit"
+                                class="btn btn-primary btn-lg">
+                            Create Account
+                        </button>
+                    </div>
+
+                </form>
+
+                <hr class="my-4" />
+
+                <div class="text-center">
+                    <p class="text-muted mb-2">
+                        Already have an account?
+                    </p>
+
+                    <a asp-controller="Login"
+                       asp-action="Index"
+                       class="btn btn-outline-secondary">
+                        Sign In
+                    </a>
+                </div>
+
+            </div>
+        </section>
+
+    </div>
+</div>

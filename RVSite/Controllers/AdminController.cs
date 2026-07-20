@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using RVSite.Data;
@@ -8,6 +9,7 @@ using System.Threading.Tasks;
 
 namespace RVSite.Controllers
 {
+    [Authorize(Roles = "Admin")]
     public class AdminController : Controller
     {
         private readonly AppDbContext _context;
@@ -20,16 +22,25 @@ namespace RVSite.Controllers
         [HttpGet]
         public async Task<IActionResult> Dashboard()
         {
+            var today = DateTime.Today;
+
             var totalSites = await _context.Sites.CountAsync();
 
-            var availableSites = await _context.Sites
-                .CountAsync(s => s.SiteStatus == SiteStatus.Available.ToString());
+            var reservedSites = await _context.Reservations
+                .Where(r =>
+                    r.ReservationStatus != ReservationStatus.Cancelled &&
+                    r.CheckInDate.Date <= today &&
+                    r.CheckOutDate.Date >= today)
+                .Select(r => r.SiteID)
+                .Distinct()
+                .CountAsync();
 
-            var reservedSites = await _context.Sites
-                .CountAsync(s => s.SiteStatus == SiteStatus.Reserved.ToString());
+            var maintenanceTasks = await _context.MaintenanceTasks
+                .CountAsync(t =>
+                    t.Status == MaintenanceTaskStatus.Open ||
+                    t.Status == MaintenanceTaskStatus.InProgress);
 
-            var maintenanceSites = await _context.Sites
-                .CountAsync(s => s.SiteStatus == SiteStatus.Maintenance.ToString());
+            var availableSites = totalSites - reservedSites;
 
             var recentSites = await _context.Sites
                 .Include(s => s.SiteType)
@@ -40,7 +51,7 @@ namespace RVSite.Controllers
             ViewBag.TotalSites = totalSites;
             ViewBag.AvailableSites = availableSites;
             ViewBag.ReservedSites = reservedSites;
-            ViewBag.MaintenanceSites = maintenanceSites;
+            ViewBag.MaintenanceSites = maintenanceTasks;
             ViewBag.RecentSites = recentSites;
 
             return View();
@@ -83,6 +94,7 @@ namespace RVSite.Controllers
             var reservations = await _context.Reservations
                 .Include(r => r.User)
                 .Include(r => r.Site)
+                    .ThenInclude(s => s.SiteType)
                 .Where(r => r.CheckInDate.Date <= end.Date &&
                             r.CheckOutDate.Date >= start.Date)
                 .ToListAsync();
@@ -114,6 +126,11 @@ namespace RVSite.Controllers
                     .ThenBy(r => r.CheckInDate)
                     .ToList(),
 
+                "SiteUsage" => nonCancelledReservations
+                    .OrderBy(r => r.Site != null ? r.Site.SiteNumber : "")
+                    .ThenBy(r => r.CheckInDate)
+                    .ToList(),
+
                 _ => reservations
                     .OrderBy(r => r.CheckInDate)
                     .ToList()
@@ -125,6 +142,43 @@ namespace RVSite.Controllers
                 .Select(r => r.SiteID)
                 .Distinct()
                 .Count();
+
+            var sites = await _context.Sites
+                .Include(s => s.SiteType)
+                .OrderBy(s => s.SiteNumber)
+                .ToListAsync();
+
+            var reportEndExclusive = end.Date.AddDays(1);
+
+            var siteUsageRows = sites.Select(site =>
+            {
+                var siteReservations = nonCancelledReservations
+                    .Where(r => r.SiteID == site.SiteID)
+                    .ToList();
+
+                return new SiteUsageReportRow
+                {
+                    SiteID = site.SiteID,
+                    SiteNumber = site.SiteNumber,
+                    SiteTypeName = site.SiteType != null ? site.SiteType.Name : "Unknown",
+                    ReservationCount = siteReservations.Count,
+                    ReservedNights = siteReservations.Sum(r =>
+                    {
+                        var overlapStart = r.CheckInDate.Date > start.Date
+                            ? r.CheckInDate.Date
+                            : start.Date;
+
+                        var overlapEnd = r.CheckOutDate.Date < reportEndExclusive
+                            ? r.CheckOutDate.Date
+                            : reportEndExclusive;
+
+                        var nights = (overlapEnd - overlapStart).Days;
+
+                        return nights < 0 ? 0 : nights;
+                    }),
+                    RevenueTotal = siteReservations.Sum(r => r.TotalCost)
+                };
+            }).ToList();
 
             var model = new ReportsViewModel
             {
@@ -149,7 +203,9 @@ namespace RVSite.Controllers
                     ? 0
                     : Math.Round((decimal)occupiedSiteCount / totalSites * 100, 1),
 
-                Reservations = filteredReservations
+                Reservations = filteredReservations,
+
+                SiteUsageRows = siteUsageRows
             };
 
             return View(model);

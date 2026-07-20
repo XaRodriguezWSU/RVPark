@@ -31,6 +31,11 @@ namespace RVSite.Models
         [Required]
         public string PasswordHash { get; set; }
 
+        public bool EmailConfirmed { get; set; } = false;
+
+        public string? EmailConfirmationToken { get; set; }
+
+
         public ICollection<Reservation> Reservations { get; set; } = new List<Reservation>();
 
 

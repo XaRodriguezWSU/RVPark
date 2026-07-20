@@ -1,0 +1,206 @@
+﻿using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using RVSite.Models;
+using RVSite.Services;
+using System.Security.Claims;
+
+namespace RVSite.Controllers
+{
+    public class ClientReservationController : Controller
+    {
+        private readonly AppDbContext _context;
+        private readonly CostService _costService;
+
+        public ClientReservationController(AppDbContext context, CostService costService)
+        {
+            _context = context;
+            _costService = costService;
+        }
+
+        // Step 1: Show booking form
+        public IActionResult Book()
+        {
+            ViewBag.SiteTypes = _context.SiteTypes.ToList();
+            return View(new Reservation());
+        }
+
+        [HttpPost]
+        public IActionResult Book(Reservation model, string siteType, int? rvLength, bool search = false)
+        {
+            ViewBag.SiteTypes = _context.SiteTypes.ToList();
+
+            if (search)
+            {
+                // Step 1: User clicked "Search"
+                var availableSites = _context.Sites
+                    .Where(s => s.SiteType.Name == siteType &&
+                                (rvLength == null || s.MaxRVLength >= rvLength))
+                    .Where(s => !_context.Reservations.Any(r =>
+                        r.SiteID == s.SiteID &&
+                        r.CheckInDate < model.CheckOutDate &&
+                        model.CheckInDate < r.CheckOutDate))
+                    .ToList();
+
+                ViewBag.AvailableSites = availableSites;
+                return View(model);
+            }
+
+            // Step 2: User clicked "Reserve"
+            model.UserID = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier).Value);
+            model.Site = _context.Sites.FirstOrDefault(s => s.SiteID == model.SiteID);
+            model.TotalCost = _costService.CalculateCost(model);
+            model.BalanceDue = model.TotalCost;
+            model.ReservationStatus = ReservationStatus.Confirmed;
+
+            _context.Reservations.Add(model);
+            _context.SaveChanges();
+
+            return RedirectToAction("Confirmation", new { id = model.ReservationID });
+        }
+
+
+        public IActionResult Confirmation(int id)
+        {
+            var reservation = _context.Reservations
+                .Include(r => r.Site)
+                .Include(r => r.User)
+                .Include(r => r.Site.SiteType)
+                .FirstOrDefault(r => r.ReservationID == id);
+
+            Console.WriteLine("Confirmation ID: " + id);
+            Console.WriteLine("Reservation is null? " + (reservation == null));
+            Console.WriteLine("Site is null? " + (reservation?.Site == null));
+            Console.WriteLine("User is null? " + (reservation?.User == null));
+
+            if (reservation == null)
+                return NotFound();
+
+            return View(reservation);
+        }
+
+        public IActionResult Edit(int id)
+        {
+            var reservation = _context.Reservations
+                .Include(r => r.Site)
+                    .ThenInclude(s => s.SiteType)
+                .Include(r => r.User)
+                .FirstOrDefault(r => r.ReservationID == id);
+
+            if (reservation == null)
+                return NotFound();
+
+            // Only allow editing future reservations
+            if (reservation.CheckInDate <= DateTime.Today)
+                return BadRequest("Past reservations cannot be edited.");
+
+            ViewBag.SiteTypes = _context.SiteTypes.ToList();
+
+            return View(reservation);
+        }
+
+        [HttpPost]
+        public IActionResult Edit(Reservation updated, string siteType, int? rvLength)
+        {
+            var reservation = _context.Reservations
+                .Include(r => r.Site)
+                    .ThenInclude(s => s.SiteType)
+                .Include(r => r.User)
+                .FirstOrDefault(r => r.ReservationID == updated.ReservationID);
+
+            if (reservation == null)
+                return NotFound();
+
+            // 1. Validate new dates
+            if (updated.CheckInDate >= updated.CheckOutDate)
+            {
+                ModelState.AddModelError("", "Check-out must be after check-in.");
+                ViewBag.SiteTypes = _context.SiteTypes.ToList();
+                return View(reservation);
+            }
+
+            // 2. Find available sites matching new criteria
+            var availableSites = _context.Sites
+                .Where(s => s.SiteType.Name == siteType &&
+                            (rvLength == null || s.MaxRVLength >= rvLength))
+                .Where(s => !_context.Reservations.Any(r =>
+                    r.SiteID == s.SiteID &&
+                    r.ReservationID != reservation.ReservationID &&
+                    r.CheckInDate < updated.CheckOutDate &&
+                    updated.CheckInDate < r.CheckOutDate))
+                .ToList();
+
+            if (!availableSites.Any())
+            {
+                ModelState.AddModelError("", "No sites available for the updated criteria.");
+                ViewBag.SiteTypes = _context.SiteTypes.ToList();
+                ViewBag.AvailableSites = availableSites;
+                return View(reservation);
+            }
+
+            // 3. Update reservation fields
+            reservation.CheckInDate = updated.CheckInDate;
+            reservation.CheckOutDate = updated.CheckOutDate;
+            reservation.NumberOfAdults = updated.NumberOfAdults;
+            reservation.NumberOfChildren = updated.NumberOfChildren;
+            reservation.NumberOfPets = updated.NumberOfPets;
+            reservation.SpecialRequests = updated.SpecialRequests;
+
+            // 4. Update site if changed
+            if (updated.SiteID != reservation.SiteID)
+            {
+                reservation.SiteID = updated.SiteID;
+                _context.Entry(reservation).Reference(r => r.Site).Load();
+                _context.Entry(reservation.Site).Reference(s => s.SiteType).Load();
+            }
+
+            // 5. Recalculate cost
+            decimal oldTotal = reservation.TotalCost;
+            decimal newTotal = _costService.CalculateCost(reservation);
+
+            reservation.TotalCost = newTotal;
+            reservation.BalanceDue = newTotal; // No Stripe logic required
+
+            ViewBag.PriceDifference = newTotal - oldTotal;
+
+            _context.SaveChanges();
+
+            return View("EditConfirmation", reservation);
+        }
+
+        public IActionResult Cancel(int id)
+        {
+            var reservation = _context.Reservations
+                .Include(r => r.Site)
+                .Include(r => r.User)
+                .FirstOrDefault(r => r.ReservationID == id);
+
+            if (reservation == null)
+                return NotFound();
+
+            if (reservation.CheckInDate <= DateTime.Today)
+                return BadRequest("Past reservations cannot be cancelled.");
+
+            reservation.ReservationStatus = ReservationStatus.Cancelled;
+
+            _context.SaveChanges();
+
+            return View("CancelConfirmation", reservation);
+        }
+
+        public IActionResult MyReservations()
+        {
+            int userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier).Value);
+
+            var reservations = _context.Reservations
+                .Include(r => r.Site)
+                    .ThenInclude(s => s.SiteType)
+                .Where(r => r.UserID == userId)
+                .OrderByDescending(r => r.ReservationDate)
+                .ToList();
+
+            return View(reservations);
+        }
+
+    }
+}

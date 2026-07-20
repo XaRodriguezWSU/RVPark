@@ -1,0 +1,54 @@
+﻿@{
+    ViewData["Title"] = "Email Confirmed";
+}
+
+<div class="row justify-content-center py-5">
+
+    <div class="col-lg-7">
+
+        <section class="card shadow-sm">
+
+            <div class="card-body text-center p-5">
+
+                <div class="mb-4">
+                    <div class="display-1 text-success">
+                        ✓
+                    </div>
+                </div>
+
+                <span class="home-kicker">
+                    ACCOUNT ACTIVATED
+                </span>
+
+                <h1 class="page-title mt-2">
+                    Email Confirmed
+                </h1>
+
+                <p class="page-subtitle mb-4">
+                    Your account has been successfully verified and is now active.
+                    You may now sign in to access your reservations and account.
+                </p>
+
+                <div class="d-flex justify-content-center gap-3">
+
+                    <a asp-controller="Login"
+                       asp-action="Index"
+                       class="btn btn-primary btn-lg px-4">
+                        Sign In
+                    </a>
+
+                    <a asp-controller="Home"
+                       asp-action="Index"
+                       class="btn btn-outline-secondary btn-lg px-4">
+                        Return Home
+                    </a>
+
+                </div>
+
+            </div>
+
+        </section>
+
+    </div>
+
+</div>

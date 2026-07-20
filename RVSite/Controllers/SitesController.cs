@@ -1,8 +1,9 @@
-
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using RVSite.Models;
 
+[Authorize(Roles = "Admin")]
 public class SitesController : Controller
 {
     private readonly AppDbContext _context;

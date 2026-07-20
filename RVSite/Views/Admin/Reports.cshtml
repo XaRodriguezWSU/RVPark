@@ -11,7 +11,7 @@
             <span class="home-kicker">Administration</span>
             <h1 class="page-title">Reports Dashboard</h1>
             <p class="page-subtitle">
-                Generate arrivals, departures, occupancy, reservation history, and revenue reports.
+                Generate arrivals, departures, occupancy, site usage, reservation history, and revenue reports.
             </p>
         </div>
     </section>
@@ -82,6 +82,16 @@
                asp-route-startDate="@Model.StartDate.ToString("yyyy-MM-dd")"
                asp-route-endDate="@Model.EndDate.ToString("yyyy-MM-dd")">
                 Occupancy
+            </a>
+        </div>
+
+        <div class="col-md">
+            <a class="btn w-100 @(Model.ReportType == "SiteUsage" ? "btn-primary" : "btn-outline-secondary")"
+               asp-action="Reports"
+               asp-route-reportType="SiteUsage"
+               asp-route-startDate="@Model.StartDate.ToString("yyyy-MM-dd")"
+               asp-route-endDate="@Model.EndDate.ToString("yyyy-MM-dd")">
+                Site Usage
             </a>
         </div>
 
@@ -295,6 +305,34 @@
                     </div>
                 </div>
             </div>
+            }
+            else if (Model.ReportType == "SiteUsage")
+            {
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle admin-table">
+                        <thead>
+                            <tr>
+                                <th>Site Number</th>
+                                <th>Site Type</th>
+                                <th class="text-end">Reservations</th>
+                                <th class="text-end">Reserved Nights</th>
+                                <th class="text-end">Revenue</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var site in Model.SiteUsageRows)
+                            {
+                                <tr>
+                                    <td>@site.SiteNumber</td>
+                                    <td>@site.SiteTypeName</td>
+                                    <td class="text-end">@site.ReservationCount</td>
+                                    <td class="text-end">@site.ReservedNights</td>
+                                    <td class="text-end">@site.RevenueTotal.ToString("C")</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
             }
             else
             {

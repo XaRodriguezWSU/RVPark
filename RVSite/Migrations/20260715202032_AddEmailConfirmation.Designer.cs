@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using RVSite.Models;
 
@@ -11,9 +12,11 @@ using RVSite.Models;
 namespace RVSite.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260715202032_AddEmailConfirmation")]
+    partial class AddEmailConfirmation
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -47,63 +50,6 @@ namespace RVSite.Migrations
                     b.HasIndex("ReservationID");
 
                     b.ToTable("Fees");
-                });
-
-            modelBuilder.Entity("RVSite.Models.MaintenanceTask", b =>
-                {
-                    b.Property<int>("MaintenanceTaskID")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("MaintenanceTaskID"));
-
-                    b.Property<int?>("ClosedByUserID")
-                        .HasColumnType("int");
-
-                    b.Property<DateTime?>("CompletedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("CompletionNotes")
-                        .HasMaxLength(1000)
-                        .HasColumnType("nvarchar(1000)");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<int>("CreatedByUserID")
-                        .HasColumnType("int");
-
-                    b.Property<string>("Description")
-                        .IsRequired()
-                        .HasMaxLength(2000)
-                        .HasColumnType("nvarchar(2000)");
-
-                    b.Property<int>("Priority")
-                        .HasColumnType("int");
-
-                    b.Property<int>("SiteID")
-                        .HasColumnType("int");
-
-                    b.Property<int>("Status")
-                        .HasColumnType("int");
-
-                    b.Property<int>("TaskType")
-                        .HasColumnType("int");
-
-                    b.Property<string>("Title")
-                        .IsRequired()
-                        .HasMaxLength(150)
-                        .HasColumnType("nvarchar(150)");
-
-                    b.HasKey("MaintenanceTaskID");
-
-                    b.HasIndex("ClosedByUserID");
-
-                    b.HasIndex("CreatedByUserID");
-
-                    b.HasIndex("SiteID");
-
-                    b.ToTable("MaintenanceTasks");
                 });
 
             modelBuilder.Entity("RVSite.Models.Reservation", b =>
@@ -299,6 +245,7 @@ namespace RVSite.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("EmailConfirmationToken")
+                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<bool>("EmailConfirmed")
@@ -344,31 +291,6 @@ namespace RVSite.Migrations
                         .IsRequired();
 
                     b.Navigation("Reservation");
-                });
-
-            modelBuilder.Entity("RVSite.Models.MaintenanceTask", b =>
-                {
-                    b.HasOne("RVSite.Models.User", "ClosedByUser")
-                        .WithMany()
-                        .HasForeignKey("ClosedByUserID");
-
-                    b.HasOne("RVSite.Models.User", "CreatedByUser")
-                        .WithMany()
-                        .HasForeignKey("CreatedByUserID")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("RVSite.Models.Site", "Site")
-                        .WithMany()
-                        .HasForeignKey("SiteID")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("ClosedByUser");
-
-                    b.Navigation("CreatedByUser");
-
-                    b.Navigation("Site");
                 });
 
             modelBuilder.Entity("RVSite.Models.Reservation", b =>
