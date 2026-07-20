@@ -25,5 +25,17 @@ namespace RVSite.Models
 
         // Report results
         public List<Reservation> Reservations { get; set; } = new();
+
+        public List<SiteUsageReportRow> SiteUsageRows { get; set; } = new();
+    }
+
+    public class SiteUsageReportRow
+    {
+        public int SiteID { get; set; }
+        public string SiteNumber { get; set; } = string.Empty;
+        public string SiteTypeName { get; set; } = string.Empty;
+        public int ReservationCount { get; set; }
+        public int ReservedNights { get; set; }
+        public decimal RevenueTotal { get; set; }
     }
 }

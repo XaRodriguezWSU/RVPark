@@ -1,0 +1,103 @@
+﻿@model RVSite.Models.Reservation
+
+@{
+    ViewData["Title"] = "Reservation Updated";
+}
+
+<div class="row justify-content-center py-4">
+    <div class="col-xl-9">
+        <section class="card">
+            <div class="card-body p-4 p-lg-5">
+                <div class="text-center mb-4">
+                    <div class="confirmation-mark mb-3">✓</div>
+
+                    <span class="home-kicker">Changes Saved</span>
+
+                    <h1 class="page-title">Reservation Updated</h1>
+
+                    <p class="page-subtitle">
+                        Your reservation changes have been successfully saved.
+                    </p>
+                </div>
+
+                <div class="row g-3 mb-4">
+                    <div class="col-md-6 col-xl-4">
+                        <div class="detail-box">
+                            <span>Reservation</span>
+                            <strong>#@Model.ReservationID</strong>
+                        </div>
+                    </div>
+
+                    <div class="col-md-6 col-xl-4">
+                        <div class="detail-box">
+                            <span>Site</span>
+                            <strong>Site @Model.Site?.SiteNumber</strong>
+                        </div>
+                    </div>
+
+                    <div class="col-md-6 col-xl-4">
+                        <div class="detail-box">
+                            <span>Site Type</span>
+                            <strong>@Model.Site?.SiteType?.Name</strong>
+                        </div>
+                    </div>
+
+                    <div class="col-md-6 col-xl-4">
+                        <div class="detail-box">
+                            <span>Check-In</span>
+                            <strong>@Model.CheckInDate.ToShortDateString()</strong>
+                        </div>
+                    </div>
+
+                    <div class="col-md-6 col-xl-4">
+                        <div class="detail-box">
+                            <span>Check-Out</span>
+                            <strong>@Model.CheckOutDate.ToShortDateString()</strong>
+                        </div>
+                    </div>
+
+                    <div class="col-md-6 col-xl-4">
+                        <div class="detail-box">
+                            <span>New Total</span>
+                            <strong>@Model.TotalCost.ToString("C")</strong>
+                        </div>
+                    </div>
+
+                    @if (ViewBag.PriceDifference != null)
+                    {
+                        var difference = (decimal)ViewBag.PriceDifference;
+
+                    <div class="col-md-6 col-xl-4">
+                        <div class="detail-box">
+                            <span>Price Difference</span>
+
+                            <strong class="@(difference > 0
+                                                   ? "text-danger"
+                                                   : difference < 0
+                                                       ? "text-success"
+                                                       : "")">
+                                @(difference > 0 ? "+" : "")@difference.ToString("C")
+                            </strong>
+                        </div>
+                    </div>
+                    }
+                </div>
+
+                <div class="d-flex flex-wrap justify-content-center gap-2">
+                    <a asp-controller="ClientReservation"
+                       asp-action="MyReservations"
+                       class="btn btn-primary">
+                        Back to My Reservations
+                    </a>
+
+                    <a asp-controller="ClientReservation"
+                       asp-action="Edit"
+                       asp-route-id="@Model.ReservationID"
+                       class="btn btn-outline-secondary">
+                        Edit Again
+                    </a>
+                </div>
+            </div>
+        </section>
+    </div>
+</div>
