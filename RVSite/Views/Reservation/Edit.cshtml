@@ -2,45 +2,139 @@
 
 @{
     ViewData["Title"] = "Edit Reservation";
+
+    int? selectedSiteID =
+        ViewBag.SelectedSiteID is int siteID
+            ? siteID
+            : null;
+
+    bool conflictDetected =
+        ViewBag.ConflictDetected == true;
 }
 
 <section class="card admin-hero mb-4">
     <div class="card-body p-4 p-lg-5">
-        <span class="home-kicker">Reservation Management</span>
-        <h1 class="page-title">Edit Reservation #@Model.ReservationID</h1>
-        <p class="page-subtitle">
-            Update reservation dates or move the reservation to another available site.
-        </p>
+        <div class="d-flex flex-column flex-lg-row justify-content-between align-items-lg-center gap-3">
+            <div>
+                <span class="home-kicker">
+                    Administrator Reservation Oversight
+                </span>
+
+                <h1 class="page-title">
+                    Edit Reservation #@Model.ReservationID
+                </h1>
+
+                <p class="page-subtitle mb-0">
+                    Update dates, change the assigned site or override a reservation conflict when necessary.
+                </p>
+            </div>
+
+            <a asp-controller="Reservation"
+               asp-action="Index"
+               class="btn btn-outline-secondary">
+                Back to Reservations
+            </a>
+        </div>
     </div>
 </section>
 
+@if (conflictDetected)
+{
+    <div class="alert alert-warning"
+         role="alert">
+
+        <h2 class="h5">
+            Reservation Conflict Detected
+        </h2>
+
+        <p class="mb-0">
+            Another active reservation already uses the selected site during these dates.
+            Review the reservation carefully before using the administrator override.
+        </p>
+    </div>
+}
+
+@if (ViewData.ModelState.ErrorCount > 0)
+{
+    <div asp-validation-summary="All"
+         class="alert alert-danger"
+         role="alert">
+    </div>
+}
+
 <section class="row g-4">
     <div class="col-lg-4">
-        <div class="card">
+        <div class="card h-100">
             <div class="card-header">
-                <h2 class="h5 mb-0">Current Reservation</h2>
+                <h2 class="h5 mb-1">
+                    Current Reservation
+                </h2>
+
+                <p class="mb-0 text-muted">
+                    Existing customer and reservation information.
+                </p>
             </div>
 
             <div class="card-body">
                 <div class="row g-3">
                     <div class="col-12">
-                        <div class="detail-box">
-                            <span>Customer</span>
-                            <strong>@Model.User.FirstName @Model.User.LastName</strong>
+                        <div class="border rounded p-3">
+                            <div class="small text-muted mb-1">
+                                Customer
+                            </div>
+
+                            <div class="fw-semibold">
+                                @(Model.User?.FirstName ?? "Unknown")
+                                @(Model.User?.LastName ?? "Customer")
+                            </div>
                         </div>
                     </div>
 
                     <div class="col-12">
-                        <div class="detail-box">
-                            <span>Current Site</span>
-                            <strong>@Model.Site.SiteNumber</strong>
+                        <div class="border rounded p-3">
+                            <div class="small text-muted mb-1">
+                                Current Site
+                            </div>
+
+                            <div class="fw-semibold">
+                                @(Model.Site?.SiteNumber ?? "Unknown")
+                            </div>
                         </div>
                     </div>
 
                     <div class="col-12">
-                        <div class="detail-box">
-                            <span>Status</span>
-                            <strong>@Model.ReservationStatus</strong>
+                        <div class="border rounded p-3">
+                            <div class="small text-muted mb-1">
+                                Status
+                            </div>
+
+                            <div class="fw-semibold">
+                                @Model.ReservationStatus
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-12">
+                        <div class="border rounded p-3">
+                            <div class="small text-muted mb-1">
+                                Current Total
+                            </div>
+
+                            <div class="fw-semibold">
+                                @Model.TotalCost.ToString("C")
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-12">
+                        <div class="border rounded p-3">
+                            <div class="small text-muted mb-1">
+                                Current Balance
+                            </div>
+
+                            <div class="fw-semibold">
+                                @Model.BalanceDue.ToString("C")
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -51,48 +145,155 @@
     <div class="col-lg-8">
         <div class="card h-100">
             <div class="card-header">
-                <h2 class="h5 mb-0">Edit Details</h2>
+                <h2 class="h5 mb-1">
+                    Edit Reservation Details
+                </h2>
+
+                <p class="mb-0 text-muted">
+                    Changes to the dates or site may affect the reservation total.
+                </p>
             </div>
 
             <div class="card-body">
-                <form asp-action="Edit" asp-route-id="@Model.ReservationID" method="post">
+                <form asp-controller="Reservation"
+                      asp-action="Edit"
+                      method="post">
+
+                    @Html.AntiForgeryToken()
+
                     <input type="hidden" asp-for="ReservationID" />
+                    <input type="hidden" asp-for="NumberOfAdults" />
+                    <input type="hidden" asp-for="NumberOfChildren" />
+                    <input type="hidden" asp-for="NumberOfPets" />
+                    <input type="hidden" asp-for="SpecialRequests" />
+                    <input type="hidden" asp-for="ReservationStatus" />
+                    <input type="hidden" asp-for="UserID" />
+                    <input type="hidden" asp-for="SiteID" />
+                    <input type="hidden" asp-for="TotalCost" />
+                    <input type="hidden" asp-for="BalanceDue" />
+                    <input type="hidden" asp-for="ReservationDate" />
 
                     <div class="row g-3">
                         <div class="col-md-6">
-                            <label asp-for="CheckInDate" class="form-label">Start Date</label>
-                            <input asp-for="CheckInDate" type="date" class="form-control" />
-                            <span asp-validation-for="CheckInDate" class="text-danger"></span>
+                            <label asp-for="CheckInDate"
+                                   class="form-label">
+                                Check-In Date
+                            </label>
+
+                            <input asp-for="CheckInDate"
+                                   type="date"
+                                   class="form-control"
+                                   required />
+
+                            <span asp-validation-for="CheckInDate"
+                                  class="text-danger">
+                            </span>
                         </div>
 
                         <div class="col-md-6">
-                            <label asp-for="CheckOutDate" class="form-label">End Date</label>
-                            <input asp-for="CheckOutDate" type="date" class="form-control" />
-                            <span asp-validation-for="CheckOutDate" class="text-danger"></span>
+                            <label asp-for="CheckOutDate"
+                                   class="form-label">
+                                Check-Out Date
+                            </label>
+
+                            <input asp-for="CheckOutDate"
+                                   type="date"
+                                   class="form-control"
+                                   required />
+
+                            <span asp-validation-for="CheckOutDate"
+                                  class="text-danger">
+                            </span>
                         </div>
 
                         <div class="col-12">
-                            <label class="form-label">Change Site</label>
-                            <select name="newSiteID" class="form-select">
-                                <option value="">Keep Current Site</option>
+                            <label for="newSiteID"
+                                   class="form-label">
+                                Assigned Site
+                            </label>
+
+                            <select id="newSiteID"
+                                    name="newSiteID"
+                                    class="form-select">
+
+                                <option value="">
+                                    Keep Current Site @Model.Site?.SiteNumber
+                                </option>
+
                                 @foreach (var site in ViewBag.AvailableSites)
                                 {
-                                <option value="@site.SiteID">@site.SiteNumber</option>
+                                    if (selectedSiteID == site.SiteID)
+                                    {
+                                        <option value="@site.SiteID"
+                                                selected>
+                                            Site @site.SiteNumber
+                                            - @(site.SiteType?.Name ?? "Site")
+                                            - @site.SiteStatus
+                                            - @site.BaseRate.ToString("C") per night
+                                        </option>
+                                    }
+                                    else
+                                    {
+                                        <option value="@site.SiteID">
+                                            Site @site.SiteNumber
+                                            - @(site.SiteType?.Name ?? "Site")
+                                            - @site.SiteStatus
+                                            - @site.BaseRate.ToString("C") per night
+                                        </option>
+                                    }
                                 }
                             </select>
+
+                            <div class="form-text">
+                                The system checks the selected site against all active reservations.
+                            </div>
                         </div>
                     </div>
 
+                    <section class="border rounded p-3 mt-4">
+                        <div class="form-check">
+                            <input id="overrideConflict"
+                                   name="overrideConflict"
+                                   type="checkbox"
+                                   value="true"
+                                   class="form-check-input" />
+
+                            <label for="overrideConflict"
+                                   class="form-check-label fw-semibold">
+                                Override Reservation Conflict
+                            </label>
+                        </div>
+
+                        <p class="small text-muted mb-0 mt-2">
+                            Use this administrator option only after reviewing the conflicting reservation.
+                            This allows overlapping reservations to be saved for the same site.
+                        </p>
+                    </section>
+
+                    @if (conflictDetected)
+                    {
+                        <div class="alert alert-warning mt-4 mb-0">
+                            To continue with the conflicting dates and site, select
+                            <strong>Override Reservation Conflict</strong>
+                            and submit the form again.
+                        </div>
+                    }
+
                     <div class="d-flex flex-wrap gap-2 mt-4">
-                        <button type="submit" class="btn btn-primary">
+                        <button type="submit"
+                                class="btn btn-primary">
                             Save Changes
                         </button>
 
-                        <a asp-action="CancelReservation"
-                           asp-route-id="@Model.ReservationID"
-                           class="btn btn-outline-danger">
-                            Cancel Reservation
-                        </a>
+                        @if (Model.ReservationStatus != ReservationStatus.Cancelled)
+                        {
+                            <a asp-controller="Reservation"
+                               asp-action="CancelReservation"
+                               asp-route-id="@Model.ReservationID"
+                               class="btn btn-outline-danger">
+                                Cancel Reservation
+                            </a>
+                        }
 
                         <a asp-controller="Reservation"
                            asp-action="Index"
