@@ -27,5 +27,8 @@ namespace RVSite.Models
 
         // Stripe session id, check number, or manual-entry auth code
         public string? TransactionReference { get; set; }
+
+        // Employee who recorded an offline payment. Null for Stripe payments.
+        public int? ProcessedByUserID { get; set; }
     }
 }

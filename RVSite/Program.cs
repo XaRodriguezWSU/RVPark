@@ -17,6 +17,9 @@ builder.Services.AddScoped<CostService>();
 builder.Services.AddScoped<EmailService>();
 builder.Services.AddScoped<StripeApiAdapter>();
 builder.Services.AddScoped<StripePaymentStrategy>();
+builder.Services.AddScoped<CashPaymentStrategy>();
+builder.Services.AddScoped<CheckPaymentStrategy>();
+builder.Services.AddScoped<ManualCardPaymentStrategy>();
 
 builder.Services.AddDbContext<AppDbContext>(options =>
 {

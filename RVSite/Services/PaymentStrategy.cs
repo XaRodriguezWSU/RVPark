@@ -31,9 +31,9 @@ namespace RVSite.Services
         {
             payment.ReservationID = reservation.ReservationID;
             payment.Method = PaymentMethodType.Stripe;
-            payment.Status = PaymentStatus.Pending; 
+            payment.Status = PaymentStatus.Pending;
 
-            var successUrl = $"{_baseUrl}/Payment/Confirmation?reservationId={reservation.ReservationID}";
+            var successUrl = $"{_baseUrl}/Payment/Confirmation?reservationId={reservation.ReservationID}&session_id={{CHECKOUT_SESSION_ID}}";
             var cancelUrl = $"{_baseUrl}/Payment/Checkout?reservationId={reservation.ReservationID}";
 
             var session = await _stripe.CreateSessionAsync(payment.AmountPaid, reservation.ReservationID.ToString(), successUrl, cancelUrl);
@@ -43,4 +43,43 @@ namespace RVSite.Services
         }
     }
 
+    public abstract class OfflinePaymentStrategy : IPaymentStrategy
+    {
+        protected abstract PaymentMethodType Method { get; }
+ 
+        public Task<PaymentResult> ProcessAsync(Reservation reservation, Payment payment, int? employeeUserId = null)
+        {
+            if (employeeUserId == null)
+            {
+                return Task.FromResult(new PaymentResult
+                {
+                    Success = false,
+                    Error = $"{Method} payments must be recorded by an employee."
+                });
+            }
+ 
+            payment.ReservationID = reservation.ReservationID;
+            payment.Method = Method;
+            payment.Status = PaymentStatus.Paid;
+            payment.ProcessedByUserID = employeeUserId;
+ 
+            return Task.FromResult(new PaymentResult { Success = true });
+        }
+    }
+ 
+    public class CashPaymentStrategy : OfflinePaymentStrategy
+    {
+        protected override PaymentMethodType Method => PaymentMethodType.Cash;
+    }
+ 
+    public class CheckPaymentStrategy : OfflinePaymentStrategy
+    {
+        protected override PaymentMethodType Method => PaymentMethodType.Check;
+    }
+ 
+    public class ManualCardPaymentStrategy : OfflinePaymentStrategy
+    {
+        protected override PaymentMethodType Method => PaymentMethodType.ManualCard;
+    }
+  
 }

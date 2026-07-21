@@ -51,12 +51,12 @@ namespace RVSite.Controllers
             model.Site = _context.Sites.FirstOrDefault(s => s.SiteID == model.SiteID);
             model.TotalCost = _costService.CalculateCost(model);
             model.BalanceDue = model.TotalCost;
-            model.ReservationStatus = ReservationStatus.Confirmed;
+            model.ReservationStatus = ReservationStatus.Pending;
 
             _context.Reservations.Add(model);
             _context.SaveChanges();
 
-            return RedirectToAction("Confirmation", new { id = model.ReservationID });
+            return RedirectToAction("Checkout", "Payment", new { ReservationId = model.ReservationID });
         }
 
 
