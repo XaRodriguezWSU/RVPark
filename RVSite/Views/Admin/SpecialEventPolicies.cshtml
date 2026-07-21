@@ -133,7 +133,7 @@
                                                 Edit
                                             </a>
 
-                                            @if (policy.IsActive)
+                                            @if (policy.IsActive && !(ViewBag.ShowArchived as bool? ?? false))
                                             {
                                                 <form asp-action="ArchiveSpecialEventPolicy" method="post">
                                                     <input type="hidden" name="id" value="@policy.SpecialEventPolicyID" />

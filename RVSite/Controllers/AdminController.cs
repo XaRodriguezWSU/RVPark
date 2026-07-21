@@ -359,6 +359,10 @@ namespace RVSite.Controllers
 
             existingPolicy.MaximumAdvanceBookingDays = policy.MaximumAdvanceBookingDays;
             existingPolicy.PeakSeasonMaximumStayNights = policy.PeakSeasonMaximumStayNights;
+            existingPolicy.PeakSeasonStartMonth = policy.PeakSeasonStartMonth;
+            existingPolicy.PeakSeasonStartDay = policy.PeakSeasonStartDay;
+            existingPolicy.PeakSeasonEndMonth = policy.PeakSeasonEndMonth;
+            existingPolicy.PeakSeasonEndDay = policy.PeakSeasonEndDay;
             existingPolicy.RequiredDaysAwayBeforeReturn = policy.RequiredDaysAwayBeforeReturn;
             existingPolicy.LateCancellationWindowDays = policy.LateCancellationWindowDays;
             existingPolicy.GeneralPolicyNotes = policy.GeneralPolicyNotes;

@@ -46,6 +46,40 @@
                     <span asp-validation-for="PeakSeasonMaximumStayNights" class="text-danger"></span>
                 </div>
 
+                <div class="row g-3 mb-3">
+                    <div class="col-md-6">
+                        <label asp-for="PeakSeasonStartMonth" class="form-label">
+                            Peak Season Start Month
+                        </label>
+                        <input asp-for="PeakSeasonStartMonth" type="number" class="form-control" />
+                        <span asp-validation-for="PeakSeasonStartMonth" class="text-danger"></span>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label asp-for="PeakSeasonStartDay" class="form-label">
+                            Peak Season Start Day
+                        </label>
+                        <input asp-for="PeakSeasonStartDay" type="number" class="form-control" />
+                        <span asp-validation-for="PeakSeasonStartDay" class="text-danger"></span>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label asp-for="PeakSeasonEndMonth" class="form-label">
+                            Peak Season End Month
+                        </label>
+                        <input asp-for="PeakSeasonEndMonth" type="number" class="form-control" />
+                        <span asp-validation-for="PeakSeasonEndMonth" class="text-danger"></span>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label asp-for="PeakSeasonEndDay" class="form-label">
+                            Peak Season End Day
+                        </label>
+                        <input asp-for="PeakSeasonEndDay" type="number" class="form-control" />
+                        <span asp-validation-for="PeakSeasonEndDay" class="text-danger"></span>
+                    </div>
+                </div>
+
                 <div class="mb-3">
                     <label asp-for="RequiredDaysAwayBeforeReturn" class="form-label">
                         Required Time Away Before Return (days)

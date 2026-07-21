@@ -46,13 +46,21 @@
                     <strong>Maximum Advance Booking</strong>
                     <p class="mb-0">
                         @Model.MaximumAdvanceBookingMonths month(s)
-                        (@Model.MaximumAdvanceBookingDays days)
                     </p>
                 </div>
 
                 <div class="col-md-6">
                     <strong>Peak-Season Maximum Stay</strong>
                     <p class="mb-0">@Model.PeakSeasonMaximumStayNights night(s)</p>
+                </div>
+
+                <div class="col-md-6 policy-summary-item">
+                    <strong>Peak Season Date Range</strong>
+                    <p class="mb-0">
+                        @Model.PeakSeasonStartMonth/@Model.PeakSeasonStartDay
+                        -
+                        @Model.PeakSeasonEndMonth/@Model.PeakSeasonEndDay
+                    </p>
                 </div>
 
                 <div class="col-md-6">
