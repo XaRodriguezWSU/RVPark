@@ -87,3 +87,64 @@
         </form>
     </div>
 </section>
+
+
+@if (ViewBag.IsEmployee == true)
+{
+    <section class="card">
+        <div class="card-header">
+            <h2 class="h5 mb-0">
+                Record Offline Payment
+                <span class="text-muted fw-normal">(Employee Only)</span>
+            </h2>
+        </div>
+
+        <div class="card-body">
+            <form asp-controller="Payment" asp-action="RecordOfflinePayment" method="post">
+                <input type="hidden" name="reservationId" value="@Model.ReservationID" />
+
+                <div class="row g-3">
+                    <div class="col-md-4">
+                        <label for="method" class="form-label">Payment Method</label>
+                        <select id="method" name="method" class="form-select">
+                            <option value="Cash">Cash</option>
+                            <option value="Check">Check</option>
+                            <option value="ManualCard">Manual Credit Card</option>
+                        </select>
+                    </div>
+
+                    <div class="col-md-4">
+                        <label for="amount" class="form-label">Amount</label>
+                        <div class="input-group">
+                            <span class="input-group-text">$</span>
+                            <input id="amount"
+                                   name="amount"
+                                   type="number"
+                                   step="0.01"
+                                   min="0.01"
+                                   class="form-control"
+                                   value="@ViewBag.AmountDue" />
+                        </div>
+                    </div>
+
+                    <div class="col-md-4">
+                        <label for="reference" class="form-label">
+                            Reference <span class="text-muted fw-normal">(optional)</span>
+                        </label>
+                        <input id="reference"
+                               name="reference"
+                               type="text"
+                               class="form-control"
+                               placeholder="Check #, auth code, etc." />
+                    </div>
+                </div>
+
+                <div class="mt-4">
+                    <button type="submit" class="btn btn-outline-secondary">
+                        Record Payment
+                    </button>
+                </div>
+            </form>
+        </div>
+    </section>
+}

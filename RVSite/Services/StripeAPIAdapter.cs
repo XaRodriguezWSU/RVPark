@@ -66,5 +66,12 @@ namespace RVSite.Services
                 return false;
             }
         }
+
+        public async Task<bool> IsSessionPaidAsync(string sessionId)
+        {
+            var service = new SessionService();
+            Session session = await service.GetAsync(sessionId);
+            return session.PaymentStatus == "paid";
+        }
     }
 }

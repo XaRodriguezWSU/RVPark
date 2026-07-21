@@ -15,6 +15,9 @@ namespace RVSite.Controllers
         private readonly EmailService _emailService;
         private readonly StripeApiAdapter _stripeAdapter;
         private readonly StripePaymentStrategy _stripeStrategy;
+        private readonly CashPaymentStrategy _cashStrategy;
+        private readonly CheckPaymentStrategy _checkStrategy;
+        private readonly ManualCardPaymentStrategy _manualCardStrategy;
 
         private IPaymentStrategy _strategy = null!;
 
@@ -22,13 +25,19 @@ namespace RVSite.Controllers
             AppDbContext context,
             EmailService emailService,
             StripeApiAdapter stripeAdapter,
-            StripePaymentStrategy stripeStrategy
+            StripePaymentStrategy stripeStrategy,
+            CashPaymentStrategy cashStrategy,
+            CheckPaymentStrategy checkStrategy,
+            ManualCardPaymentStrategy manualCardStrategy
             )
         {
             _context = context;
             _emailService = emailService;
             _stripeAdapter = stripeAdapter;
             _stripeStrategy = stripeStrategy;
+            _cashStrategy = cashStrategy;
+            _checkStrategy = checkStrategy;
+            _manualCardStrategy = manualCardStrategy;
         }
 
         private void SetPaymentStrategy(PaymentMethodType method)
@@ -36,7 +45,10 @@ namespace RVSite.Controllers
             _strategy = method switch
             {
                 PaymentMethodType.Stripe => _stripeStrategy,
-                _ => throw new ArgumentOutOfRangeException(nameof(method), "Only Stripe payments are enabled right now.")
+                PaymentMethodType.Cash => _cashStrategy,
+                PaymentMethodType.Check => _checkStrategy,
+                PaymentMethodType.ManualCard => _manualCardStrategy,
+                _ => throw new ArgumentOutOfRangeException(nameof(method))
             };
         }
 
@@ -147,7 +159,7 @@ namespace RVSite.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> Confirmation(int reservationId)
+        public async Task<IActionResult> Confirmation(int reservationId, string? session_id)
         {
             var reservation = await _context.Reservations
                 .Include(r => r.User)
@@ -157,7 +169,60 @@ namespace RVSite.Controllers
 
             if (reservation == null) return NotFound();
 
+            if (!string.IsNullOrEmpty(session_id))
+            {
+                var payment = await _context.Payments
+                    .FirstOrDefaultAsync(p => p.TransactionReference == session_id);
+
+                if (payment != null && payment.Status != PaymentStatus.Paid)
+                {
+                    var isPaid = await _stripeAdapter.IsSessionPaidAsync(session_id);
+                    if (isPaid)
+                    {
+                        payment.Status = PaymentStatus.Paid;
+                        payment.PaymentDate = DateTime.Now;
+                        await CompleteTransactionAsync(reservation, payment);
+                    }
+                }
+            }
+
             return View("~/Views/ClientReservation/Confirmation.cshtml", reservation);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        [Authorize(Roles = "Staff,Admin")]
+        public async Task<IActionResult> RecordOfflinePayment(int reservationId, PaymentMethodType method, decimal amount, string? reference)
+        {
+            var reservation = await _context.Reservations.FindAsync(reservationId);
+            if (reservation == null) return NotFound();
+
+            var employeeIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (employeeIdClaim == null || !int.TryParse(employeeIdClaim, out var employeeId))
+            {
+                return Forbid();
+            }
+
+            var payment = new Payment
+            {
+                AmountPaid = amount,
+                PaymentDate = DateTime.Now,
+                TransactionReference = reference
+            };
+
+            SetPaymentStrategy(method);
+            var result = await _strategy.ProcessAsync(reservation, payment, employeeId);
+
+            if (!result.Success)
+            {
+                TempData["Error"] = result.Error;
+                return RedirectToAction(nameof(Checkout), new { reservationId });
+            }
+
+            _context.Payments.Add(payment);
+            await CompleteTransactionAsync(reservation, payment);
+
+            return RedirectToAction(nameof(Confirmation), new { reservationId });
         }
     }
 }

@@ -114,12 +114,12 @@ namespace RVSite.Controllers
             // Step 4: Calculate cost and save reservation
             model.TotalCost = _costService.CalculateCost(model);
             model.BalanceDue = model.TotalCost;
-            model.ReservationStatus = ReservationStatus.Confirmed;
+            model.ReservationStatus = ReservationStatus.Pending;
 
             _context.Reservations.Add(model);
             await _context.SaveChangesAsync();
 
-            return RedirectToAction("Confirmation", new { id = model.ReservationID });
+            return RedirectToAction("Checkout", "Payment", new { ReservationId = model.ReservationID });
         }
 
 
