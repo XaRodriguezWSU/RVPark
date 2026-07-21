@@ -94,6 +94,7 @@ namespace RVSite.Controllers
             var reservations = await _context.Reservations
                 .Include(r => r.User)
                 .Include(r => r.Site)
+                    .ThenInclude(s => s.SiteType)
                 .Where(r => r.CheckInDate.Date <= end.Date &&
                             r.CheckOutDate.Date >= start.Date)
                 .ToListAsync();
@@ -125,6 +126,11 @@ namespace RVSite.Controllers
                     .ThenBy(r => r.CheckInDate)
                     .ToList(),
 
+                "SiteUsage" => nonCancelledReservations
+                    .OrderBy(r => r.Site != null ? r.Site.SiteNumber : "")
+                    .ThenBy(r => r.CheckInDate)
+                    .ToList(),
+
                 _ => reservations
                     .OrderBy(r => r.CheckInDate)
                     .ToList()
@@ -136,6 +142,43 @@ namespace RVSite.Controllers
                 .Select(r => r.SiteID)
                 .Distinct()
                 .Count();
+
+            var sites = await _context.Sites
+                .Include(s => s.SiteType)
+                .OrderBy(s => s.SiteNumber)
+                .ToListAsync();
+
+            var reportEndExclusive = end.Date.AddDays(1);
+
+            var siteUsageRows = sites.Select(site =>
+            {
+                var siteReservations = nonCancelledReservations
+                    .Where(r => r.SiteID == site.SiteID)
+                    .ToList();
+
+                return new SiteUsageReportRow
+                {
+                    SiteID = site.SiteID,
+                    SiteNumber = site.SiteNumber,
+                    SiteTypeName = site.SiteType != null ? site.SiteType.Name : "Unknown",
+                    ReservationCount = siteReservations.Count,
+                    ReservedNights = siteReservations.Sum(r =>
+                    {
+                        var overlapStart = r.CheckInDate.Date > start.Date
+                            ? r.CheckInDate.Date
+                            : start.Date;
+
+                        var overlapEnd = r.CheckOutDate.Date < reportEndExclusive
+                            ? r.CheckOutDate.Date
+                            : reportEndExclusive;
+
+                        var nights = (overlapEnd - overlapStart).Days;
+
+                        return nights < 0 ? 0 : nights;
+                    }),
+                    RevenueTotal = siteReservations.Sum(r => r.TotalCost)
+                };
+            }).ToList();
 
             var model = new ReportsViewModel
             {
@@ -160,7 +203,9 @@ namespace RVSite.Controllers
                     ? 0
                     : Math.Round((decimal)occupiedSiteCount / totalSites * 100, 1),
 
-                Reservations = filteredReservations
+                Reservations = filteredReservations,
+
+                SiteUsageRows = siteUsageRows
             };
 
             return View(model);
@@ -257,6 +302,206 @@ namespace RVSite.Controllers
             await _context.SaveChangesAsync();
 
             return RedirectToAction(nameof(Search));
+        }
+
+        private async Task<ReservationPolicy> GetOrCreateReservationPolicyAsync()
+        {
+            var policy = await _context.ReservationPolicies.FirstOrDefaultAsync();
+
+            if (policy == null)
+            {
+                policy = new ReservationPolicy();
+                _context.ReservationPolicies.Add(policy);
+                await _context.SaveChangesAsync();
+            }
+
+            return policy;
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> ReservationPolicies()
+        {
+            var policy = await GetOrCreateReservationPolicyAsync();
+
+            ViewBag.ActiveSpecialEventPolicies = await _context.SpecialEventPolicies
+                .Include(p => p.SiteType)
+                .Where(p => p.IsActive && p.EndDate.Date >= DateTime.Today)
+                .OrderBy(p => p.StartDate)
+                .ToListAsync();
+
+            return View(policy);
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> EditReservationPolicy()
+        {
+            var policy = await GetOrCreateReservationPolicyAsync();
+
+            return View(policy);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> EditReservationPolicy(ReservationPolicy policy)
+        {
+            if (!ModelState.IsValid)
+            {
+                return View(policy);
+            }
+
+            var existingPolicy = await _context.ReservationPolicies
+                .FirstOrDefaultAsync(p => p.ReservationPolicyID == policy.ReservationPolicyID);
+
+            if (existingPolicy == null)
+            {
+                return NotFound();
+            }
+
+            existingPolicy.MaximumAdvanceBookingDays = policy.MaximumAdvanceBookingDays;
+            existingPolicy.PeakSeasonMaximumStayNights = policy.PeakSeasonMaximumStayNights;
+            existingPolicy.PeakSeasonStartMonth = policy.PeakSeasonStartMonth;
+            existingPolicy.PeakSeasonStartDay = policy.PeakSeasonStartDay;
+            existingPolicy.PeakSeasonEndMonth = policy.PeakSeasonEndMonth;
+            existingPolicy.PeakSeasonEndDay = policy.PeakSeasonEndDay;
+            existingPolicy.RequiredDaysAwayBeforeReturn = policy.RequiredDaysAwayBeforeReturn;
+            existingPolicy.LateCancellationWindowDays = policy.LateCancellationWindowDays;
+            existingPolicy.GeneralPolicyNotes = policy.GeneralPolicyNotes;
+            existingPolicy.LastUpdated = DateTime.Now;
+
+            await _context.SaveChangesAsync();
+
+            TempData["SuccessMessage"] = "Reservation policies were updated.";
+
+            return RedirectToAction(nameof(ReservationPolicies));
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> SpecialEventPolicies(bool showArchived = false)
+        {
+            var today = DateTime.Today;
+
+            var query = _context.SpecialEventPolicies
+                .Include(p => p.SiteType)
+                .AsQueryable();
+
+            if (showArchived)
+            {
+                query = query.Where(p => !p.IsActive || p.EndDate.Date < today);
+                ViewBag.PageTitle = "Archived Special Event Policies";
+            }
+            else
+            {
+                query = query.Where(p => p.IsActive && p.EndDate.Date >= today);
+                ViewBag.PageTitle = "Active & Upcoming Special Event Policies";
+            }
+
+            ViewBag.ShowArchived = showArchived;
+
+            var policies = showArchived
+                ? await query.OrderByDescending(p => p.EndDate).ToListAsync()
+                : await query.OrderBy(p => p.StartDate).ToListAsync();
+
+            return View(policies);
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> SpecialEventPolicyForm(int? id)
+        {
+            ViewBag.SiteTypes = await _context.SiteTypes
+                .OrderBy(s => s.Name)
+                .ToListAsync();
+
+            if (id == null)
+            {
+                return View(new SpecialEventPolicy
+                {
+                    StartDate = DateTime.Today,
+                    EndDate = DateTime.Today,
+                    IsActive = true
+                });
+            }
+
+            var policy = await _context.SpecialEventPolicies
+                .FirstOrDefaultAsync(p => p.SpecialEventPolicyID == id);
+
+            if (policy == null)
+            {
+                return NotFound();
+            }
+
+            return View(policy);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> SaveSpecialEventPolicy(SpecialEventPolicy policy)
+        {
+            ModelState.Remove(nameof(SpecialEventPolicy.SiteType));
+
+            if (policy.StartDate > policy.EndDate)
+            {
+                ModelState.AddModelError("", "Start date cannot be after end date.");
+            }
+
+            if (!ModelState.IsValid)
+            {
+                ViewBag.SiteTypes = await _context.SiteTypes
+                    .OrderBy(s => s.Name)
+                    .ToListAsync();
+
+                return View("SpecialEventPolicyForm", policy);
+            }
+
+            if (policy.SpecialEventPolicyID == 0)
+            {
+                _context.SpecialEventPolicies.Add(policy);
+                TempData["SuccessMessage"] = "Special event policy was added.";
+            }
+            else
+            {
+                var existingPolicy = await _context.SpecialEventPolicies
+                    .FirstOrDefaultAsync(p => p.SpecialEventPolicyID == policy.SpecialEventPolicyID);
+
+                if (existingPolicy == null)
+                {
+                    return NotFound();
+                }
+
+                existingPolicy.EventName = policy.EventName;
+                existingPolicy.StartDate = policy.StartDate;
+                existingPolicy.EndDate = policy.EndDate;
+                existingPolicy.SiteTypeID = policy.SiteTypeID;
+                existingPolicy.MaximumStayNights = policy.MaximumStayNights;
+                existingPolicy.CancellationWindowDays = policy.CancellationWindowDays;
+                existingPolicy.IsActive = policy.IsActive;
+                existingPolicy.Notes = policy.Notes;
+
+                TempData["SuccessMessage"] = "Special event policy was updated.";
+            }
+
+            await _context.SaveChangesAsync();
+
+            return RedirectToAction(nameof(SpecialEventPolicies));
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> ArchiveSpecialEventPolicy(int id)
+        {
+            var policy = await _context.SpecialEventPolicies.FindAsync(id);
+
+            if (policy == null)
+            {
+                return NotFound();
+            }
+
+            policy.IsActive = false;
+
+            await _context.SaveChangesAsync();
+
+            TempData["SuccessMessage"] = "Special event policy was archived.";
+
+            return RedirectToAction(nameof(SpecialEventPolicies));
         }
 
         // Stuff for the employee management system below

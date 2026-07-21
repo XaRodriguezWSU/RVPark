@@ -1,0 +1,156 @@
+﻿@model List<RVSite.Models.SpecialEventPolicy>
+
+@{
+    bool showArchived = ViewBag.ShowArchived ?? false;
+    ViewData["Title"] = showArchived ? "Archived Special Event Policies" : "Special Event Policies";
+}
+
+<div class="admin-page">
+
+    <section class="card admin-hero mb-4">
+        <div class="card-body p-4 p-lg-5">
+            <span class="home-kicker">Administration</span>
+            <h1 class="page-title">
+                @(showArchived ? "Archived Special Event Policies" : "Special Event Policies")
+            </h1>
+            <p class="page-subtitle">
+                Manage temporary reservation rules for holidays, special events, and date-based exceptions.
+            </p>
+
+            <div class="d-flex gap-2 flex-wrap mt-3">
+                <a asp-action="SpecialEventPolicyForm" class="btn btn-primary">
+                    Add New Policy
+                </a>
+
+                @if (showArchived)
+                {
+                    <a asp-action="SpecialEventPolicies" class="btn btn-outline-secondary">
+                        View Active & Upcoming
+                    </a>
+                }
+                else
+                {
+                    <a asp-action="SpecialEventPolicies" asp-route-showArchived="true" class="btn btn-outline-secondary">
+                        View Archived
+                    </a>
+                }
+
+                <a asp-action="ReservationPolicies" class="btn btn-outline-secondary">
+                    Back to Reservation Policies
+                </a>
+            </div>
+        </div>
+    </section>
+
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success">
+            @TempData["SuccessMessage"]
+        </div>
+    }
+
+    <section class="card">
+        <div class="card-header">
+            <h2 class="h5 mb-0">
+                @(showArchived ? "Archived Policies" : "Active & Upcoming Policies")
+            </h2>
+        </div>
+
+        <div class="card-body p-0">
+            @if (!Model.Any())
+            {
+                <div class="p-4">
+                    <div class="alert alert-info mb-0">
+                        @(showArchived
+                            ? "No archived special event policies found."
+                            : "No active or upcoming special event policies found.")
+                    </div>
+                </div>
+            }
+            else
+            {
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle admin-table text-center">
+                        <thead>
+                            <tr>
+                                <th>Status</th>
+                                <th>Event</th>
+                                <th>Dates</th>
+                                <th>Site Type</th>
+                                <th>Max Stay</th>
+                                <th>Cancel Window</th>
+                                <th class="text-end">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var policy in Model)
+                            {
+                                var today = DateTime.Today;
+                                string statusText;
+                                string statusClass;
+
+                                if (!policy.IsActive)
+                                {
+                                    statusText = "Archived";
+                                    statusClass = "bg-secondary";
+                                }
+                                else if (policy.EndDate.Date < today)
+                                {
+                                    statusText = "Expired";
+                                    statusClass = "bg-secondary";
+                                }
+                                else if (policy.StartDate.Date > today)
+                                {
+                                    statusText = "Upcoming";
+                                    statusClass = "bg-info text-dark";
+                                }
+                                else
+                                {
+                                    statusText = "Active";
+                                    statusClass = "bg-success";
+                                }
+
+                                <tr>
+                                    <td>
+                                        <span class="badge @statusClass">
+                                            @statusText
+                                        </span>
+                                    </td>
+                                    <td>@policy.EventName</td>
+                                    <td>
+                                        @policy.StartDate.ToShortDateString()
+                                        -
+                                        @policy.EndDate.ToShortDateString()
+                                    </td>
+                                    <td>@(policy.SiteType?.Name ?? "All Site Types")</td>
+                                    <td>@(policy.MaximumStayNights?.ToString() ?? "Default")</td>
+                                    <td>@(policy.CancellationWindowDays?.ToString() ?? "Default")</td>
+                                    <td class="text-end">
+                                        <div class="d-flex justify-content-end gap-2">
+                                            <a asp-action="SpecialEventPolicyForm"
+                                               asp-route-id="@policy.SpecialEventPolicyID"
+                                               class="btn btn-sm btn-outline-primary">
+                                                Edit
+                                            </a>
+
+                                            @if (policy.IsActive && !(ViewBag.ShowArchived as bool? ?? false))
+                                            {
+                                                <form asp-action="ArchiveSpecialEventPolicy" method="post">
+                                                    <input type="hidden" name="id" value="@policy.SpecialEventPolicyID" />
+                                                    <button type="submit" class="btn btn-sm btn-outline-secondary">
+                                                        Archive
+                                                    </button>
+                                                </form>
+                                            }
+                                        </div>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+        </div>
+    </section>
+
+</div>

@@ -1,0 +1,222 @@
+﻿@model RVSite.Models.Reservation
+
+@{
+    ViewData["Title"] = "Cancel Reservation";
+}
+
+<section class="card admin-hero mb-4">
+    <div class="card-body p-4 p-lg-5">
+        <div class="d-flex flex-column flex-lg-row justify-content-between align-items-lg-center gap-3">
+            <div>
+                <span class="home-kicker">
+                    Reservation Management
+                </span>
+
+                <h1 class="page-title">
+                    Cancel Reservation #@Model.ReservationID
+                </h1>
+
+                <p class="page-subtitle mb-0">
+                    Review the reservation before confirming the cancellation.
+                </p>
+            </div>
+
+            <a asp-controller="Reservation"
+               asp-action="Index"
+               class="btn btn-outline-secondary">
+                Back to Reservations
+            </a>
+        </div>
+    </div>
+</section>
+
+<div class="alert alert-warning"
+     role="alert">
+
+    <h2 class="h5">
+        Confirm Cancellation
+    </h2>
+
+    <p class="mb-0">
+        This action will mark the reservation as cancelled.
+        The reservation will remain in the system for recordkeeping.
+    </p>
+</div>
+
+<div class="row g-4">
+    <div class="col-lg-5">
+        <section class="card h-100">
+            <div class="card-header">
+                <h2 class="h5 mb-1">
+                    Customer Information
+                </h2>
+
+                <p class="mb-0 text-muted">
+                    Customer associated with this reservation.
+                </p>
+            </div>
+
+            <div class="card-body">
+                <div class="border rounded p-3 mb-3">
+                    <div class="small text-muted mb-1">
+                        Customer
+                    </div>
+
+                    <div class="fw-semibold">
+                        @(Model.User?.FirstName ?? "Unknown")
+                        @(Model.User?.LastName ?? "Customer")
+                    </div>
+                </div>
+
+                <div class="border rounded p-3 mb-3">
+                    <div class="small text-muted mb-1">
+                        Email
+                    </div>
+
+                    <div class="fw-semibold text-break">
+                        @(Model.User?.Email ?? "Not available")
+                    </div>
+                </div>
+
+                <div class="border rounded p-3">
+                    <div class="small text-muted mb-1">
+                        Phone
+                    </div>
+
+                    <div class="fw-semibold">
+                        @(Model.User?.PhoneNumber ?? "Not available")
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <div class="col-lg-7">
+        <section class="card h-100">
+            <div class="card-header">
+                <h2 class="h5 mb-1">
+                    Reservation Details
+                </h2>
+
+                <p class="mb-0 text-muted">
+                    Verify that this is the correct reservation.
+                </p>
+            </div>
+
+            <div class="card-body">
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <div class="border rounded p-3 h-100">
+                            <div class="small text-muted mb-1">
+                                Reservation ID
+                            </div>
+
+                            <div class="fw-semibold">
+                                #@Model.ReservationID
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <div class="border rounded p-3 h-100">
+                            <div class="small text-muted mb-1">
+                                Status
+                            </div>
+
+                            <div class="fw-semibold">
+                                @Model.ReservationStatus
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <div class="border rounded p-3 h-100">
+                            <div class="small text-muted mb-1">
+                                Site
+                            </div>
+
+                            <div class="fw-semibold">
+                                @(Model.Site?.SiteNumber ?? "Unknown")
+                            </div>
+
+                            <div class="small text-muted">
+                                @(Model.Site?.SiteType?.Name ?? "Site")
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <div class="border rounded p-3 h-100">
+                            <div class="small text-muted mb-1">
+                                Total Cost
+                            </div>
+
+                            <div class="fw-semibold">
+                                @Model.TotalCost.ToString("C")
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <div class="border rounded p-3 h-100">
+                            <div class="small text-muted mb-1">
+                                Check-In
+                            </div>
+
+                            <div class="fw-semibold">
+                                @Model.CheckInDate.ToString("MMM d, yyyy")
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <div class="border rounded p-3 h-100">
+                            <div class="small text-muted mb-1">
+                                Check-Out
+                            </div>
+
+                            <div class="fw-semibold">
+                                @Model.CheckOutDate.ToString("MMM d, yyyy")
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div>
+</div>
+
+<section class="card mt-4 mb-5">
+    <div class="card-body">
+        <form asp-controller="Reservation"
+              asp-action="ConfirmCancelReservation"
+              method="post">
+
+            @Html.AntiForgeryToken()
+
+            <input type="hidden"
+                   name="id"
+                   value="@Model.ReservationID" />
+
+            <div class="d-flex flex-wrap gap-2">
+                <button type="submit"
+                        class="btn btn-danger">
+                    Confirm Cancellation
+                </button>
+
+                <a asp-controller="Reservation"
+                   asp-action="Edit"
+                   asp-route-id="@Model.ReservationID"
+                   class="btn btn-outline-secondary">
+                    Keep Reservation
+                </a>
+
+                <a asp-controller="Reservation"
+                   asp-action="Index"
+                   class="btn btn-outline-secondary">
+                    Back to Reservations
+                </a>
+            </div>
+        </form>
+    </div>
+</section>

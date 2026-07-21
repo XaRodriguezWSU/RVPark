@@ -1,0 +1,150 @@
+@model RVSite.Models.Reservation
+
+@{
+    ViewData["Title"] = "Checkout";
+}
+
+<section class="card admin-hero mb-4">
+    <div class="card-body p-4 p-lg-5">
+        <span class="home-kicker">Complete Your Booking</span>
+        <h1 class="page-title">Checkout</h1>
+        <p class="page-subtitle">
+            Review your reservation total and choose how you'd like to pay.
+        </p>
+    </div>
+</section>
+
+@if (TempData["Error"] != null)
+{
+<div class="alert alert-danger">@TempData["Error"]</div>
+}
+
+<section class="card mb-4">
+    <div class="card-header">
+        <h2 class="h5 mb-0">Reservation Summary</h2>
+    </div>
+
+    <div class="card-body">
+        <div class="row g-3">
+            <div class="col-md-6 col-xl-4">
+                <div class="detail-box">
+                    <span>Reservation Number</span>
+                    <strong>#@Model.ReservationID</strong>
+                </div>
+            </div>
+
+            <div class="col-md-6 col-xl-4">
+                <div class="detail-box">
+                    <span>Site</span>
+                    <strong>Site @Model.Site?.SiteNumber</strong>
+                </div>
+            </div>
+
+            <div class="col-md-6 col-xl-4">
+                <div class="detail-box">
+                    <span>Check-In</span>
+                    <strong>@Model.CheckInDate.ToShortDateString()</strong>
+                </div>
+            </div>
+
+            <div class="col-md-6 col-xl-4">
+                <div class="detail-box">
+                    <span>Check-Out</span>
+                    <strong>@Model.CheckOutDate.ToShortDateString()</strong>
+                </div>
+            </div>
+
+            <div class="col-md-6 col-xl-4">
+                <div class="detail-box">
+                    <span>Total Cost</span>
+                    <strong>@Model.TotalCost.ToString("C")</strong>
+                </div>
+            </div>
+
+            <div class="col-md-6 col-xl-4">
+                <div class="detail-box">
+                    <span>Amount Due</span>
+                    <strong>@(((decimal)ViewBag.AmountDue).ToString("C"))</strong>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="card mb-4">
+    <div class="card-header">
+        <h2 class="h5 mb-0">Pay Online</h2>
+    </div>
+
+    <div class="card-body">
+        <p class="text-muted">You'll be redirected to Stripe to securely complete your payment.</p>
+
+        <form asp-controller="Payment" asp-action="ProcessStripePayment" method="post">
+            <input type="hidden" name="reservationId" value="@Model.ReservationID" />
+            <button type="submit" class="btn btn-primary">
+                Pay @(((decimal)ViewBag.AmountDue).ToString("C")) with Card
+            </button>
+        </form>
+    </div>
+</section>
+
+
+@if (ViewBag.IsEmployee == true)
+{
+    <section class="card">
+        <div class="card-header">
+            <h2 class="h5 mb-0">
+                Record Offline Payment
+                <span class="text-muted fw-normal">(Employee Only)</span>
+            </h2>
+        </div>
+
+        <div class="card-body">
+            <form asp-controller="Payment" asp-action="RecordOfflinePayment" method="post">
+                <input type="hidden" name="reservationId" value="@Model.ReservationID" />
+
+                <div class="row g-3">
+                    <div class="col-md-4">
+                        <label for="method" class="form-label">Payment Method</label>
+                        <select id="method" name="method" class="form-select">
+                            <option value="Cash">Cash</option>
+                            <option value="Check">Check</option>
+                            <option value="ManualCard">Manual Credit Card</option>
+                        </select>
+                    </div>
+
+                    <div class="col-md-4">
+                        <label for="amount" class="form-label">Amount</label>
+                        <div class="input-group">
+                            <span class="input-group-text">$</span>
+                            <input id="amount"
+                                   name="amount"
+                                   type="number"
+                                   step="0.01"
+                                   min="0.01"
+                                   class="form-control"
+                                   value="@ViewBag.AmountDue" />
+                        </div>
+                    </div>
+
+                    <div class="col-md-4">
+                        <label for="reference" class="form-label">
+                            Reference <span class="text-muted fw-normal">(optional)</span>
+                        </label>
+                        <input id="reference"
+                               name="reference"
+                               type="text"
+                               class="form-control"
+                               placeholder="Check #, auth code, etc." />
+                    </div>
+                </div>
+
+                <div class="mt-4">
+                    <button type="submit" class="btn btn-outline-secondary">
+                        Record Payment
+                    </button>
+                </div>
+            </form>
+        </div>
+    </section>
+}

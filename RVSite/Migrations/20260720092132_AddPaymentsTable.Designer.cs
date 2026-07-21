@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using RVSite.Models;
 
@@ -11,9 +12,11 @@ using RVSite.Models;
 namespace RVSite.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260720092132_AddPaymentsTable")]
+    partial class AddPaymentsTable
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -123,9 +126,6 @@ namespace RVSite.Migrations
                     b.Property<DateTime>("PaymentDate")
                         .HasColumnType("datetime2");
 
-                    b.Property<int?>("ProcessedByUserID")
-                        .HasColumnType("int");
-
                     b.Property<int>("ReservationID")
                         .HasColumnType("int");
 
@@ -194,50 +194,6 @@ namespace RVSite.Migrations
                     b.HasIndex("UserID");
 
                     b.ToTable("Reservations");
-                });
-
-            modelBuilder.Entity("RVSite.Models.ReservationPolicy", b =>
-                {
-                    b.Property<int>("ReservationPolicyID")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("ReservationPolicyID"));
-
-                    b.Property<string>("GeneralPolicyNotes")
-                        .HasMaxLength(1000)
-                        .HasColumnType("nvarchar(1000)");
-
-                    b.Property<DateTime>("LastUpdated")
-                        .HasColumnType("datetime2");
-
-                    b.Property<int>("LateCancellationWindowDays")
-                        .HasColumnType("int");
-
-                    b.Property<int>("MaximumAdvanceBookingDays")
-                        .HasColumnType("int");
-
-                    b.Property<int>("PeakSeasonEndDay")
-                        .HasColumnType("int");
-
-                    b.Property<int>("PeakSeasonEndMonth")
-                        .HasColumnType("int");
-
-                    b.Property<int>("PeakSeasonMaximumStayNights")
-                        .HasColumnType("int");
-
-                    b.Property<int>("PeakSeasonStartDay")
-                        .HasColumnType("int");
-
-                    b.Property<int>("PeakSeasonStartMonth")
-                        .HasColumnType("int");
-
-                    b.Property<int>("RequiredDaysAwayBeforeReturn")
-                        .HasColumnType("int");
-
-                    b.HasKey("ReservationPolicyID");
-
-                    b.ToTable("ReservationPolicies");
                 });
 
             modelBuilder.Entity("RVSite.Models.Role", b =>
@@ -364,48 +320,6 @@ namespace RVSite.Migrations
                     b.HasIndex("SiteTypeID");
 
                     b.ToTable("SiteTypePrices");
-                });
-
-            modelBuilder.Entity("RVSite.Models.SpecialEventPolicy", b =>
-                {
-                    b.Property<int>("SpecialEventPolicyID")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("SpecialEventPolicyID"));
-
-                    b.Property<int?>("CancellationWindowDays")
-                        .HasColumnType("int");
-
-                    b.Property<DateTime>("EndDate")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("EventName")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
-
-                    b.Property<bool>("IsActive")
-                        .HasColumnType("bit");
-
-                    b.Property<int?>("MaximumStayNights")
-                        .HasColumnType("int");
-
-                    b.Property<string>("Notes")
-                        .HasMaxLength(1000)
-                        .HasColumnType("nvarchar(1000)");
-
-                    b.Property<int?>("SiteTypeID")
-                        .HasColumnType("int");
-
-                    b.Property<DateTime>("StartDate")
-                        .HasColumnType("datetime2");
-
-                    b.HasKey("SpecialEventPolicyID");
-
-                    b.HasIndex("SiteTypeID");
-
-                    b.ToTable("SpecialEventPolicies");
                 });
 
             modelBuilder.Entity("RVSite.Models.User", b =>
@@ -552,15 +466,6 @@ namespace RVSite.Migrations
                         .HasForeignKey("SiteTypeID")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
-
-                    b.Navigation("SiteType");
-                });
-
-            modelBuilder.Entity("RVSite.Models.SpecialEventPolicy", b =>
-                {
-                    b.HasOne("RVSite.Models.SiteType", "SiteType")
-                        .WithMany()
-                        .HasForeignKey("SiteTypeID");
 
                     b.Navigation("SiteType");
                 });
