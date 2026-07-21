@@ -1,0 +1,135 @@
+﻿@model RVSite.Models.SpecialEventPolicy
+
+@{
+    bool isEdit = Model.SpecialEventPolicyID != 0;
+    ViewData["Title"] = isEdit ? "Edit Special Event Policy" : "Add Special Event Policy";
+    var siteTypes = ViewBag.SiteTypes as List<RVSite.Models.SiteType>;
+}
+
+<div class="admin-page">
+
+    <section class="card admin-hero mb-4">
+        <div class="card-body p-4 p-lg-5">
+            <span class="home-kicker">Administration</span>
+            <h1 class="page-title">
+                @(isEdit ? "Edit Special Event Policy" : "Add Special Event Policy")
+            </h1>
+            <p class="page-subtitle">
+                Special event policies override the general reservation policy for selected dates.
+            </p>
+        </div>
+    </section>
+
+    <section class="card">
+        <div class="card-header">
+            <h2 class="h5 mb-0">
+                @(isEdit ? "Policy Details" : "New Policy Details")
+            </h2>
+        </div>
+
+        <div class="card-body">
+            <form asp-action="SaveSpecialEventPolicy" method="post">
+                <input type="hidden" asp-for="SpecialEventPolicyID" />
+
+                <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+                <div class="mb-3">
+                    <label asp-for="EventName" class="form-label">Event Name</label>
+                    <input asp-for="EventName" class="form-control" />
+                    <span asp-validation-for="EventName" class="text-danger"></span>
+                </div>
+
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label asp-for="StartDate" class="form-label">Start Date</label>
+                        <input asp-for="StartDate" type="date" asp-format="{0:yyyy-MM-dd}" class="form-control" />
+                        <span asp-validation-for="StartDate" class="text-danger"></span>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label asp-for="EndDate" class="form-label">End Date</label>
+                        <input asp-for="EndDate" type="date" asp-format="{0:yyyy-MM-dd}" class="form-control" />
+                        <span asp-validation-for="EndDate" class="text-danger"></span>
+                    </div>
+                </div>
+
+                <div class="mb-3 mt-3">
+                    <label asp-for="SiteTypeID" class="form-label">Site Type</label>
+                    <select asp-for="SiteTypeID" class="form-select">
+                        <option value="">All Site Types</option>
+
+                        @if (siteTypes != null)
+                        {
+                            foreach (var siteType in siteTypes)
+                            {
+                                <option value="@siteType.SiteTypeID">
+                                    @siteType.Name
+                                </option>
+                            }
+                        }
+                    </select>
+                    <span asp-validation-for="SiteTypeID" class="text-danger"></span>
+                </div>
+
+                <div class="row g-3">
+                    <div class="col-md-4">
+                        <label asp-for="MaximumStayNights" class="form-label">
+                            Maximum Stay (nights)
+                        </label>
+                        <input asp-for="MaximumStayNights" type="number" class="form-control" />
+                        <span asp-validation-for="MaximumStayNights" class="text-danger"></span>
+                        <div class="form-text">Leave blank to use the general policy.</div>
+                    </div>
+
+                    <div class="col-md-4">
+                        <label asp-for="CancellationWindowDays" class="form-label">
+                            Cancellation Window (days)
+                        </label>
+                        <input asp-for="CancellationWindowDays" type="number" class="form-control" />
+                        <span asp-validation-for="CancellationWindowDays" class="text-danger"></span>
+                        <div class="form-text">Leave blank to use the general policy.</div>
+                    </div>
+
+                    @* <div class="col-md-4">
+                        <label asp-for="CancellationFeeNights" class="form-label">
+                            Cancellation Fee (nights)
+                        </label>
+                        <input asp-for="CancellationFeeNights" type="number" class="form-control" />
+                        <span asp-validation-for="CancellationFeeNights" class="text-danger"></span>
+                        <div class="form-text">Leave blank to use the general policy.</div>
+                    </div> *@
+                </div>
+
+                <div class="form-check my-3">
+                    <input asp-for="IsActive" class="form-check-input" />
+                    <label asp-for="IsActive" class="form-check-label">
+                        Active
+                    </label>
+                </div>
+
+                <div class="mb-3">
+                    <label asp-for="Notes" class="form-label">Notes</label>
+                    <textarea asp-for="Notes" class="form-control" rows="3"></textarea>
+                    <span asp-validation-for="Notes" class="text-danger"></span>
+                </div>
+
+                <div class="d-flex gap-2">
+                    <button type="submit" class="btn btn-primary">
+                        @(isEdit ? "Save Changes" : "Add Policy")
+                    </button>
+
+                    <a asp-action="SpecialEventPolicies" class="btn btn-outline-secondary">
+                        Cancel
+                    </a>
+                </div>
+            </form>
+        </div>
+    </section>
+
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}

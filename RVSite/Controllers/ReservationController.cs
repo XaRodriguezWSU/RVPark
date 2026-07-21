@@ -12,13 +12,16 @@ namespace RVSite.Controllers
     {
         private readonly AppDbContext _context;
         private readonly CostService _costService;
+        private readonly ReservationPolicyService _reservationPolicyService;
 
         public ReservationController(
             AppDbContext context,
-            CostService costService)
+            CostService costService,
+            ReservationPolicyService reservationPolicyService)
         {
             _context = context;
             _costService = costService;
+            _reservationPolicyService = reservationPolicyService;
         }
 
         public async Task<IActionResult> Index()
@@ -366,6 +369,26 @@ namespace RVSite.Controllers
                 }
             }
 
+            if (ModelState.IsValid &&
+                site != null &&
+                checkOutDate > checkInDate)
+            {
+                var policyValidation =
+                    await _reservationPolicyService.ValidateReservationAsync(
+                        checkInDate,
+                        checkOutDate,
+                        customerId,
+                        siteId);
+
+                if (!policyValidation.IsValid)
+                {
+                    foreach (var error in policyValidation.Errors)
+                    {
+                        ModelState.AddModelError("", error);
+                    }
+                }
+            }
+
             if (!ModelState.IsValid || site == null)
             {
                 ViewBag.Customer = customer;
@@ -586,6 +609,31 @@ namespace RVSite.Controllers
                 ModelState.AddModelError(
                     "newSiteID",
                     "A site under maintenance cannot be assigned to a reservation.");
+
+                await PrepareEditView(
+                    reservation,
+                    updated.CheckInDate,
+                    updated.CheckOutDate,
+                    newSiteID,
+                    false);
+
+                return View(reservation);
+            }
+
+            var policyValidation =
+                await _reservationPolicyService.ValidateReservationAsync(
+                    updated.CheckInDate,
+                    updated.CheckOutDate,
+                    reservation.UserID,
+                    targetSiteID,
+                    reservation.ReservationID);
+
+            if (!policyValidation.IsValid)
+            {
+                foreach (var error in policyValidation.Errors)
+                {
+                    ModelState.AddModelError("", error);
+                }
 
                 await PrepareEditView(
                     reservation,

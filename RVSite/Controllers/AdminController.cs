@@ -304,6 +304,202 @@ namespace RVSite.Controllers
             return RedirectToAction(nameof(Search));
         }
 
+        private async Task<ReservationPolicy> GetOrCreateReservationPolicyAsync()
+        {
+            var policy = await _context.ReservationPolicies.FirstOrDefaultAsync();
+
+            if (policy == null)
+            {
+                policy = new ReservationPolicy();
+                _context.ReservationPolicies.Add(policy);
+                await _context.SaveChangesAsync();
+            }
+
+            return policy;
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> ReservationPolicies()
+        {
+            var policy = await GetOrCreateReservationPolicyAsync();
+
+            ViewBag.ActiveSpecialEventPolicies = await _context.SpecialEventPolicies
+                .Include(p => p.SiteType)
+                .Where(p => p.IsActive && p.EndDate.Date >= DateTime.Today)
+                .OrderBy(p => p.StartDate)
+                .ToListAsync();
+
+            return View(policy);
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> EditReservationPolicy()
+        {
+            var policy = await GetOrCreateReservationPolicyAsync();
+
+            return View(policy);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> EditReservationPolicy(ReservationPolicy policy)
+        {
+            if (!ModelState.IsValid)
+            {
+                return View(policy);
+            }
+
+            var existingPolicy = await _context.ReservationPolicies
+                .FirstOrDefaultAsync(p => p.ReservationPolicyID == policy.ReservationPolicyID);
+
+            if (existingPolicy == null)
+            {
+                return NotFound();
+            }
+
+            existingPolicy.MaximumAdvanceBookingDays = policy.MaximumAdvanceBookingDays;
+            existingPolicy.PeakSeasonMaximumStayNights = policy.PeakSeasonMaximumStayNights;
+            existingPolicy.RequiredDaysAwayBeforeReturn = policy.RequiredDaysAwayBeforeReturn;
+            existingPolicy.LateCancellationWindowDays = policy.LateCancellationWindowDays;
+            existingPolicy.GeneralPolicyNotes = policy.GeneralPolicyNotes;
+            existingPolicy.LastUpdated = DateTime.Now;
+
+            await _context.SaveChangesAsync();
+
+            TempData["SuccessMessage"] = "Reservation policies were updated.";
+
+            return RedirectToAction(nameof(ReservationPolicies));
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> SpecialEventPolicies(bool showArchived = false)
+        {
+            var today = DateTime.Today;
+
+            var query = _context.SpecialEventPolicies
+                .Include(p => p.SiteType)
+                .AsQueryable();
+
+            if (showArchived)
+            {
+                query = query.Where(p => !p.IsActive || p.EndDate.Date < today);
+                ViewBag.PageTitle = "Archived Special Event Policies";
+            }
+            else
+            {
+                query = query.Where(p => p.IsActive && p.EndDate.Date >= today);
+                ViewBag.PageTitle = "Active & Upcoming Special Event Policies";
+            }
+
+            ViewBag.ShowArchived = showArchived;
+
+            var policies = showArchived
+                ? await query.OrderByDescending(p => p.EndDate).ToListAsync()
+                : await query.OrderBy(p => p.StartDate).ToListAsync();
+
+            return View(policies);
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> SpecialEventPolicyForm(int? id)
+        {
+            ViewBag.SiteTypes = await _context.SiteTypes
+                .OrderBy(s => s.Name)
+                .ToListAsync();
+
+            if (id == null)
+            {
+                return View(new SpecialEventPolicy
+                {
+                    StartDate = DateTime.Today,
+                    EndDate = DateTime.Today,
+                    IsActive = true
+                });
+            }
+
+            var policy = await _context.SpecialEventPolicies
+                .FirstOrDefaultAsync(p => p.SpecialEventPolicyID == id);
+
+            if (policy == null)
+            {
+                return NotFound();
+            }
+
+            return View(policy);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> SaveSpecialEventPolicy(SpecialEventPolicy policy)
+        {
+            ModelState.Remove(nameof(SpecialEventPolicy.SiteType));
+
+            if (policy.StartDate > policy.EndDate)
+            {
+                ModelState.AddModelError("", "Start date cannot be after end date.");
+            }
+
+            if (!ModelState.IsValid)
+            {
+                ViewBag.SiteTypes = await _context.SiteTypes
+                    .OrderBy(s => s.Name)
+                    .ToListAsync();
+
+                return View("SpecialEventPolicyForm", policy);
+            }
+
+            if (policy.SpecialEventPolicyID == 0)
+            {
+                _context.SpecialEventPolicies.Add(policy);
+                TempData["SuccessMessage"] = "Special event policy was added.";
+            }
+            else
+            {
+                var existingPolicy = await _context.SpecialEventPolicies
+                    .FirstOrDefaultAsync(p => p.SpecialEventPolicyID == policy.SpecialEventPolicyID);
+
+                if (existingPolicy == null)
+                {
+                    return NotFound();
+                }
+
+                existingPolicy.EventName = policy.EventName;
+                existingPolicy.StartDate = policy.StartDate;
+                existingPolicy.EndDate = policy.EndDate;
+                existingPolicy.SiteTypeID = policy.SiteTypeID;
+                existingPolicy.MaximumStayNights = policy.MaximumStayNights;
+                existingPolicy.CancellationWindowDays = policy.CancellationWindowDays;
+                existingPolicy.IsActive = policy.IsActive;
+                existingPolicy.Notes = policy.Notes;
+
+                TempData["SuccessMessage"] = "Special event policy was updated.";
+            }
+
+            await _context.SaveChangesAsync();
+
+            return RedirectToAction(nameof(SpecialEventPolicies));
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> ArchiveSpecialEventPolicy(int id)
+        {
+            var policy = await _context.SpecialEventPolicies.FindAsync(id);
+
+            if (policy == null)
+            {
+                return NotFound();
+            }
+
+            policy.IsActive = false;
+
+            await _context.SaveChangesAsync();
+
+            TempData["SuccessMessage"] = "Special event policy was archived.";
+
+            return RedirectToAction(nameof(SpecialEventPolicies));
+        }
+
         // Stuff for the employee management system below
         [HttpGet]
         public async Task<IActionResult> Employees()

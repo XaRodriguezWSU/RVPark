@@ -20,6 +20,7 @@ builder.Services.AddScoped<StripePaymentStrategy>();
 builder.Services.AddScoped<CashPaymentStrategy>();
 builder.Services.AddScoped<CheckPaymentStrategy>();
 builder.Services.AddScoped<ManualCardPaymentStrategy>();
+builder.Services.AddScoped<ReservationPolicyService>();
 
 builder.Services.AddDbContext<AppDbContext>(options =>
 {
