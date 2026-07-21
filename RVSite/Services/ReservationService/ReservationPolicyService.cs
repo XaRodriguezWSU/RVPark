@@ -65,21 +65,17 @@ namespace RVSite.Services
                 checkOutDate,
                 site?.SiteTypeID);
 
-            int maximumStayNights = specialEventPolicy?.MaximumStayNights
-                                    ?? policy.PeakSeasonMaximumStayNights;
-
-            if (stayNights > maximumStayNights)
+            if (specialEventPolicy?.MaximumStayNights != null &&
+                stayNights > specialEventPolicy.MaximumStayNights.Value)
             {
-                if (specialEventPolicy != null)
-                {
-                    result.Errors.Add(
-                        $"This reservation overlaps the special event policy '{specialEventPolicy.EventName}', which allows a maximum stay of {maximumStayNights} night(s).");
-                }
-                else
-                {
-                    result.Errors.Add(
-                        $"The maximum stay is {maximumStayNights} night(s).");
-                }
+                result.Errors.Add(
+                    $"This reservation overlaps the special event policy '{specialEventPolicy.EventName}', which allows a maximum stay of {specialEventPolicy.MaximumStayNights.Value} night(s).");
+            }
+            else if (ReservationOverlapsPeakSeason(checkInDate, checkOutDate, policy) &&
+                     stayNights > policy.PeakSeasonMaximumStayNights)
+            {
+                result.Errors.Add(
+                    $"Reservations during peak season are limited to {policy.PeakSeasonMaximumStayNights} night(s).");
             }
 
             if (policy.RequiredDaysAwayBeforeReturn > 0)
@@ -105,7 +101,7 @@ namespace RVSite.Services
                 if (violatesReturnRule)
                 {
                     result.Errors.Add(
-                        $"This customer must wait {policy.RequiredDaysAwayBeforeReturn} day(s) between each reservation.");
+                        $"There must be {policy.RequiredDaysAwayBeforeReturn} day(s) between each reservation.");
                 }
             }
 
@@ -127,6 +123,36 @@ namespace RVSite.Services
                 .OrderByDescending(p => p.SiteTypeID != null)
                 .ThenBy(p => p.StartDate)
                 .FirstOrDefaultAsync();
+        }
+
+        private bool ReservationOverlapsPeakSeason(
+            DateTime checkInDate,
+            DateTime checkOutDate,
+            ReservationPolicy policy)
+        {
+            for (DateTime date = checkInDate.Date; date < checkOutDate.Date; date = date.AddDays(1))
+            {
+                if (DateFallsInPeakSeason(date, policy))
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        private bool DateFallsInPeakSeason(DateTime date, ReservationPolicy policy)
+        {
+            int current = date.Month * 100 + date.Day;
+            int start = policy.PeakSeasonStartMonth * 100 + policy.PeakSeasonStartDay;
+            int end = policy.PeakSeasonEndMonth * 100 + policy.PeakSeasonEndDay;
+
+            if (start <= end)
+            {
+                return current >= start && current <= end;
+            }
+
+            return current >= start || current <= end;
         }
     }
 }

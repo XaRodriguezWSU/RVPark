@@ -34,6 +34,22 @@ namespace RVSite.Models
         public int PeakSeasonMaximumStayNights { get; set; } = 14;
 
         [Required]
+        [Range(1, 12)]
+        public int PeakSeasonStartMonth { get; set; } = 5;
+
+        [Required]
+        [Range(1, 31)]
+        public int PeakSeasonStartDay { get; set; } = 1;
+
+        [Required]
+        [Range(1, 12)]
+        public int PeakSeasonEndMonth { get; set; } = 9;
+
+        [Required]
+        [Range(1, 31)]
+        public int PeakSeasonEndDay { get; set; } = 30;
+
+        [Required]
         [Range(0, 365)]
         public int RequiredDaysAwayBeforeReturn { get; set; } = 14;
 
