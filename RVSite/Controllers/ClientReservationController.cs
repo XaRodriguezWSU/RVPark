@@ -24,7 +24,12 @@ namespace RVSite.Controllers
         public IActionResult Book()
         {
             ViewBag.SiteTypes = _context.SiteTypes.ToList();
-            return View(new Reservation());
+
+            return View(new Reservation
+            {
+                CheckInDate = DateTime.Today,
+                CheckOutDate = DateTime.Today.AddDays(1)
+            });
         }
 
         [HttpPost]
