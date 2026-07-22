@@ -56,7 +56,9 @@
                             <th>Check-In</th>
                             <th>Check-Out</th>
                             <th>Status</th>
-                            <th class="text-end">Total</th>
+                            <th class="text-end">Reservation Cost</th>
+                            <th class="text-end">Fees</th>
+                            <th class="text-end">Balance Due</th>
                             <th class="text-end">Actions</th>
                         </tr>
                     </thead>
@@ -92,31 +94,68 @@
                             </td>
 
                             <td class="text-end">
+                                @if (r.Fees != null && r.Fees.Any())
+                                {
+                                    <span>@r.Fees.Sum(f => f.Amount).ToString("C")</span>
+                                }
+                                else
+                                {
+                                    <span>$0.00</span>
+                                }
+                            </td>
+
+                            <td class="text-end">
+                                @if (r.BalanceDue > 0)
+                                {
+                                    <span class="fw-bold text-danger">
+                                        @r.BalanceDue.ToString("C")
+                                    </span>
+                                }
+                                else
+                                {
+                                    <span class="text-muted">$0.00</span>
+                                }
+                            </td>
+
+                            <td class="text-end">
+                                @if (r.BalanceDue > 0)
+                                {
+                                    <a asp-controller="Payment"
+                                        asp-action="Checkout"
+                                        asp-route-reservationId="@r.ReservationID"
+                                        class="btn btn-sm btn-primary">
+                                        Pay Balance
+                                    </a>
+                                }
+
                                 @if (r.ReservationStatus != RVSite.Models.ReservationStatus.Cancelled &&
                                          r.CheckInDate > DateTime.Today)
-                                    {
-                                <div class="btn-group btn-group-sm">
-                                    <a asp-controller="ClientReservation"
-                                       asp-action="Edit"
-                                       asp-route-id="@r.ReservationID"
-                                       class="btn btn-outline-primary">
-                                        Edit
-                                    </a>
+                                {
+                                    <div class="btn-group btn-group-sm">
+                                        <a asp-controller="ClientReservation"
+                                           asp-action="Edit"
+                                           asp-route-id="@r.ReservationID"
+                                           class="btn btn-outline-primary">
+                                            Edit
+                                        </a>
 
-                                    <a asp-controller="ClientReservation"
-                                       asp-action="Cancel"
-                                       asp-route-id="@r.ReservationID"
-                                       class="btn btn-outline-danger">
-                                        Cancel
-                                    </a>
-                                </div>
-                                    }
-                                    else
-                                    {
-                            <span class="text-muted small">
-                                For assistance, please contact our support team.
-                            </span>
-                                    }
+                                        <a asp-controller="ClientReservation"
+                                           asp-action="Cancel"
+                                           asp-route-id="@r.ReservationID"
+                                           class="btn btn-outline-danger">
+                                            Cancel
+                                        </a>
+                                    </div>
+                                }
+                                
+                                @if (r.BalanceDue <= 0 &&
+                                     (r.ReservationStatus == RVSite.Models.ReservationStatus.Cancelled ||
+                                      r.CheckInDate <= DateTime.Today))
+                                {
+                                    <span class="text-muted small">
+                                        For assistance, please contact our support team.
+                                    </span>
+                                }
                             </td>
                         </tr>
                         }
