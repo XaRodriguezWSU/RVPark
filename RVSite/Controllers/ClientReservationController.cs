@@ -210,11 +210,34 @@ namespace RVSite.Controllers
             reservation.SpecialRequests = updated.SpecialRequests;
 
             // 4. Update site if changed
-            if (updated.SiteID != reservation.SiteID)
+            if (updated.SiteID > 0 && updated.SiteID != reservation.SiteID)
             {
+                var newSite = _context.Sites
+                    .Include(s => s.SiteType)
+                    .FirstOrDefault(s => s.SiteID == updated.SiteID);
+
+                if (newSite == null)
+                {
+                    ModelState.AddModelError("", "The selected site could not be found.");
+                    ViewBag.SiteTypes = _context.SiteTypes.ToList();
+                    return View(reservation);
+                }
+
                 reservation.SiteID = updated.SiteID;
-                _context.Entry(reservation).Reference(r => r.Site).Load();
-                _context.Entry(reservation.Site).Reference(s => s.SiteType).Load();
+                reservation.Site = newSite;
+            }
+            else
+            {
+                _context.Entry(reservation)
+                    .Reference(r => r.Site)
+                    .Load();
+
+                if (reservation.Site != null)
+                {
+                    _context.Entry(reservation.Site)
+                        .Reference(s => s.SiteType)
+                        .Load();
+                }
             }
 
             // 5. Recalculate cost
@@ -251,16 +274,29 @@ namespace RVSite.Controllers
             return View("CancelConfirmation", reservation);
         }
 
-        public IActionResult MyReservations()
+        public async Task<IActionResult> MyReservations()
         {
             int userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier).Value);
 
-            var reservations = _context.Reservations
+            var reservationIds = await _context.Reservations
+                .Where(r => r.UserID == userId)
+                .Select(r => r.ReservationID)
+                .ToListAsync();
+
+            foreach (var reservationId in reservationIds)
+            {
+                await _costService.UpdateReservationBalanceDueAsync(reservationId);
+            }
+
+            await _context.SaveChangesAsync();
+
+            var reservations = await _context.Reservations
                 .Include(r => r.Site)
                     .ThenInclude(s => s.SiteType)
+                .Include(r => r.Fees)
                 .Where(r => r.UserID == userId)
                 .OrderByDescending(r => r.ReservationDate)
-                .ToList();
+                .ToListAsync();
 
             return View(reservations);
         }
