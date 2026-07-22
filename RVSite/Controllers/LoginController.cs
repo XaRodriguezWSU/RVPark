@@ -117,7 +117,10 @@ namespace RVSite.Controllers
             string email,
             string phoneNumber,
             string password,
-            string confirmPassword)
+            string confirmPassword,
+            string militaryID,
+            string baseName,
+            string rank)
         {
             firstName = firstName?.Trim() ?? "";
             lastName = lastName?.Trim() ?? "";
@@ -141,6 +144,16 @@ namespace RVSite.Controllers
 
             if (password != confirmPassword)
                 ModelState.AddModelError("confirmPassword", "Passwords do not match.");
+
+            if (string.IsNullOrWhiteSpace(militaryID))
+                ModelState.AddModelError("militaryID", "Military ID is required.");
+
+            if (string.IsNullOrWhiteSpace(baseName))
+                ModelState.AddModelError("base", "Base is required.");
+
+            if (string.IsNullOrWhiteSpace(rank))
+                ModelState.AddModelError("rank", "Rank is required.");
+
 
             if (!string.IsNullOrWhiteSpace(password) && password.Length < 8)
             {
@@ -191,7 +204,10 @@ namespace RVSite.Controllers
                 IsLocked = false,
                 PasswordHash = "",
                 EmailConfirmed = false,
-                EmailConfirmationToken = token
+                EmailConfirmationToken = token,
+                MilitaryID = militaryID,
+                BaseName = baseName,
+                Rank = rank
             };
 
             user.PasswordHash = _passwordHasher.HashPassword(user, password);

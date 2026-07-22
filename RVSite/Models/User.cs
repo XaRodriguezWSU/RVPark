@@ -35,6 +35,17 @@ namespace RVSite.Models
 
         public string? EmailConfirmationToken { get; set; }
 
+        [Required]
+        [StringLength(50)]
+        public string MilitaryID { get; set; }
+
+        [Required]
+        [StringLength(100)]
+        public string BaseName { get; set; }
+
+        [Required]
+        [StringLength(50)]
+        public string Rank { get; set; }
 
         public ICollection<Reservation> Reservations { get; set; } = new List<Reservation>();
 
