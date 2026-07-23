@@ -238,7 +238,9 @@
                         <tr>
                             <th>Reservation ID</th>
                             <th>Guest</th>
-                            <th class="text-end">Charges</th>
+                            <th class="text-end">Reservation Total</th>
+                            <th class="text-end">Fees</th>
+                            <th class="text-end">Total Charges</th>
                             <th class="text-end">Payments</th>
                             <th class="text-end">Balance Due</th>
                             <th>Status</th>
@@ -247,18 +249,33 @@
                     <tbody>
                         @foreach (var r in Model.Reservations)
                             {
-                                var charges = r.TotalCost;
-                                var balanceDue = r.BalanceDue;
-                                var payments = charges - balanceDue;
+                                var reservationTotal = r.TotalCost;
 
-                        <tr>
-                            <td>@r.ReservationID</td>
-                            <td>@r.User?.FirstName @r.User?.LastName</td>
-                            <td class="text-end">@charges.ToString("C")</td>
-                            <td class="text-end">@payments.ToString("C")</td>
-                            <td class="text-end">@balanceDue.ToString("C")</td>
-                            <td>@r.ReservationStatus</td>
-                        </tr>
+                                var feeTotal = r.Fees != null
+                                    ? r.Fees.Sum(f => f.Amount)
+                                    : 0;
+
+                                var totalCharges = reservationTotal + feeTotal;
+
+                                var payments = Model.Payments != null
+                                    ? Model.Payments
+                                        .Where(p => p.ReservationID == r.ReservationID &&
+                                                    p.Status == RVSite.Models.PaymentStatus.Paid)
+                                        .Sum(p => p.AmountPaid)
+                                    : 0;
+
+                                var balanceDue = r.BalanceDue;
+
+                                <tr>
+                                    <td>@r.ReservationID</td>
+                                    <td>@r.User?.FirstName @r.User?.LastName</td>
+                                    <td class="text-end">@reservationTotal.ToString("C")</td>
+                                    <td class="text-end">@feeTotal.ToString("C")</td>
+                                    <td class="text-end">@totalCharges.ToString("C")</td>
+                                    <td class="text-end">@payments.ToString("C")</td>
+                                    <td class="text-end">@balanceDue.ToString("C")</td>
+                                    <td>@r.ReservationStatus</td>
+                                </tr>
                             }
                     </tbody>
                 </table>

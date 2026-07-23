@@ -95,12 +95,45 @@ namespace RVSite.Controllers
                 .Include(r => r.User)
                 .Include(r => r.Site)
                     .ThenInclude(s => s.SiteType)
+                .Include(r => r.Fees)
                 .Where(r => r.CheckInDate.Date <= end.Date &&
                             r.CheckOutDate.Date >= start.Date)
                 .ToListAsync();
 
             var nonCancelledReservations = reservations
                 .Where(r => r.ReservationStatus != ReservationStatus.Cancelled)
+                .ToList();
+
+            var payments = await _context.Payments
+                .Include(p => p.Reservation)
+                    .ThenInclude(r => r.User)
+                .Include(p => p.Reservation)
+                    .ThenInclude(r => r.Site)
+                        .ThenInclude(s => s.SiteType)
+                .Include(p => p.Reservation)
+                    .ThenInclude(r => r.Fees)
+                .Where(p =>
+                    p.PaymentDate.Date >= start.Date &&
+                    p.PaymentDate.Date <= end.Date)
+                .ToListAsync();
+
+            var paidPayments = payments
+                .Where(p => p.Status == PaymentStatus.Paid)
+                .ToList();
+
+            var pendingPayments = payments
+                .Where(p => p.Status == PaymentStatus.Pending)
+                .ToList();
+
+            var failedPayments = payments
+                .Where(p => p.Status == PaymentStatus.Failed)
+                .ToList();
+
+            var paymentReservations = payments
+                .Where(p => p.Reservation != null)
+                .Select(p => p.Reservation!)
+                .GroupBy(r => r.ReservationID)
+                .Select(g => g.First())
                 .ToList();
 
             var filteredReservations = selectedReportType switch
@@ -117,8 +150,8 @@ namespace RVSite.Controllers
                     .OrderBy(r => r.CheckOutDate)
                     .ToList(),
 
-                "Revenue" => nonCancelledReservations
-                    .OrderByDescending(r => r.TotalCost)
+                "Revenue" => reservations
+                    .OrderByDescending(r => r.ReservationDate)
                     .ToList(),
 
                 "Occupancy" => nonCancelledReservations
@@ -194,7 +227,20 @@ namespace RVSite.Controllers
                     r.CheckOutDate.Date >= start.Date &&
                     r.CheckOutDate.Date <= end.Date),
 
-                RevenueTotal = nonCancelledReservations.Sum(r => r.TotalCost),
+                RevenueTotal = paidPayments.Sum(p => p.AmountPaid),
+
+                FeeTotal = paymentReservations
+                    .SelectMany(r => r.Fees)
+                    .Sum(f => f.Amount),
+
+                PaymentCount = paidPayments.Count,
+
+                PendingPaymentTotal = pendingPayments.Sum(p => p.AmountPaid),
+                PendingPaymentCount = pendingPayments.Count,
+
+                FailedPaymentCount = failedPayments.Count,
+
+                OutstandingBalanceTotal = reservations.Sum(r => r.BalanceDue),
 
                 TotalSites = totalSites,
                 OccupiedSites = occupiedSiteCount,
@@ -204,6 +250,10 @@ namespace RVSite.Controllers
                     : Math.Round((decimal)occupiedSiteCount / totalSites * 100, 1),
 
                 Reservations = filteredReservations,
+
+                Payments = payments
+                    .OrderByDescending(p => p.PaymentDate)
+                    .ToList(),
 
                 SiteUsageRows = siteUsageRows
             };
