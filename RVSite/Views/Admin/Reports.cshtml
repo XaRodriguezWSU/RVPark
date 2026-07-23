@@ -1,4 +1,5 @@
 ﻿@model RVSite.Models.ReportsViewModel
+@inject RVSite.Services.CostService CostService
 
 @{
     ViewData["Title"] = "Reports Dashboard";
@@ -252,7 +253,7 @@
                                 var reservationTotal = r.TotalCost;
 
                                 var feeTotal = r.Fees != null
-                                    ? r.Fees.Sum(f => f.Amount)
+                                    ? r.Fees.Sum(f => CostService.CalculateFeeAmount(f))
                                     : 0;
 
                                 var totalCharges = reservationTotal + feeTotal;
@@ -264,7 +265,7 @@
                                         .Sum(p => p.AmountPaid)
                                     : 0;
 
-                                var balanceDue = r.BalanceDue;
+                                var balanceDue = Math.Max(0, totalCharges - payments);
 
                                 <tr>
                                     <td>@r.ReservationID</td>

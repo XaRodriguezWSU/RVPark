@@ -31,9 +31,36 @@ namespace RVSite.Services
 
         public async Task<decimal> CalculateFeeTotalAsync(int reservationID)
         {
-            return await _context.Fees
+            var fees = await _context.Fees
                 .Where(f => f.ReservationID == reservationID)
-                .SumAsync(f => f.Amount);
+                .ToListAsync();
+
+            return fees.Sum(f => CalculateFeeAmount(f));
+        }
+
+        public decimal CalculateFeeAmount(Fee fee)
+        {
+            if (fee.NameCode == FeeCodes.Cancellation)
+            {
+                int daysAccrued = CalculateCancellationFeeDays(fee.EffectiveDate);
+
+                return fee.Amount * daysAccrued;
+            }
+
+            return fee.Amount;
+        }
+
+        private int CalculateCancellationFeeDays(DateTime effectiveDate)
+        {
+            var startDate = effectiveDate.Date;
+            var today = DateTime.Today;
+
+            if (startDate > today)
+            {
+                return 0;
+            }
+
+            return (today - startDate).Days + 1;
         }
 
         public async Task<decimal> CalculatePaidTotalAsync(int reservationID)

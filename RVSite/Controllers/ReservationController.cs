@@ -29,6 +29,7 @@ namespace RVSite.Controllers
             var reservations = await _context.Reservations
                 .Include(r => r.User)
                 .Include(r => r.Site)
+                .Include(r => r.Fees)
                 .OrderByDescending(r => r.ReservationDate)
                 .ToListAsync();
 
@@ -530,6 +531,7 @@ namespace RVSite.Controllers
             var reservation = await _context.Reservations
                 .Include(r => r.User)
                 .Include(r => r.Site)
+                .Include(r => r.Fees)
                 .FirstOrDefaultAsync(r =>
                     r.ReservationID == id);
 
@@ -555,6 +557,7 @@ namespace RVSite.Controllers
             var reservation = await _context.Reservations
                 .Include(r => r.Site)
                 .Include(r => r.User)
+                .Include(r => r.Fees)
                 .FirstOrDefaultAsync(r =>
                     r.ReservationID == updated.ReservationID);
 
@@ -682,7 +685,6 @@ namespace RVSite.Controllers
             decimal balanceDifference = newTotal - oldTotal;
 
             reservation.TotalCost = newTotal;
-            reservation.BalanceDue += balanceDifference;
 
             targetSite.SiteStatus = SiteStatus.Reserved.ToString();
 
@@ -704,6 +706,9 @@ namespace RVSite.Controllers
             ViewBag.BalanceDifference = balanceDifference;
             ViewBag.ConflictOverridden = hasConflict && overrideConflict;
 
+            await _context.SaveChangesAsync();
+
+            await _costService.UpdateReservationBalanceDueAsync(reservation.ReservationID);
             await _context.SaveChangesAsync();
 
             return View(
