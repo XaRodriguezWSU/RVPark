@@ -20,12 +20,20 @@ namespace RVSite.Models
         public decimal RevenueTotal { get; set; }
         public decimal OccupancyRate { get; set; }
         public int TotalSites { get; set; }
-
         public int OccupiedSites { get; set; }
+
+        // Payment summary metrics
+        public int PaymentCount { get; set; }
+        public decimal PendingPaymentTotal { get; set; }
+        public int PendingPaymentCount { get; set; }
+        public int FailedPaymentCount { get; set; }
+        public decimal OutstandingBalanceTotal { get; set; }
+        public decimal FeeTotal { get; set; }
+
 
         // Report results
         public List<Reservation> Reservations { get; set; } = new();
-
+        public List<Payment> Payments { get; set; } = new();
         public List<SiteUsageReportRow> SiteUsageRows { get; set; } = new();
     }
 
