@@ -1,4 +1,5 @@
 ﻿@model IEnumerable<RVSite.Models.Reservation>
+@inject RVSite.Services.CostService CostService
 
 @{
     ViewData["Title"] = "Reservations";
@@ -105,8 +106,16 @@
                                     @reservation.CheckOutDate.ToString("MMM d, yyyy")
                                 </td>
 
+                                @{
+                                    var feeTotal = reservation.Fees != null
+                                        ? reservation.Fees.Sum(f => CostService.CalculateFeeAmount(f))
+                                        : 0;
+
+                                    var totalWithFees = reservation.TotalCost + feeTotal;
+                                }
+
                                 <td class="text-end">
-                                    @reservation.TotalCost.ToString("C")
+                                    @totalWithFees.ToString("C")
                                 </td>
 
                                 <td>

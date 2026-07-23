@@ -1,4 +1,5 @@
 ﻿@model List<RVSite.Models.Reservation>
+@inject RVSite.Services.CostService CostService
 
     @{
     ViewData["Title"] = "My Reservations";
@@ -96,7 +97,7 @@
                             <td class="text-end">
                                 @if (r.Fees != null && r.Fees.Any())
                                 {
-                                    <span>@r.Fees.Sum(f => f.Amount).ToString("C")</span>
+                                    <span>@r.Fees.Sum(f => CostService.CalculateFeeAmount(f)).ToString("C")</span>
                                 }
                                 else
                                 {
