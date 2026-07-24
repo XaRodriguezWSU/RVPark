@@ -29,15 +29,18 @@ namespace RVSite.Controllers
 
         // GET: /Login
         [HttpGet]
-        public IActionResult Index()
+        public IActionResult Index(string? returnUrl = null)
         {
+            ViewBag.ReturnUrl = returnUrl;
+
             return View();
         }
 
         // POST: /Login
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Index(string email, string password)
+        public async Task<IActionResult> Index(string email, string password,
+    string? returnUrl = null)
         {
             if (string.IsNullOrWhiteSpace(email) ||
                 string.IsNullOrWhiteSpace(password))
@@ -55,12 +58,15 @@ namespace RVSite.Controllers
             if (user == null)
             {
                 ViewBag.Error = "Invalid email or password.";
+
+                ViewBag.ReturnUrl = returnUrl;
                 return View();
             }
 
             if (user.IsLocked)
             {
                 ViewBag.Error = "This account is currently locked.";
+                ViewBag.ReturnUrl = returnUrl;
                 return View();
             }
 
@@ -80,6 +86,7 @@ namespace RVSite.Controllers
                 !legacyPasswordMatches)
             {
                 ViewBag.Error = "Invalid email or password.";
+                ViewBag.ReturnUrl = returnUrl;
                 return View();
             }
 
@@ -96,6 +103,12 @@ namespace RVSite.Controllers
                 user.Role?.Type == RoleType.Staff)
             {
                 return RedirectToAction("Dashboard", "Admin");
+            }
+
+            if (!string.IsNullOrWhiteSpace(returnUrl) &&
+    Url.IsLocalUrl(returnUrl))
+            {
+                return LocalRedirect(returnUrl);
             }
 
             return RedirectToAction("Index", "Home");

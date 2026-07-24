@@ -1,150 +1,550 @@
+@using RVSite.Models
 @model RVSite.Models.Reservation
 
 @{
     ViewData["Title"] = "Checkout";
+
+    decimal amountDue = ViewBag.AmountDue is decimal due
+        ? due
+        : Model.BalanceDue;
+
+    bool isEmployee = ViewBag.IsEmployee == true;
+
+    var payments =
+        ViewBag.Payments as List<Payment>
+        ?? new List<Payment>();
+
+    bool isCancelled =
+        Model.ReservationStatus == ReservationStatus.Cancelled;
+
+    bool isPaid =
+        amountDue <= 0 && !isCancelled;
+
+    bool canAcceptPayment =
+        !isCancelled && amountDue > 0;
 }
 
 <section class="card admin-hero mb-4">
     <div class="card-body p-4 p-lg-5">
-        <span class="home-kicker">Complete Your Booking</span>
-        <h1 class="page-title">Checkout</h1>
+        <span class="home-kicker">
+            @(isEmployee ? "Employee Payment Processing" : "Complete Your Booking")
+        </span>
+
+        <h1 class="page-title">
+            Reservation Checkout
+        </h1>
+
         <p class="page-subtitle">
-            Review your reservation total and choose how you'd like to pay.
+            @if (isEmployee)
+            {
+            <text>
+                Review the reservation, process an online payment,
+                or record an offline payment.
+            </text>
+            }
+            else
+            {
+            <text>
+                Review your reservation and securely complete payment.
+            </text>
+            }
         </p>
     </div>
 </section>
 
 @if (TempData["Error"] != null)
 {
-<div class="alert alert-danger">@TempData["Error"]</div>
+<div class="alert alert-danger alert-dismissible fade show"
+     role="alert">
+
+    @TempData["Error"]
+
+    <button type="button"
+            class="btn-close"
+            data-bs-dismiss="alert"
+            aria-label="Close">
+    </button>
+</div>
+}
+
+@if (TempData["SuccessMessage"] != null)
+{
+<div class="alert alert-success alert-dismissible fade show"
+     role="alert">
+
+    @TempData["SuccessMessage"]
+
+    <button type="button"
+            class="btn-close"
+            data-bs-dismiss="alert"
+            aria-label="Close">
+    </button>
+</div>
 }
 
 <section class="card mb-4">
-    <div class="card-header">
-        <h2 class="h5 mb-0">Reservation Summary</h2>
+    <div class="card-header d-flex flex-wrap align-items-center justify-content-between gap-2">
+        <h2 class="h5 mb-0">
+            Reservation Summary
+        </h2>
+
+        @if (isCancelled)
+        {
+        <span class="badge bg-danger">
+            Cancelled
+        </span>
+        }
+        else if (isPaid)
+        {
+        <span class="badge bg-success">
+            Paid in Full
+        </span>
+        }
+        else if (Model.ReservationStatus == ReservationStatus.Pending)
+        {
+        <span class="badge bg-warning text-dark">
+            Pending Payment
+        </span>
+        }
+        else
+        {
+        <span class="badge bg-primary">
+            @Model.ReservationStatus
+        </span>
+        }
     </div>
 
     <div class="card-body">
         <div class="row g-3">
+
             <div class="col-md-6 col-xl-4">
-                <div class="detail-box">
+                <div class="detail-box h-100">
                     <span>Reservation Number</span>
                     <strong>#@Model.ReservationID</strong>
                 </div>
             </div>
 
             <div class="col-md-6 col-xl-4">
-                <div class="detail-box">
+                <div class="detail-box h-100">
+                    <span>Customer</span>
+                    <strong>
+                        @if (Model.User != null)
+                        {
+                        @($"{Model.User.FirstName} {Model.User.LastName}")
+                        }
+                        else
+                        {
+                        <text>Customer information unavailable</text>
+                        }
+                    </strong>
+                </div>
+            </div>
+
+            <div class="col-md-6 col-xl-4">
+                <div class="detail-box h-100">
                     <span>Site</span>
-                    <strong>Site @Model.Site?.SiteNumber</strong>
+                    <strong>
+                        @if (Model.Site != null)
+                        {
+                        @($"Site {Model.Site.SiteNumber}")
+                        }
+                        else
+                        {
+                        <text>Site unavailable</text>
+                        }
+                    </strong>
                 </div>
             </div>
 
             <div class="col-md-6 col-xl-4">
-                <div class="detail-box">
+                <div class="detail-box h-100">
                     <span>Check-In</span>
-                    <strong>@Model.CheckInDate.ToShortDateString()</strong>
+                    <strong>
+                        @Model.CheckInDate.ToString("MMMM d, yyyy")
+                    </strong>
                 </div>
             </div>
 
             <div class="col-md-6 col-xl-4">
-                <div class="detail-box">
+                <div class="detail-box h-100">
                     <span>Check-Out</span>
-                    <strong>@Model.CheckOutDate.ToShortDateString()</strong>
+                    <strong>
+                        @Model.CheckOutDate.ToString("MMMM d, yyyy")
+                    </strong>
                 </div>
             </div>
 
             <div class="col-md-6 col-xl-4">
-                <div class="detail-box">
-                    <span>Total Cost</span>
-                    <strong>@Model.TotalCost.ToString("C")</strong>
+                <div class="detail-box h-100">
+                    <span>Reservation Status</span>
+                    <strong>@Model.ReservationStatus</strong>
                 </div>
             </div>
 
-            <div class="col-md-6 col-xl-4">
-                <div class="detail-box">
-                    <span>Amount Due</span>
-                    <strong>@(((decimal)ViewBag.AmountDue).ToString("C"))</strong>
-                </div>
-            </div>
         </div>
     </div>
 </section>
 
 <section class="card mb-4">
     <div class="card-header">
-        <h2 class="h5 mb-0">Pay Online</h2>
+        <h2 class="h5 mb-0">
+            Payment Summary
+        </h2>
     </div>
 
     <div class="card-body">
-        <p class="text-muted">You'll be redirected to Stripe to securely complete your payment.</p>
+        <div class="row g-3">
 
-        <form asp-controller="Payment" asp-action="ProcessStripePayment" method="post">
-            <input type="hidden" name="reservationId" value="@Model.ReservationID" />
-            <button type="submit" class="btn btn-primary">
-                Pay @(((decimal)ViewBag.AmountDue).ToString("C")) with Card
-            </button>
-        </form>
+            <div class="col-md-4">
+                <div class="detail-box h-100">
+                    <span>Total Cost</span>
+                    <strong>
+                        @Model.TotalCost.ToString("C")
+                    </strong>
+                </div>
+            </div>
+
+            <div class="col-md-4">
+                <div class="detail-box h-100">
+                    <span>Amount Paid</span>
+                    <strong class="text-success">
+                        @Math.Max(0, Model.TotalCost - amountDue).ToString("C")
+                    </strong>
+                </div>
+            </div>
+
+            <div class="col-md-4">
+                <div class="detail-box h-100">
+                    <span>Balance Due</span>
+
+                    @if (amountDue > 0)
+                    {
+                    <strong class="text-danger">
+                        @amountDue.ToString("C")
+                    </strong>
+                    }
+                    else
+                    {
+                    <strong class="text-success">
+                        $0.00
+                    </strong>
+                    }
+                </div>
+            </div>
+
+        </div>
     </div>
 </section>
 
-
-@if (ViewBag.IsEmployee == true)
+@if (isCancelled)
 {
-    <section class="card">
-        <div class="card-header">
-            <h2 class="h5 mb-0">
-                Record Offline Payment
-                <span class="text-muted fw-normal">(Employee Only)</span>
+<section class="card mb-4">
+    <div class="card-body p-4">
+        <div class="alert alert-warning mb-0">
+            <h2 class="h5">
+                Payment Unavailable
             </h2>
+
+            <p class="mb-0">
+                This reservation has been cancelled and cannot accept
+                additional payments.
+            </p>
         </div>
+    </div>
+</section>
+}
+else if (isPaid)
+{
+<section class="card mb-4">
+    <div class="card-body p-4">
+        <div class="alert alert-success mb-0">
+            <h2 class="h5">
+                Reservation Paid in Full
+            </h2>
 
-        <div class="card-body">
-            <form asp-controller="Payment" asp-action="RecordOfflinePayment" method="post">
-                <input type="hidden" name="reservationId" value="@Model.ReservationID" />
+            <p class="mb-0">
+                No remaining balance is due for this reservation.
+            </p>
+        </div>
+    </div>
+</section>
+}
+else if (canAcceptPayment)
+{
+<div class="row g-4 mb-4">
 
-                <div class="row g-3">
-                    <div class="col-md-4">
-                        <label for="method" class="form-label">Payment Method</label>
-                        <select id="method" name="method" class="form-select">
-                            <option value="Cash">Cash</option>
-                            <option value="Check">Check</option>
-                            <option value="ManualCard">Manual Credit Card</option>
+    <div class="@(isEmployee ? "col-lg-6" : "col-12")">
+        <section class="card h-100">
+            <div class="card-header">
+                <h2 class="h5 mb-0">
+                    Pay Online
+                </h2>
+            </div>
+
+            <div class="card-body d-flex flex-column">
+                <p class="text-muted">
+                    You will be redirected to Stripe to securely complete
+                    the card payment.
+                </p>
+
+                <div class="detail-box mb-4">
+                    <span>Online Payment Amount</span>
+                    <strong>@amountDue.ToString("C")</strong>
+                </div>
+
+                <form asp-controller="Payment"
+                      asp-action="ProcessStripePayment"
+                      method="post"
+                      class="mt-auto">
+
+                    @Html.AntiForgeryToken()
+
+                    <input type="hidden"
+                           name="reservationId"
+                           value="@Model.ReservationID" />
+
+                    <button type="submit"
+                            class="btn btn-primary w-100">
+                        Pay @amountDue.ToString("C") with Card
+                    </button>
+                </form>
+            </div>
+        </section>
+    </div>
+
+    @if (isEmployee)
+        {
+    <div class="col-lg-6">
+        <section class="card h-100">
+            <div class="card-header">
+                <h2 class="h5 mb-0">
+                    Record Offline Payment
+                </h2>
+            </div>
+
+            <div class="card-body">
+                <p class="text-muted">
+                    Use this form to record cash, check, or a manually
+                    processed card payment.
+                </p>
+
+                <form asp-controller="Payment"
+                      asp-action="RecordOfflinePayment"
+                      method="post">
+
+                    @Html.AntiForgeryToken()
+
+                    <input type="hidden"
+                           name="reservationId"
+                           value="@Model.ReservationID" />
+
+                    <div class="mb-3">
+                        <label for="method"
+                               class="form-label">
+                            Payment Method
+                        </label>
+
+                        <select id="method"
+                                name="method"
+                                class="form-select"
+                                required>
+
+                            <option value="">
+                                Select a payment method
+                            </option>
+
+                            <option value="@PaymentMethodType.Cash">
+                                Cash
+                            </option>
+
+                            <option value="@PaymentMethodType.Check">
+                                Check
+                            </option>
+
+                            <option value="@PaymentMethodType.ManualCard">
+                                Manual Credit Card
+                            </option>
                         </select>
                     </div>
 
-                    <div class="col-md-4">
-                        <label for="amount" class="form-label">Amount</label>
+                    <div class="mb-3">
+                        <label for="amount"
+                               class="form-label">
+                            Payment Amount
+                        </label>
+
                         <div class="input-group">
                             <span class="input-group-text">$</span>
+
                             <input id="amount"
                                    name="amount"
                                    type="number"
                                    step="0.01"
                                    min="0.01"
+                                   max="@amountDue"
                                    class="form-control"
-                                   value="@ViewBag.AmountDue" />
+                                   value="@amountDue.ToString("0.00")"
+                                   required />
+                        </div>
+
+                        <div class="form-text">
+                            Maximum payment:
+                            @amountDue.ToString("C")
                         </div>
                     </div>
 
-                    <div class="col-md-4">
-                        <label for="reference" class="form-label">
-                            Reference <span class="text-muted fw-normal">(optional)</span>
+                    <div class="mb-4">
+                        <label for="reference"
+                               class="form-label">
+                            Reference
+                            <span class="text-muted fw-normal">
+                                (optional)
+                            </span>
                         </label>
+
                         <input id="reference"
                                name="reference"
                                type="text"
                                class="form-control"
-                               placeholder="Check #, auth code, etc." />
+                               maxlength="150"
+                               placeholder="Check number, receipt number, or authorization code" />
                     </div>
-                </div>
 
-                <div class="mt-4">
-                    <button type="submit" class="btn btn-outline-secondary">
+                    <button type="submit"
+                            class="btn btn-primary w-100">
                         Record Payment
                     </button>
-                </div>
-            </form>
-        </div>
-    </section>
+                </form>
+            </div>
+        </section>
+    </div>
+        }
+
+</div>
 }
+
+<section class="card mb-4">
+    <div class="card-header d-flex flex-wrap align-items-center justify-content-between gap-2">
+        <h2 class="h5 mb-0">
+            Payment History
+        </h2>
+
+        <span class="text-muted small">
+            @payments.Count payment@(payments.Count == 1 ? "" : "s")
+        </span>
+    </div>
+
+    <div class="card-body p-0">
+        @if (!payments.Any())
+        {
+        <div class="p-4 text-muted">
+            No payments have been recorded for this reservation.
+        </div>
+        }
+        else
+        {
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Method</th>
+                        <th>Status</th>
+                        <th>Reference</th>
+                        <th>Processed By</th>
+                        <th class="text-end">Amount</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    @foreach (var payment in payments)
+                        {
+                    <tr>
+                        <td>
+                            @payment.PaymentDate.ToString(
+                                "MMM d, yyyy h:mm tt")
+                        </td>
+
+                        <td>
+                            @payment.Method
+                        </td>
+
+                        <td>
+                            @if (payment.Status == PaymentStatus.Paid)
+                                    {
+                            <span class="badge bg-success">
+                                Paid
+                            </span>
+                                    }
+                                    else if (payment.Status == PaymentStatus.Failed)
+                                    {
+                            <span class="badge bg-danger">
+                                Failed
+                            </span>
+                                    }
+                                    else
+                                    {
+                            <span class="badge bg-secondary">
+                                @payment.Status
+                            </span>
+                                    }
+                        </td>
+
+                        <td>
+                            @(string.IsNullOrWhiteSpace(
+                                        payment.TransactionReference)
+                                        ? "—"
+                                        : payment.TransactionReference)
+                        </td>
+
+                        <td>
+                            @if (payment.ProcessedByUserID.HasValue)
+                                    {
+                            <span>
+                                Employee
+                                #@payment.ProcessedByUserID
+                            </span>
+                                    }
+                                    else
+                                    {
+                            <span>Online</span>
+                                    }
+                        </td>
+
+                        <td class="text-end fw-bold">
+                            @payment.AmountPaid.ToString("C")
+                        </td>
+                    </tr>
+                        }
+                </tbody>
+            </table>
+        </div>
+        }
+    </div>
+</section>
+
+<div class="d-flex flex-wrap gap-2 mb-4">
+
+    @if (isEmployee)
+    {
+    <a asp-controller="Reservation"
+       asp-action="Index"
+       class="btn btn-outline-secondary">
+        Back to Reservation List
+    </a>
+    }
+    else
+    {
+    <a asp-controller="ClientReservation"
+       asp-action="MyReservations"
+       class="btn btn-outline-secondary">
+        Back to My Reservations
+    </a>
+    }
+
+    <a asp-controller="Home"
+       asp-action="Index"
+       class="btn btn-outline-dark">
+        Return Home
+    </a>
+</div>

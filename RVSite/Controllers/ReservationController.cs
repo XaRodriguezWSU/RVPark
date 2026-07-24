@@ -7,7 +7,7 @@ using RVSite.Services;
 
 namespace RVSite.Controllers
 {
-    [Authorize(Roles = "Admin")]
+    [Authorize(Roles = "Admin,Staff")]
     public class ReservationController : Controller
     {
         private readonly AppDbContext _context;
@@ -433,7 +433,7 @@ namespace RVSite.Controllers
                         ? null
                         : specialRequests.Trim(),
                 ReservationStatus =
-                    ReservationStatus.Confirmed,
+                    ReservationStatus.Pending,
                 ReservationDate = DateTime.Now
             };
 
@@ -453,10 +453,11 @@ namespace RVSite.Controllers
                 "The walk-in reservation was created successfully.";
 
             return RedirectToAction(
-                nameof(WalkInConfirmation),
+                "Checkout",
+                "Payment",
                 new
                 {
-                    id = reservation.ReservationID
+                    reservationId = reservation.ReservationID
                 });
         }
 
