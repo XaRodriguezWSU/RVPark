@@ -1,195 +1,291 @@
 ﻿@model RVSite.Models.Reservation
 
 @{
-    ViewData["Title"] = "Book a Site";
-    var availableSites = ViewBag.AvailableSites as IEnumerable<RVSite.Models.Site>;
-    var selectedSiteType = ViewBag.SelectedSiteType as string;
-    var selectedRvLength = ViewBag.RvLength as int?;
+    ViewData["Title"] = "Complete Reservation";
+
+    var selectedSite =
+        ViewBag.SelectedSite as RVSite.Models.Site
+        ?? Model.Site;
+
+    var checkInDate =
+        ViewBag.CheckInDate is DateTime viewCheckIn
+            ? viewCheckIn
+            : Model.CheckInDate;
+
+    var checkOutDate =
+        ViewBag.CheckOutDate is DateTime viewCheckOut
+            ? viewCheckOut
+            : Model.CheckOutDate;
+
+    var numberOfNights =
+        checkOutDate.Date > checkInDate.Date
+            ? (checkOutDate.Date - checkInDate.Date).Days
+            : 0;
+
+    var estimatedSiteCost =
+        selectedSite != null
+            ? selectedSite.BaseRate * numberOfNights
+            : 0;
 }
 
 <section class="card admin-hero mb-4">
     <div class="card-body p-4 p-lg-5">
-        <span class="home-kicker">Plan Your Stay</span>
-        <h1 class="page-title">Book an RV Site</h1>
-        <p class="page-subtitle">
-            Choose your dates and site requirements, then select from the available sites.
+        <span class="home-kicker">Complete Your Booking</span>
+
+        <h1 class="page-title">Reserve Your RV Site</h1>
+
+        <p class="page-subtitle mb-0">
+            Review your selected campsite and enter the remaining details
+            needed to complete your reservation.
         </p>
     </div>
 </section>
 
+@if (selectedSite == null)
+{
+<section class="card">
+    <div class="card-body p-4 p-lg-5 text-center">
+        <h2 class="h4 mb-3">No campsite was selected</h2>
+
+        <p class="text-muted mb-4">
+            Return to the campsite search and select an available site
+            before continuing.
+        </p>
+
+        <a asp-controller="Sites"
+           asp-action="Search"
+           class="btn btn-primary">
+            Search Campsites
+        </a>
+    </div>
+</section>
+}
+else
+{
 <form asp-controller="ClientReservation"
       asp-action="Book"
       method="post">
 
-    <section class="card mb-4">
-        <div class="card-header">
-            <h2 class="h5 mb-0">1. Search Availability</h2>
-        </div>
+    @Html.AntiForgeryToken()
 
-        <div class="card-body">
-            <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+    <input asp-for="SiteID"
+           type="hidden"
+           value="@selectedSite.SiteID" />
 
-            <div class="row g-3">
-                <div class="col-md-6">
-                    <label asp-for="CheckInDate" class="form-label">Check-In</label>
-                    <input asp-for="CheckInDate"
-                           type="date"
-                           class="form-control" />
-                    <span asp-validation-for="CheckInDate" class="text-danger"></span>
+    <input asp-for="CheckInDate"
+           type="hidden"
+           value="@checkInDate.ToString("yyyy-MM-dd")" />
+
+    <input asp-for="CheckOutDate"
+           type="hidden"
+           value="@checkOutDate.ToString("yyyy-MM-dd")" />
+
+    <div asp-validation-summary="ModelOnly"
+         class="alert alert-danger"
+         role="alert">
+    </div>
+
+    <div class="row g-4">
+        <div class="col-lg-5">
+            <section class="card">
+                <div class="card-header">
+                    <h2 class="h5 mb-0">Reservation Summary</h2>
                 </div>
 
-                <div class="col-md-6">
-                    <label asp-for="CheckOutDate" class="form-label">Check-Out</label>
-                    <input asp-for="CheckOutDate"
-                           type="date"
-                           class="form-control" />
-                    <span asp-validation-for="CheckOutDate" class="text-danger"></span>
-                </div>
+                <div class="card-body">
+                    @{
+                            var firstPhoto = selectedSite.Photos?
+                                .OrderBy(photo => photo.SortOrder)
+                                .FirstOrDefault();
+                    }
 
-                <div class="col-md-6">
-                    <label for="siteType" class="form-label">Site Type</label>
-                    <select id="siteType"
-                            name="siteType"
-                            class="form-select">
-                        <option value="">-- Select Site Type --</option>
-
-                        @foreach (var type in ViewBag.SiteTypes)
+                    @if (firstPhoto != null)
                         {
-                            if (selectedSiteType == type.Name)
-                            {
-                                <option value="@type.Name" selected>@type.Name</option>
-                            }
-                            else
-                            {
-                                <option value="@type.Name">@type.Name</option>
-                            }
+                    <img src="@firstPhoto.FilePath"
+                         alt="Site @selectedSite.SiteNumber"
+                         class="img-fluid rounded mb-4 w-100"
+                         style="height: 240px; object-fit: cover;" />
                         }
-                    </select>
-                </div>
+                        else
+                        {
+                    <div class="site-image-placeholder rounded mb-4"
+                         style="height: 240px;">
+                        Image Coming Soon
+                    </div>
+                        }
 
-                <div class="col-md-6">
-                    <label for="rvLength" class="form-label">
-                        RV Length
-                        <span class="text-muted fw-normal">(optional)</span>
-                    </label>
+                    <div class="mb-4">
+                        <span class="home-kicker">
+                            @(selectedSite.SiteType?.Name ?? "RV Site")
+                        </span>
 
-                    <div class="input-group">
-                        <input id="rvLength"
-                               name="rvLength"
-                               type="number"
-                               min="0"
-                               class="form-control"
-                               value="@selectedRvLength"
-                               placeholder="Example: 35" />
+                        <h3 class="h4 mb-2">
+                            Site @selectedSite.SiteNumber
+                        </h3>
 
-                        <span class="input-group-text">ft</span>
+                        <p class="text-muted mb-0">
+                            Maximum RV length:
+                            <strong>@selectedSite.MaxRVLength ft</strong>
+                        </p>
+                    </div>
+
+                    <div class="detail-box mb-3">
+                        <span class="detail-label">Check-In</span>
+
+                        <strong>
+                            @checkInDate.ToString("dddd, MMMM d, yyyy")
+                        </strong>
+                    </div>
+
+                    <div class="detail-box mb-3">
+                        <span class="detail-label">Check-Out</span>
+
+                        <strong>
+                            @checkOutDate.ToString("dddd, MMMM d, yyyy")
+                        </strong>
+                    </div>
+
+                    <div class="detail-box mb-3">
+                        <span class="detail-label">Length of Stay</span>
+
+                        <strong>
+                            @numberOfNights
+                            @(numberOfNights == 1 ? "night" : "nights")
+                        </strong>
+                    </div>
+
+                    <div class="detail-box mb-3">
+                        <span class="detail-label">Nightly Rate</span>
+
+                        <strong>
+                            @selectedSite.BaseRate.ToString("C")
+                        </strong>
+                    </div>
+
+                    <div class="detail-box">
+                        <span class="detail-label">
+                            Estimated Site Cost
+                        </span>
+
+                        <strong class="fs-5">
+                            @estimatedSiteCost.ToString("C")
+                        </strong>
+
+                        <small class="text-muted d-block mt-1">
+                            Additional fees may be applied before payment.
+                        </small>
                     </div>
                 </div>
-            </div>
-
-            <div class="mt-4">
-                <button type="submit"
-                        name="search"
-                        value="true"
-                        class="btn btn-primary">
-                    Search Available Sites
-                </button>
-            </div>
-        </div>
-    </section>
-
-    @if (ViewBag.AvailableSites != null)
-    {
-    <section class="card">
-        <div class="card-header">
-            <h2 class="h5 mb-0">2. Complete Your Reservation</h2>
+            </section>
         </div>
 
-        <div class="card-body">
-            @if (availableSites == null || !availableSites.Any())
-                {
-            <div class="alert alert-info mb-0">
-                No sites matched the selected dates and requirements.
-            </div>
-                }
-                else
-                {
-            <div class="row g-3">
-                <div class="col-12">
-                    <label asp-for="SiteID" class="form-label">Select Site</label>
-
-                    <select asp-for="SiteID" class="form-select">
-                        <option value="">-- Select an Available Site --</option>
-
-                        @foreach (var site in availableSites)
-                                {
-                        <option value="@site.SiteID">
-                            Site @site.SiteNumber · @site.SiteType?.Name ·
-                            @site.MaxRVLength ft max · @site.BaseRate.ToString("C") / night
-                        </option>
-                                }
-                    </select>
-
-                    <span asp-validation-for="SiteID" class="text-danger"></span>
+        <div class="col-lg-7">
+            <section class="card">
+                <div class="card-header">
+                    <h2 class="h5 mb-0">Guest Information</h2>
                 </div>
 
-                <div class="col-md-4">
-                    <label asp-for="NumberOfAdults" class="form-label">Adults</label>
-                    <input asp-for="NumberOfAdults"
-                           type="number"
-                           min="1"
-                           class="form-control" />
-                    <span asp-validation-for="NumberOfAdults" class="text-danger"></span>
+                <div class="card-body p-4">
+                    <p class="text-muted mb-4">
+                        Enter the number of guests and any information
+                        the campground should know before your arrival.
+                    </p>
+
+                    <div class="row g-3">
+                        <div class="col-md-4">
+                            <label asp-for="NumberOfAdults"
+                                   class="form-label">
+                                Adults
+                            </label>
+
+                            <input asp-for="NumberOfAdults"
+                                   type="number"
+                                   min="1"
+                                   class="form-control" />
+
+                            <span asp-validation-for="NumberOfAdults"
+                                  class="text-danger">
+                            </span>
+                        </div>
+
+                        <div class="col-md-4">
+                            <label asp-for="NumberOfChildren"
+                                   class="form-label">
+                                Children
+                            </label>
+
+                            <input asp-for="NumberOfChildren"
+                                   type="number"
+                                   min="0"
+                                   class="form-control" />
+
+                            <span asp-validation-for="NumberOfChildren"
+                                  class="text-danger">
+                            </span>
+                        </div>
+
+                        <div class="col-md-4">
+                            <label asp-for="NumberOfPets"
+                                   class="form-label">
+                                Pets
+                            </label>
+
+                            <input asp-for="NumberOfPets"
+                                   type="number"
+                                   min="0"
+                                   class="form-control" />
+
+                            <span asp-validation-for="NumberOfPets"
+                                  class="text-danger">
+                            </span>
+                        </div>
+
+                        <div class="col-12">
+                            <label asp-for="SpecialRequests"
+                                   class="form-label">
+                                Special Requests
+                            </label>
+
+                            <textarea asp-for="SpecialRequests"
+                                      class="form-control"
+                                      rows="5"
+                                      placeholder="Accessibility needs, arrival notes, pet information, or other requests"></textarea>
+
+                            <span asp-validation-for="SpecialRequests"
+                                  class="text-danger">
+                            </span>
+                        </div>
+                    </div>
+
+                    <div class="alert alert-light border mt-4 mb-0">
+                        Your reservation is not finalized until the
+                        required payment has been completed.
+                    </div>
                 </div>
 
-                <div class="col-md-4">
-                    <label asp-for="NumberOfChildren" class="form-label">Children</label>
-                    <input asp-for="NumberOfChildren"
-                           type="number"
-                           min="0"
-                           class="form-control" />
-                    <span asp-validation-for="NumberOfChildren" class="text-danger"></span>
+                <div class="card-footer bg-white">
+                    <div class="d-flex flex-column flex-sm-row
+                                    justify-content-between
+                                    align-items-sm-center
+                                    gap-2">
+
+                        <a asp-controller="Sites"
+                           asp-action="Search"
+                           class="btn btn-outline-secondary">
+                            Back to Site Search
+                        </a>
+
+                        <button type="submit"
+                                class="btn btn-primary px-4">
+                            Continue to Payment
+                        </button>
+                    </div>
                 </div>
-
-                <div class="col-md-4">
-                    <label asp-for="NumberOfPets" class="form-label">Pets</label>
-                    <input asp-for="NumberOfPets"
-                           type="number"
-                           min="0"
-                           class="form-control" />
-                    <span asp-validation-for="NumberOfPets" class="text-danger"></span>
-                </div>
-
-                <div class="col-12">
-                    <label asp-for="SpecialRequests" class="form-label">
-                        Special Requests
-                    </label>
-
-                    <textarea asp-for="SpecialRequests"
-                              class="form-control"
-                              rows="4"
-                              placeholder="Accessibility needs, arrival notes, or other requests"></textarea>
-
-                    <span asp-validation-for="SpecialRequests" class="text-danger"></span>
-                </div>
-            </div>
-
-            <div class="d-flex flex-wrap gap-2 mt-4">
-                <button type="submit" class="btn btn-primary">
-                    Reserve Site
-                </button>
-
-                <a asp-controller="Home"
-                   asp-action="Index"
-                   class="btn btn-outline-secondary">
-                    Back to Available Sites
-                </a>
-            </div>
-                }
+            </section>
         </div>
-    </section>
-    }
+    </div>
 </form>
+}
 
 @section Scripts {
     @{

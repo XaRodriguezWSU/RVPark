@@ -1,9 +1,12 @@
 ﻿using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using RVSite.Models;
 using RVSite.Services;
+using System;
 using System.Security.Claims;
+using System.Threading.Tasks;
 
 namespace RVSite.Controllers
 {
@@ -21,15 +24,50 @@ namespace RVSite.Controllers
         }
 
         // Step 1: Show booking form
-        public IActionResult Book()
+        [Authorize]
+        [HttpGet]
+        public async Task<IActionResult> Book(
+    int siteId,
+    DateTime checkInDate,
+    DateTime checkOutDate)
         {
-            ViewBag.SiteTypes = _context.SiteTypes.ToList();
+            var site = await _context.Sites
+                .Include(s => s.SiteType)
+                .Include(s => s.Photos)
+                .FirstOrDefaultAsync(s => s.SiteID == siteId);
 
-            return View(new Reservation
+            if (site == null)
             {
-                CheckInDate = DateTime.Today,
-                CheckOutDate = DateTime.Today.AddDays(1)
-            });
+                return NotFound();
+            }
+
+            if (checkInDate.Date < DateTime.Today ||
+                checkOutDate.Date <= checkInDate.Date)
+            {
+                TempData["ErrorMessage"] =
+                    "The selected reservation dates are invalid.";
+
+                return RedirectToAction(
+                    "Search",
+                    "Sites");
+            }
+
+            var reservation = new Reservation
+            {
+                SiteID = site.SiteID,
+                Site = site,
+                CheckInDate = checkInDate.Date,
+                CheckOutDate = checkOutDate.Date,
+                NumberOfAdults = 1,
+                NumberOfChildren = 0,
+                NumberOfPets = 0
+            };
+
+            ViewBag.SelectedSite = site;
+            ViewBag.CheckInDate = checkInDate.Date;
+            ViewBag.CheckOutDate = checkOutDate.Date;
+
+            return View(reservation);
         }
 
         [HttpPost]

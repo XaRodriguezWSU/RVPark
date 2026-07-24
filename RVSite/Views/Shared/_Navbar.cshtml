@@ -33,7 +33,7 @@
 
                     @if (User.Identity?.IsAuthenticated ?? false)
                     {
-                    @if (User.IsInRole("Admin") || User.IsInRole("Staff"))
+                    if (User.IsInRole("Admin") || User.IsInRole("Staff"))
                         {
                     <li class="nav-item">
                         <a class="nav-link app-nav-link"
@@ -74,7 +74,7 @@
 
                             <li>
                                 <a class="dropdown-item"
-                                   asp-controller="Reservations"
+                                   asp-controller="Reservation"
                                    asp-action="Index">
                                     Reservation List
                                 </a>
@@ -94,10 +94,10 @@
                     </li>
 
                     <li class="nav-item ms-lg-2">
-                        <a asp-controller="ClientReservation"
-                           asp-action="Book"
+                        <a asp-controller="Sites"
+                           asp-action="Search"
                            class="btn btn-primary rounded-pill px-4">
-                            Reserve Now
+                            Search Sites
                         </a>
                     </li>
                         }
@@ -120,10 +120,10 @@
                     else
                     {
                     <li class="nav-item ms-lg-2">
-                        <a asp-controller="ClientReservation"
-                           asp-action="Book"
-                           class="btn btn-outline-dark rounded-pill px-4">
-                            Reserve Now
+                        <a asp-controller="Sites"
+                           asp-action="Search"
+                           class="btn btn-primary rounded-pill px-4">
+                            Search Sites
                         </a>
                     </li>
 

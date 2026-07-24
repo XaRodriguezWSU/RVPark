@@ -1,10 +1,12 @@
-using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using RVSite.Data;
 using RVSite.Models;
 using RVSite.Services;
+using System;
+using System.Security.Claims;
+using System.Threading.Tasks;
 
 namespace RVSite.Controllers
 {
@@ -57,13 +59,41 @@ namespace RVSite.Controllers
         public async Task<IActionResult> Checkout(int reservationId)
         {
             var reservation = await _context.Reservations
+                .Include(r => r.User)
                 .Include(r => r.Site)
-                .FirstOrDefaultAsync(r => r.ReservationID == reservationId);
+                    .ThenInclude(s => s!.SiteType)
+                .FirstOrDefaultAsync(r =>
+                    r.ReservationID == reservationId);
 
-            if (reservation == null) return NotFound();
+            if (reservation == null)
+            {
+                return NotFound();
+            }
 
-            ViewBag.AmountDue = reservation.BalanceDue > 0 ? reservation.BalanceDue : reservation.TotalCost;
-            ViewBag.IsEmployee = User.IsInRole("Staff") || User.IsInRole("Admin");
+            bool isEmployee =
+                User.IsInRole("Staff") ||
+                User.IsInRole("Admin");
+
+            if (!isEmployee)
+            {
+                string? userIdClaim =
+                    User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+                if (!int.TryParse(userIdClaim, out int userId) ||
+                    reservation.UserID != userId)
+                {
+                    return Forbid();
+                }
+            }
+
+            ViewBag.AmountDue = reservation.BalanceDue;
+            ViewBag.IsEmployee = isEmployee;
+
+            ViewBag.Payments = await _context.Payments
+                .Where(p =>
+                    p.ReservationID == reservation.ReservationID)
+                .OrderByDescending(p => p.PaymentDate)
+                .ToListAsync();
 
             return View(reservation);
         }
@@ -137,24 +167,67 @@ namespace RVSite.Controllers
         }
 
 
-        private async Task CompleteTransactionAsync(Reservation reservation, Payment payment)
+        private async Task CompleteTransactionAsync(
+            Reservation reservation,
+            Payment payment)
         {
-            reservation.ReservationStatus = ReservationStatus.Confirmed;
-            reservation.BalanceDue = Math.Max(0, reservation.TotalCost - payment.AmountPaid);
+            reservation.BalanceDue = Math.Max(
+                0,
+                reservation.BalanceDue - payment.AmountPaid);
+
+            if (reservation.BalanceDue <= 0)
+            {
+                reservation.BalanceDue = 0;
+                reservation.ReservationStatus =
+                    ReservationStatus.Confirmed;
+            }
+            else
+            {
+                reservation.ReservationStatus =
+                    ReservationStatus.Pending;
+            }
 
             await _context.SaveChangesAsync();
 
             if (reservation.User?.Email != null)
             {
-                var subject = $"Reservation #{reservation.ReservationID} Confirmed";
-                var body = $"<p>Hi {reservation.User.FirstName},</p>" +
-                           $"<p>Your reservation (#{reservation.ReservationID}) is confirmed.</p>" +
-                           $"<p>Amount paid: {payment.AmountPaid:C}<br/>" +
-                           $"Check-in: {reservation.CheckInDate:MMMM d, yyyy}<br/>" +
-                           $"Check-out: {reservation.CheckOutDate:MMMM d, yyyy}</p>" +
-                           $"<p>Thank you for booking with us!</p>";
+                string subject;
+                string body;
 
-                await _emailService.SendAsync(reservation.User.Email, subject, body);
+                if (reservation.BalanceDue <= 0)
+                {
+                    subject =
+                        $"Reservation #{reservation.ReservationID} Confirmed";
+
+                    body =
+                        $"<p>Hi {reservation.User.FirstName},</p>" +
+                        $"<p>Your reservation " +
+                        $"(#{reservation.ReservationID}) is confirmed.</p>" +
+                        $"<p>Amount paid: {payment.AmountPaid:C}<br/>" +
+                        $"Remaining balance: {reservation.BalanceDue:C}<br/>" +
+                        $"Check-in: {reservation.CheckInDate:MMMM d, yyyy}<br/>" +
+                        $"Check-out: {reservation.CheckOutDate:MMMM d, yyyy}</p>" +
+                        $"<p>Thank you for booking with us!</p>";
+                }
+                else
+                {
+                    subject =
+                        $"Payment Received for Reservation #{reservation.ReservationID}";
+
+                    body =
+                        $"<p>Hi {reservation.User.FirstName},</p>" +
+                        $"<p>We received a payment for reservation " +
+                        $"#{reservation.ReservationID}.</p>" +
+                        $"<p>Amount paid: {payment.AmountPaid:C}<br/>" +
+                        $"Remaining balance: {reservation.BalanceDue:C}</p>" +
+                        $"<p>Your reservation will be confirmed when the " +
+                        $"remaining balance is paid.</p>";
+                }
+
+                await _emailService.SendAsync(
+                    reservation.User.Email,
+                    subject,
+                    body);
             }
         }
 
@@ -192,37 +265,127 @@ namespace RVSite.Controllers
         [HttpPost]
         [ValidateAntiForgeryToken]
         [Authorize(Roles = "Staff,Admin")]
-        public async Task<IActionResult> RecordOfflinePayment(int reservationId, PaymentMethodType method, decimal amount, string? reference)
+        public async Task<IActionResult> RecordOfflinePayment(
+            int reservationId,
+            PaymentMethodType method,
+            decimal amount,
+            string? reference)
         {
-            var reservation = await _context.Reservations.FindAsync(reservationId);
-            if (reservation == null) return NotFound();
+            var reservation = await _context.Reservations
+                .Include(r => r.User)
+                .Include(r => r.Site)
+                    .ThenInclude(s => s!.SiteType)
+                .FirstOrDefaultAsync(r =>
+                    r.ReservationID == reservationId);
 
-            var employeeIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            if (employeeIdClaim == null || !int.TryParse(employeeIdClaim, out var employeeId))
+            if (reservation == null)
+            {
+                return NotFound();
+            }
+
+            if (reservation.ReservationStatus ==
+                ReservationStatus.Cancelled)
+            {
+                TempData["Error"] =
+                    "Payments cannot be recorded for a cancelled reservation.";
+
+                return RedirectToAction(
+                    nameof(Checkout),
+                    new { reservationId });
+            }
+
+            if (reservation.BalanceDue <= 0)
+            {
+                TempData["Error"] =
+                    "This reservation has already been paid in full.";
+
+                return RedirectToAction(
+                    nameof(Checkout),
+                    new { reservationId });
+            }
+
+            if (amount <= 0)
+            {
+                TempData["Error"] =
+                    "The payment amount must be greater than zero.";
+
+                return RedirectToAction(
+                    nameof(Checkout),
+                    new { reservationId });
+            }
+
+            if (amount > reservation.BalanceDue)
+            {
+                TempData["Error"] =
+                    $"The payment cannot exceed the remaining balance " +
+                    $"of {reservation.BalanceDue:C}.";
+
+                return RedirectToAction(
+                    nameof(Checkout),
+                    new { reservationId });
+            }
+
+            if (method == PaymentMethodType.Stripe)
+            {
+                TempData["Error"] =
+                    "Use the online card payment option for Stripe payments.";
+
+                return RedirectToAction(
+                    nameof(Checkout),
+                    new { reservationId });
+            }
+
+            string? employeeIdClaim =
+                User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+            if (employeeIdClaim == null ||
+                !int.TryParse(employeeIdClaim, out int employeeId))
             {
                 return Forbid();
             }
 
             var payment = new Payment
             {
+                ReservationID = reservation.ReservationID,
                 AmountPaid = amount,
                 PaymentDate = DateTime.Now,
-                TransactionReference = reference
+                TransactionReference =
+                    string.IsNullOrWhiteSpace(reference)
+                        ? null
+                        : reference.Trim()
             };
 
             SetPaymentStrategy(method);
-            var result = await _strategy.ProcessAsync(reservation, payment, employeeId);
+
+            var result = await _strategy.ProcessAsync(
+                reservation,
+                payment,
+                employeeId);
 
             if (!result.Success)
             {
                 TempData["Error"] = result.Error;
-                return RedirectToAction(nameof(Checkout), new { reservationId });
+
+                return RedirectToAction(
+                    nameof(Checkout),
+                    new { reservationId });
             }
 
             _context.Payments.Add(payment);
-            await CompleteTransactionAsync(reservation, payment);
 
-            return RedirectToAction(nameof(Confirmation), new { reservationId });
+            await CompleteTransactionAsync(
+                reservation,
+                payment);
+
+            TempData["SuccessMessage"] =
+                reservation.BalanceDue <= 0
+                    ? "Payment recorded. The reservation is now confirmed."
+                    : $"Payment recorded. Remaining balance: " +
+                      $"{reservation.BalanceDue:C}.";
+
+            return RedirectToAction(
+                nameof(Checkout),
+                new { reservationId });
         }
     }
 }
