@@ -35,6 +35,7 @@ namespace RVSite.Models
 
         public string? EmailConfirmationToken { get; set; }
 
+        [Required]
         [StringLength(50)]
         public string? MilitaryID { get; set; }
 
