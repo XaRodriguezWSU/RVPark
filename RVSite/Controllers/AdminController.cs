@@ -338,20 +338,12 @@ namespace RVSite.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> CancelReservation(int id)
+        public IActionResult CancelReservation(int id)
         {
-            var reservation = await _context.Reservations.FindAsync(id);
-
-            if (reservation == null)
-            {
-                return NotFound();
-            }
-
-            reservation.ReservationStatus = ReservationStatus.Cancelled;
-
-            await _context.SaveChangesAsync();
-
-            return RedirectToAction(nameof(Search));
+            return RedirectToAction(
+                "CancelReservation",
+                "Reservation",
+                new { id });
         }
 
         private async Task<ReservationPolicy> GetOrCreateReservationPolicyAsync()
@@ -415,6 +407,7 @@ namespace RVSite.Controllers
             existingPolicy.PeakSeasonEndDay = policy.PeakSeasonEndDay;
             existingPolicy.RequiredDaysAwayBeforeReturn = policy.RequiredDaysAwayBeforeReturn;
             existingPolicy.LateCancellationWindowDays = policy.LateCancellationWindowDays;
+            existingPolicy.CancellationDailyFeeAmount = policy.CancellationDailyFeeAmount;
             existingPolicy.GeneralPolicyNotes = policy.GeneralPolicyNotes;
             existingPolicy.LastUpdated = DateTime.Now;
 

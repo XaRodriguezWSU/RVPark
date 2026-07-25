@@ -241,7 +241,6 @@
                             <th>Guest</th>
                             <th class="text-end">Reservation Total</th>
                             <th class="text-end">Fees</th>
-                            <th class="text-end">Total Charges</th>
                             <th class="text-end">Payments</th>
                             <th class="text-end">Balance Due</th>
                             <th>Status</th>
@@ -250,13 +249,28 @@
                     <tbody>
                         @foreach (var r in Model.Reservations)
                             {
-                                var reservationTotal = r.TotalCost;
+                                var fees = r.Fees != null
+                                    ? r.Fees.ToList()
+                                    : new List<RVSite.Models.Fee>();
 
-                                var feeTotal = r.Fees != null
-                                    ? r.Fees.Sum(f => CostService.CalculateFeeAmount(f))
-                                    : 0;
+                                var isCancelled =
+                                    r.ReservationStatus == RVSite.Models.ReservationStatus.Cancelled;
 
-                                var totalCharges = reservationTotal + feeTotal;
+                                var cancellationFeeTotal = fees
+                                    .Where(f => f.NameCode == RVSite.Models.FeeCodes.Cancellation)
+                                    .Sum(f => CostService.CalculateFeeAmount(f));
+
+                                var regularFeeTotal = fees
+                                    .Where(f => f.NameCode != RVSite.Models.FeeCodes.Cancellation)
+                                    .Sum(f => CostService.CalculateFeeAmount(f));
+
+                                var feeTotal = isCancelled
+                                    ? cancellationFeeTotal
+                                    : regularFeeTotal + cancellationFeeTotal;
+
+                                var reservationTotal = isCancelled
+                                    ? 0
+                                    : r.TotalCost;
 
                                 var payments = Model.Payments != null
                                     ? Model.Payments
@@ -265,14 +279,35 @@
                                         .Sum(p => p.AmountPaid)
                                     : 0;
 
-                                var balanceDue = Math.Max(0, totalCharges - payments);
+                                if (isCancelled)
+                                {
+                                    var cancellationFees = fees
+                                        .Where(f => f.NameCode == RVSite.Models.FeeCodes.Cancellation)
+                                        .ToList();
+
+                                    payments = 0;
+
+                                    if (cancellationFees.Any() && Model.Payments != null)
+                                    {
+                                        var cancellationFeeStartDate = cancellationFees
+                                            .Min(f => f.EffectiveDate);
+
+                                        payments = Model.Payments
+                                            .Where(p =>
+                                                p.ReservationID == r.ReservationID &&
+                                                p.Status == RVSite.Models.PaymentStatus.Paid &&
+                                                p.PaymentDate >= cancellationFeeStartDate)
+                                            .Sum(p => p.AmountPaid);
+                                    }
+                                }
+
+                                var balanceDue = Math.Max(0, feeTotal + reservationTotal - payments);
 
                                 <tr>
                                     <td>@r.ReservationID</td>
                                     <td>@r.User?.FirstName @r.User?.LastName</td>
                                     <td class="text-end">@reservationTotal.ToString("C")</td>
                                     <td class="text-end">@feeTotal.ToString("C")</td>
-                                    <td class="text-end">@totalCharges.ToString("C")</td>
                                     <td class="text-end">@payments.ToString("C")</td>
                                     <td class="text-end">@balanceDue.ToString("C")</td>
                                     <td>@r.ReservationStatus</td>

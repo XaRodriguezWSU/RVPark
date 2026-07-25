@@ -47,11 +47,17 @@
 
                 <div class="col-md-6">
 
-                    <label asp-for="NameCode" class="form-label"></label>
+                    <label asp-for="NameCode" class="form-label">Fee Type</label>
 
-                    <select asp-for="NameCode"
-                            asp-items="Html.GetEnumSelectList<RVSite.Models.FeeCodes>()"
-                            class="form-select"></select>
+                    <select asp-for="NameCode" class="form-select">
+                        @foreach (var feeCode in Enum.GetValues(typeof(RVSite.Models.FeeCodes)).Cast<RVSite.Models.FeeCodes>())
+                        {
+                            if (feeCode != RVSite.Models.FeeCodes.Cancellation)
+                            {
+                                <option value="@feeCode">@feeCode</option>
+                            }
+                        }
+                    </select>
 
                 </div>
 
@@ -62,15 +68,11 @@
                     <input asp-for="Amount"
                            class="form-control" />
 
-                    <small class="text-muted">
-                        For cancellation fees, enter the daily charge amount. For other fees, enter the one-time fee amount.
-                    </small>
-
                 </div>
 
                 <div class="col-md-6">
 
-                    <label asp-for="EffectiveDate" class="form-label"></label>
+                    <label asp-for="EffectiveDate" class="form-label">Effective Date</label>
 
                     <input asp-for="EffectiveDate"
                            type="date"

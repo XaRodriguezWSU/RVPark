@@ -57,6 +57,11 @@ namespace RVSite.Models
         [Range(0, 365)]
         public int LateCancellationWindowDays { get; set; } = 7;
 
+        [Required]
+        [Column(TypeName = "decimal(10,2)")]
+        [Range(0, 9999.99)]
+        public decimal CancellationDailyFeeAmount { get; set; } = 14;
+
         [StringLength(1000)]
         public string? GeneralPolicyNotes { get; set; }
 
