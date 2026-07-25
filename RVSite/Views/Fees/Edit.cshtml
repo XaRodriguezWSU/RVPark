@@ -37,27 +37,66 @@
 
                 <div class="col-md-6">
 
-                    <label asp-for="ReservationID" class="form-label"></label>
+                    @if (Model.NameCode == RVSite.Models.FeeCodes.Cancellation)
+                    {
+                        <label asp-for="ReservationID" class="form-label">Reservation</label>
 
-                    <select asp-for="ReservationID"
-                            asp-items="ViewBag.ReservationID"
-                            class="form-select">
-                    </select>
+                        <select asp-for="ReservationID"
+                                asp-items="ViewBag.ReservationID"
+                                class="form-control"
+                                disabled>
+                        </select>
 
-                    <span asp-validation-for="ReservationID" class="text-danger"></span>
+                        <input type="hidden" asp-for="ReservationID" />
 
+                        <span asp-validation-for="ReservationID" class="text-danger"></span>
+
+                        <div class="form-text">
+                            Cancellation fees are created automatically. Admins may onlly edit the daily rate or effective date.
+                        </div>
+                    }
+                    else
+                    {
+                        <label asp-for="ReservationID" class="form-label"></label>
+
+                        <select asp-for="ReservationID"
+                        asp-items="ViewBag.ReservationID"
+                        class="form-select">
+                        </select>
+
+                        <span asp-validation-for="ReservationID" class="text-danger"></span>
+                    }
                 </div>
 
                 <div class="col-md-6">
 
-                    <label asp-for="NameCode" class="form-label"></label>
+                    @if (Model.NameCode == RVSite.Models.FeeCodes.Cancellation)
+                    {
+                        <label class="form-label">Fee Type</label>
 
-                    <select asp-for="NameCode"
-                            asp-items="Html.GetEnumSelectList<RVSite.Models.FeeCodes>()"
-                            class="form-select">
-                    </select>
+                        <input type="text"
+                               class="form-control"
+                               value="Cancellation"
+                               readonly />
 
-                    <span asp-validation-for="NameCode" class="text-danger"></span>
+                        <input type="hidden" asp-for="NameCode" />
+                    }
+                    else
+                    {
+                        <label asp-for="NameCode" class="form-label">Fee Type</label>
+
+                        <select asp-for="NameCode" class="form-select">
+                            @foreach (var feeCode in Enum.GetValues(typeof(RVSite.Models.FeeCodes)).Cast<RVSite.Models.FeeCodes>())
+                            {
+                                if (feeCode != RVSite.Models.FeeCodes.Cancellation)
+                                {
+                                    <option value="@feeCode">@feeCode</option>
+                                }
+                            }
+                        </select>
+
+                        <span asp-validation-for="NameCode" class="text-danger"></span>
+                    }
 
                 </div>
 
@@ -70,15 +109,11 @@
 
                     <span asp-validation-for="Amount" class="text-danger"></span>
 
-                    <small class="text-muted">
-                        For cancellation fees, enter the daily charge amount. For other fees, enter the one-time fee amount.
-                    </small>
-
                 </div>
 
                 <div class="col-md-6">
 
-                    <label asp-for="EffectiveDate" class="form-label"></label>
+                    <label asp-for="EffectiveDate" class="form-label">Effective Date</label>
 
                     <input asp-for="EffectiveDate"
                            type="date"

@@ -1,259 +1,273 @@
 ﻿@model IEnumerable<RVSite.Models.Reservation>
-    @inject RVSite.Services.CostService CostService
+@inject RVSite.Services.CostService CostService
 
-    @{
+@{
     ViewData["Title"] = "Reservations";
-    }
+}
 
-    <section class="card admin-hero mb-4">
-        <div class="card-body p-4 p-lg-5">
-            <div class="d-flex flex-column flex-lg-row justify-content-between align-items-lg-center gap-3">
-                <div>
-                    <span class="home-kicker">Employee Reservation Management</span>
-
-                    <h1 class="page-title">Reservations</h1>
-
-                    <p class="page-subtitle">
-                        Review, edit, cancel, search, and create reservations for walk-in customers.
-                    </p>
-                </div>
-
-                <div class="d-flex flex-wrap gap-2">
-                    <a class="btn btn-outline-primary"
-                       asp-controller="Reservation"
-                       asp-action="Search">
-                        Search Reservations
-                    </a>
-
-                    <a class="btn btn-primary"
-                       asp-controller="Reservation"
-                       asp-action="WalkIn">
-                        Create Walk-In Reservation
-                    </a>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <section class="card">
-        <div class="card-header d-flex justify-content-between align-items-center">
+<section class="card admin-hero mb-4">
+    <div class="card-body p-4 p-lg-5">
+        <div class="d-flex flex-column flex-lg-row justify-content-between align-items-lg-center gap-3">
             <div>
-                <h2 class="h5 mb-1">Reservation Records</h2>
-                <p class="mb-0 text-muted">
-                    @Model.Count() total reservations
+                <span class="home-kicker">Employee Reservation Management</span>
+
+                <h1 class="page-title">Reservations</h1>
+
+                <p class="page-subtitle">
+                    Review, edit, cancel, search, and create reservations for walk-in customers.
                 </p>
             </div>
+
+            <div class="d-flex flex-wrap gap-2">
+                <a class="btn btn-outline-primary"
+                   asp-controller="Reservation"
+                   asp-action="Search">
+                    Search Reservations
+                </a>
+
+                <a class="btn btn-primary"
+                   asp-controller="Reservation"
+                   asp-action="WalkIn">
+                    Create Walk-In Reservation
+                </a>
+            </div>
         </div>
+    </div>
+</section>
 
-        <div class="card-body p-0">
-            <div class="table-responsive">
-                <table class="table table-hover align-middle admin-table mb-0">
-                    <thead>
-                        <tr>
-                            <th>Reservation ID</th>
-                            <th>Customer</th>
-                            <th>Contact</th>
-                            <th>Site</th>
-                            <th>Check-In</th>
-                            <th>Check-Out</th>
-                            <th class="text-end">Total Cost</th>
-                            <th class="text-end">Balance Due</th>
-                            <th>Payment</th>
-                            <th>Reservation Status</th>
-                            <th class="text-end">Actions</th>
-                        </tr>
-                    </thead>
+<section class="card">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <div>
+            <h2 class="h5 mb-1">Reservation Records</h2>
+            <p class="mb-0 text-muted">
+                @Model.Count() total reservations
+            </p>
+        </div>
+    </div>
 
-                    <tbody>
-                        @if (Model.Any())
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle admin-table mb-0">
+                <thead>
+                    <tr>
+                        <th>Reservation ID</th>
+                        <th>Customer</th>
+                        <th>Contact</th>
+                        <th>Site</th>
+                        <th>Check-In</th>
+                        <th>Check-Out</th>
+                        <th class="text-end">Reservation Total</th>
+                        <th class="text-end">Balance Due</th>
+                        <th>Payment</th>
+                        <th>Reservation Status</th>
+                        <th class="text-end">Actions</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    @if (Model.Any())
                     {
                         foreach (var reservation in Model)
                         {
-                        <tr>
-                            <td class="fw-bold">
-                                #@reservation.ReservationID
-                            </td>
+                            <tr>
+                                <td class="fw-bold">
+                                    #@reservation.ReservationID
+                                </td>
 
-                            <td>
-                                @if (reservation.User != null)
+                                <td>
+                                    @if (reservation.User != null)
                                     {
-                                <div class="fw-semibold">
-                                    @reservation.User.FirstName
-                                    @reservation.User.LastName
-                                </div>
+                                        <div class="fw-semibold">
+                                            @reservation.User.FirstName
+                                            @reservation.User.LastName
+                                        </div>
 
-                                <small class="text-muted">
-                                    @reservation.User.Email
-                                </small>
+                                        <small class="text-muted">
+                                            @reservation.User.Email
+                                        </small>
                                     }
                                     else
                                     {
-                                <span class="text-muted">Unknown customer</span>
+                                        <span class="text-muted">Unknown customer</span>
                                     }
-                            </td>
+                                </td>
 
-                            <td>
-                                @(reservation.User?.PhoneNumber ?? "Not provided")
-                            </td>
+                                <td>
+                                    @(reservation.User?.PhoneNumber ?? "Not provided")
+                                </td>
 
-                            <td>
-                                @(reservation.Site?.SiteNumber ?? "Unknown")
-                            </td>
+                                <td>
+                                    @(reservation.Site?.SiteNumber ?? "Unknown")
+                                </td>
 
-                            <td>
-                                @reservation.CheckInDate.ToString("MMM d, yyyy")
-                            </td>
+                                <td>
+                                    @reservation.CheckInDate.ToString("MMM d, yyyy")
+                                </td>
 
-                            <td>
-                                @reservation.CheckOutDate.ToString("MMM d, yyyy")
-                            </td>
+                                <td>
+                                    @reservation.CheckOutDate.ToString("MMM d, yyyy")
+                                </td>
 
-                            @{
-                                    var feeTotal = reservation.Fees != null
-                                        ? reservation.Fees.Sum(f => CostService.CalculateFeeAmount(f))
-                                        : 0;
+                                @{
+                                    var fees = reservation.Fees != null
+                                        ? reservation.Fees.ToList()
+                                        : new List<RVSite.Models.Fee>();
 
-                                    var totalWithFees = reservation.TotalCost + feeTotal;
-                            }
+                                    var isCancelled =
+                                        reservation.ReservationStatus == RVSite.Models.ReservationStatus.Cancelled;
 
-                            <td class="text-end">
-                                @totalWithFees.ToString("C")
-                            </td>
+                                    var cancellationFeeTotal = fees
+                                        .Where(f => f.NameCode == RVSite.Models.FeeCodes.Cancellation)
+                                        .Sum(f => CostService.CalculateFeeAmount(f));
 
-                            <td class="text-end">
-                                @if (reservation.BalanceDue > 0)
-    {
-                                <span class="fw-bold text-danger">
-                                    @reservation.BalanceDue.ToString("C")
-                                </span>
-    }
-    else
-    {
-                                <span class="fw-bold text-success">
-                                    $0.00
-                                </span>
-    }
-                            </td>
+                                    var regularFeeTotal = fees
+                                        .Where(f => f.NameCode != RVSite.Models.FeeCodes.Cancellation)
+                                        .Sum(f => CostService.CalculateFeeAmount(f));
 
-                            <td>
-                                @if (reservation.ReservationStatus ==
-         ReservationStatus.Cancelled)
-    {
-                                <span class="badge bg-secondary">
-                                    Not Applicable
-                                </span>
-    }
-    else if (reservation.BalanceDue <= 0)
-    {
-                                <span class="badge bg-success">
-                                    Paid
-                                </span>
-    }
-    else if (reservation.BalanceDue <
-             reservation.TotalCost)
-    {
-                                <span class="badge bg-warning text-dark">
-                                    Partially Paid
-                                </span>
-    }
-    else
-    {
-                                <span class="badge bg-danger">
-                                    Unpaid
-                                </span>
-    }
-                            </td>
+                                    var totalWithFees = isCancelled
+                                        ? cancellationFeeTotal
+                                        : reservation.TotalCost + regularFeeTotal + cancellationFeeTotal;
 
-                            <td>
-                                @if (reservation.ReservationStatus ==
-         ReservationStatus.Cancelled)
-    {
-                                <span class="badge bg-danger">
-                                    Cancelled
-                                </span>
-    }
-    else if (reservation.ReservationStatus ==
-             ReservationStatus.Completed)
-    {
-                                <span class="badge bg-secondary">
-                                    Completed
-                                </span>
-    }
-    else if (reservation.ReservationStatus ==
-             ReservationStatus.Pending)
-    {
-                                <span class="badge bg-warning text-dark">
-                                    Pending
-                                </span>
-    }
-    else
-    {
-                                <span class="badge bg-success">
-                                    @reservation.ReservationStatus
-                                </span>
-    }
-                            </td>
+                                    var displayBalanceDue = reservation.BalanceDue;
+                                }
 
-                            <td class="text-end">
-                                <div class="dropdown">
-                                    <button class="btn btn-sm btn-outline-dark dropdown-toggle reservation-actions-button"
-                                            type="button"
-                                            data-bs-toggle="dropdown"
-                                            aria-expanded="false">
-                                        Actions
-                                    </button>
+                                <td class="text-end">
+                                    @totalWithFees.ToString("C")
+                                </td>
 
-                                    <ul class="dropdown-menu dropdown-menu-end reservation-actions-menu">
+                                <td class="text-end">
+                                    @if (displayBalanceDue > 0)
+                                    {
+                                        <span class="fw-bold text-danger">
+                                            @displayBalanceDue.ToString("C")
+                                        </span>
+                                    }
+                                    else
+                                    {
+                                        <span class="fw-bold text-success">
+                                            $0.00
+                                        </span>
+                                    }
+                                </td>
 
-                                        @if (reservation.ReservationStatus != ReservationStatus.Cancelled &&
-                 reservation.BalanceDue > 0)
-            {
-                                        <li>
-                                            <a class="dropdown-item"
-                                               asp-controller="Payment"
-                                               asp-action="Checkout"
-                                               asp-route-reservationId="@reservation.ReservationID">
-                                                <span class="reservation-action-icon">$</span>
-                                                Process Payment
-                                            </a>
-                                        </li>
+                                <td>
+                                    @if (reservation.ReservationStatus ==
+                                        ReservationStatus.Cancelled)
+                                    {
+                                        <span class="badge bg-secondary">
+                                            Not Applicable
+                                        </span>
+                                    }
+                                    else if (reservation.BalanceDue <= 0)
+                                    {
+                                        <span class="badge bg-success">
+                                            Paid
+                                        </span>
+                                    }
+                                    else if (reservation.BalanceDue <
+                                             reservation.TotalCost)
+                                    {
+                                        <span class="badge bg-warning text-dark">
+                                            Partially Paid
+                                        </span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-danger">
+                                            Unpaid
+                                        </span>
+                                    }
+                                </td>
 
-                                        <li>
-                                            <hr class="dropdown-divider" />
-                                        </li>
-            }
+                                <td>
+                                    @if (reservation.ReservationStatus ==
+                                        ReservationStatus.Cancelled)
+                                    {
+                                        <span class="badge bg-danger">
+                                            Cancelled
+                                        </span>
+                                    }
+                                    else if (reservation.ReservationStatus ==
+                                             ReservationStatus.Completed)
+                                    {
+                                        <span class="badge bg-secondary">
+                                            Completed
+                                        </span>
+                                    }
+                                    else if (reservation.ReservationStatus ==
+                                             ReservationStatus.Pending)
+                                    {
+                                        <span class="badge bg-warning text-dark">
+                                            Pending
+                                        </span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-success">
+                                            @reservation.ReservationStatus
+                                        </span>
+                                    }
+                                </td>
 
-                                        <li>
-                                            <a class="dropdown-item"
-                                               asp-controller="Reservation"
-                                               asp-action="Edit"
-                                               asp-route-id="@reservation.ReservationID">
-                                                <span class="reservation-action-icon">✎</span>
-                                                Edit Reservation
-                                            </a>
-                                        </li>
+                                <td class="text-end">
+                                    <div class="dropdown">
+                                        <button class="btn btn-sm btn-outline-dark dropdown-toggle reservation-actions-button"
+                                                type="button"
+                                                data-bs-toggle="dropdown"
+                                                aria-expanded="false">
+                                            Actions
+                                        </button>
 
-                                        @if (reservation.ReservationStatus != ReservationStatus.Cancelled)
-            {
-                                        <li>
-                                            <hr class="dropdown-divider" />
-                                        </li>
+                                        <ul class="dropdown-menu dropdown-menu-end reservation-actions-menu">
 
-                                        <li>
-                                            <a class="dropdown-item text-danger"
-                                               asp-controller="Reservation"
-                                               asp-action="CancelReservation"
-                                               asp-route-id="@reservation.ReservationID">
-                                                <span class="reservation-action-icon">×</span>
-                                                Cancel Reservation
-                                            </a>
-                                        </li>
-            }
+                                            @if (displayBalanceDue > 0)
+                                            {
+                                                <li>
+                                                    <a class="dropdown-item"
+                                                       asp-controller="Payment"
+                                                       asp-action="Checkout"
+                                                       asp-route-reservationId="@reservation.ReservationID">
+                                                        <span class="reservation-action-icon">$</span>
+                                                        Process Payment
+                                                    </a>
+                                                </li>
 
-                                    </ul>
-                                </div>
-                            </td>
-                        </tr>
+                                                <li>
+                                                    <hr class="dropdown-divider" />
+                                                </li>
+                                            }
+
+                                            <li>
+                                                <a class="dropdown-item"
+                                                   asp-controller="Reservation"
+                                                   asp-action="Edit"
+                                                   asp-route-id="@reservation.ReservationID">
+                                                    <span class="reservation-action-icon">✎</span>
+                                                    Edit Reservation
+                                                </a>
+                                            </li>
+
+                                            @if (!isCancelled)
+                                            {
+                                                <li>
+                                                    <hr class="dropdown-divider" />
+                                                </li>
+
+                                                <li>
+                                                    <a class="dropdown-item text-danger"
+                                                       asp-controller="Reservation"
+                                                       asp-action="CancelReservation"
+                                                       asp-route-id="@reservation.ReservationID">
+                                                        <span class="reservation-action-icon">×</span>
+                                                        Cancel Reservation
+                                                    </a>
+                                                </li>
+                                            }
+
+                                        </ul>
+                                    </div>
+                                </td>
+                            </tr>
                         }
                     }
                     else
@@ -264,8 +278,8 @@
                             </td>
                         </tr>
                     }
-                    </tbody>
-                </table>
-            </div>
+                </tbody>
+            </table>
         </div>
-    </section>
+    </div>
+</section>

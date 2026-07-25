@@ -26,6 +26,17 @@ namespace RVSite.Controllers
 
         public async Task<IActionResult> Index()
         {
+            var reservationIds = await _context.Reservations
+               .Select(r => r.ReservationID)
+               .ToListAsync();
+
+            foreach (var reservationId in reservationIds)
+            {
+                await _costService.UpdateReservationBalanceDueAsync(reservationId);
+            }
+
+            await _context.SaveChangesAsync();
+
             var reservations = await _context.Reservations
                 .Include(r => r.User)
                 .Include(r => r.Site)
@@ -716,6 +727,7 @@ namespace RVSite.Controllers
                 "EditConfirmation",
                 reservation);
         }
+
         [HttpGet]
         public async Task<IActionResult> CancelReservation(int id)
         {
@@ -754,6 +766,8 @@ namespace RVSite.Controllers
                 reservation.ReservationStatus =
                     ReservationStatus.Cancelled;
 
+                await AddCancellationFeeAsync(reservation);
+
                 bool anotherActiveReservationExists =
                     await _context.Reservations.AnyAsync(r =>
                         r.SiteID == reservation.SiteID &&
@@ -768,11 +782,66 @@ namespace RVSite.Controllers
                 }
 
                 await _context.SaveChangesAsync();
+
+                await _costService.UpdateReservationBalanceDueAsync(reservation.ReservationID);
+                await _context.SaveChangesAsync();
             }
 
             return View(
                 "CancelConfirmation",
                 reservation);
+        }
+
+        private async Task AddCancellationFeeAsync(Reservation reservation)
+        {
+            bool cancellationFeeApplies =
+                await CancellationFeeAppliesAsync(reservation);
+
+            if (!cancellationFeeApplies)
+            {
+                return;
+            }
+
+            bool cancellationFeeAlreadyExists = await _context.Fees.AnyAsync(f =>
+                f.ReservationID == reservation.ReservationID &&
+                f.NameCode == FeeCodes.Cancellation);
+
+            if (cancellationFeeAlreadyExists)
+            {
+                return;
+            }
+
+            var policy = await _context.ReservationPolicies.FirstOrDefaultAsync()
+                         ?? new ReservationPolicy();
+
+            var cancellationFee = new Fee
+            {
+                ReservationID = reservation.ReservationID,
+                NameCode = FeeCodes.Cancellation,
+                Amount = policy.CancellationDailyFeeAmount,
+                EffectiveDate = DateTime.Now
+            };
+
+            _context.Fees.Add(cancellationFee);
+        }
+
+        private async Task<bool> CancellationFeeAppliesAsync(Reservation reservation)
+        {
+            var policy = await _context.ReservationPolicies.FirstOrDefaultAsync()
+                         ?? new ReservationPolicy();
+
+            int cancellationWindowDays = policy.LateCancellationWindowDays;
+
+            if (cancellationWindowDays <= 0)
+            {
+                return false;
+            }
+
+            DateTime cancellationDate = DateTime.Today;
+            DateTime feeWindowStartDate =
+                reservation.CheckInDate.Date.AddDays(-cancellationWindowDays);
+
+            return cancellationDate >= feeWindowStartDate;
         }
 
         private async Task PrepareEditView(

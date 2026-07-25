@@ -111,6 +111,17 @@ namespace RVSite.Controllers
                     return NotFound();
                 }
 
+                if (existingFee.NameCode != FeeCodes.Cancellation &&
+                    fee.NameCode == FeeCodes.Cancellation)
+                {
+                    ModelState.AddModelError(
+                        "NameCode",
+                        "Cancellation fees are added automatically when a reservation is cancelled.");
+
+                    LoadReservationDropDown(fee.ReservationID);
+                    return View(fee);
+                }
+
                 int oldReservationID = existingFee.ReservationID;
 
                 try

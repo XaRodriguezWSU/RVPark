@@ -82,6 +82,39 @@ namespace RVSite.Services
                 return;
             }
 
+            if (reservation.ReservationStatus == ReservationStatus.Cancelled)
+            {
+                var cancellationFees = await _context.Fees
+                    .Where(f =>
+                        f.ReservationID == reservationID &&
+                        f.NameCode == FeeCodes.Cancellation)
+                    .ToListAsync();
+
+                decimal cancellationFeeTotal = cancellationFees
+                    .Sum(f => CalculateFeeAmount(f));
+
+                decimal paidCancellationTotal = 0;
+
+                if (cancellationFees.Any())
+                {
+                    DateTime cancellationFeeStartDate = cancellationFees
+                        .Min(f => f.EffectiveDate);
+
+                    paidCancellationTotal = await _context.Payments
+                        .Where(p =>
+                            p.ReservationID == reservationID &&
+                            p.Status == PaymentStatus.Paid &&
+                            p.PaymentDate >= cancellationFeeStartDate)
+                        .SumAsync(p => p.AmountPaid);
+                }
+
+                reservation.BalanceDue = Math.Max(
+                    0,
+                    cancellationFeeTotal - paidCancellationTotal);
+
+                return;
+            }
+
             decimal feeTotal = await CalculateFeeTotalAsync(reservationID);
             decimal paidTotal = await CalculatePaidTotalAsync(reservationID);
 
