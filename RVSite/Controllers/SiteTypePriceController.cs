@@ -15,83 +15,234 @@ namespace RVSite.Controllers
             _context = context;
         }
 
-        public IActionResult Index(int id)
+        // GET: SiteTypePrice?siteTypeId=1
+        [HttpGet]
+        public IActionResult Index(int siteTypeId)
         {
+            if (siteTypeId <= 0)
+            {
+                return BadRequest("A site type is required.");
+            }
+
+            var siteType = _context.SiteTypes
+                .FirstOrDefault(st => st.SiteTypeID == siteTypeId);
+
+            if (siteType == null)
+            {
+                return NotFound();
+            }
+
             var prices = _context.SiteTypePrices
-                .Where(p => p.SiteTypeID == id)
+                .Where(p => p.SiteTypeID == siteTypeId)
                 .Include(p => p.SiteType)
                 .OrderBy(p => p.StartDate)
                 .ToList();
 
-            ViewBag.SiteType = _context.SiteTypes.Find(id);
+            ViewBag.SiteType = siteType;
+            ViewBag.SiteTypeID = siteType.SiteTypeID;
+            ViewBag.SiteTypeName = siteType.Name;
 
             return View(prices);
         }
 
-        public IActionResult Create(int id)
+        // GET: SiteTypePrice/Create?siteTypeId=1
+        [HttpGet]
+        public IActionResult Create(int siteTypeId)
         {
-            Console.WriteLine("DEBUG: Create GET received id = " + id);
+            if (siteTypeId <= 0)
+            {
+                return BadRequest("A site type is required.");
+            }
 
-            if (id == 0)
-                return BadRequest("siteTypeId is required.");
+            var siteType = _context.SiteTypes
+                .FirstOrDefault(st => st.SiteTypeID == siteTypeId);
+
+            if (siteType == null)
+            {
+                return NotFound();
+            }
 
             var model = new SiteTypePrice
             {
-                SiteTypeID = id
+                SiteTypeID = siteTypeId,
+                StartDate = DateTime.Today
             };
+
+            ViewBag.SiteType = siteType;
+            ViewBag.SiteTypeName = siteType.Name;
 
             return View(model);
         }
 
+        // POST: SiteTypePrice/Create
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public IActionResult Create(SiteTypePrice model)
         {
-            Console.WriteLine("DEBUG: Posted SiteTypeID = " + model.SiteTypeID);
+            var siteType = _context.SiteTypes
+                .FirstOrDefault(st => st.SiteTypeID == model.SiteTypeID);
+
+            if (siteType == null)
+            {
+                ModelState.AddModelError(
+                    nameof(model.SiteTypeID),
+                    "The selected site type does not exist.");
+            }
+
+            if (model.EndDate.HasValue &&
+                model.EndDate.Value.Date < model.StartDate.Date)
+            {
+                ModelState.AddModelError(
+                    nameof(model.EndDate),
+                    "The end date cannot be before the start date.");
+            }
+
+            if (model.Price < 0)
+            {
+                ModelState.AddModelError(
+                    nameof(model.Price),
+                    "The nightly rate cannot be negative.");
+            }
 
             if (!ModelState.IsValid)
+            {
+                ViewBag.SiteType = siteType;
+                ViewBag.SiteTypeName = siteType?.Name;
+
                 return View(model);
+            }
 
             _context.SiteTypePrices.Add(model);
             _context.SaveChanges();
-            return RedirectToAction("Index", new { id = model.SiteTypeID });
+
+            return RedirectToAction(
+                nameof(Index),
+                new { siteTypeId = model.SiteTypeID });
         }
 
+        // GET: SiteTypePrice/Edit/5
+        [HttpGet]
         public IActionResult Edit(int id)
         {
-            var price = _context.SiteTypePrices.Find(id);
-            if (price == null) return NotFound();
+            var price = _context.SiteTypePrices
+                .Include(p => p.SiteType)
+                .FirstOrDefault(p => p.SiteTypePriceID == id);
+
+            if (price == null)
+            {
+                return NotFound();
+            }
+
+            ViewBag.SiteType = price.SiteType;
+            ViewBag.SiteTypeName = price.SiteType?.Name;
+
             return View(price);
         }
 
+        // POST: SiteTypePrice/Edit/5
         [HttpPost]
-        public IActionResult Edit(SiteTypePrice model)
+        [ValidateAntiForgeryToken]
+        public IActionResult Edit(int id, SiteTypePrice model)
         {
+            if (id != model.SiteTypePriceID)
+            {
+                return NotFound();
+            }
+
+            var siteType = _context.SiteTypes
+                .FirstOrDefault(st => st.SiteTypeID == model.SiteTypeID);
+
+            if (siteType == null)
+            {
+                ModelState.AddModelError(
+                    nameof(model.SiteTypeID),
+                    "The selected site type does not exist.");
+            }
+
+            if (model.EndDate.HasValue &&
+                model.EndDate.Value.Date < model.StartDate.Date)
+            {
+                ModelState.AddModelError(
+                    nameof(model.EndDate),
+                    "The end date cannot be before the start date.");
+            }
+
+            if (model.Price < 0)
+            {
+                ModelState.AddModelError(
+                    nameof(model.Price),
+                    "The nightly rate cannot be negative.");
+            }
+
             if (!ModelState.IsValid)
+            {
+                ViewBag.SiteType = siteType;
+                ViewBag.SiteTypeName = siteType?.Name;
+
                 return View(model);
+            }
 
-            _context.SiteTypePrices.Update(model);
-            _context.SaveChanges();
+            try
+            {
+                _context.SiteTypePrices.Update(model);
+                _context.SaveChanges();
+            }
+            catch (DbUpdateConcurrencyException)
+            {
+                var exists = _context.SiteTypePrices
+                    .Any(p => p.SiteTypePriceID == model.SiteTypePriceID);
 
-            return RedirectToAction("Index", new { id = model.SiteTypeID });
+                if (!exists)
+                {
+                    return NotFound();
+                }
+
+                throw;
+            }
+
+            return RedirectToAction(
+                nameof(Index),
+                new { siteTypeId = model.SiteTypeID });
         }
 
+        // GET: SiteTypePrice/Delete/5
+        [HttpGet]
         public IActionResult Delete(int id)
         {
-            var price = _context.SiteTypePrices.Find(id);
-            if (price == null) return NotFound();
+            var price = _context.SiteTypePrices
+                .Include(p => p.SiteType)
+                .FirstOrDefault(p => p.SiteTypePriceID == id);
+
+            if (price == null)
+            {
+                return NotFound();
+            }
+
             return View(price);
         }
 
-        [HttpPost, ActionName("Delete")]
+        // POST: SiteTypePrice/Delete/5
+        [HttpPost]
+        [ActionName("Delete")]
+        [ValidateAntiForgeryToken]
         public IActionResult DeleteConfirmed(int id)
         {
-            var price = _context.SiteTypePrices.Find(id);
-            int siteTypeId = price.SiteTypeID;
+            var price = _context.SiteTypePrices
+                .FirstOrDefault(p => p.SiteTypePriceID == id);
+
+            if (price == null)
+            {
+                return NotFound();
+            }
+
+            var siteTypeId = price.SiteTypeID;
 
             _context.SiteTypePrices.Remove(price);
             _context.SaveChanges();
 
-            return RedirectToAction("Index", new { id = siteTypeId });
+            return RedirectToAction(
+                nameof(Index),
+                new { siteTypeId });
         }
     }
 }

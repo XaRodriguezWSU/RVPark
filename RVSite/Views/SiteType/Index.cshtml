@@ -1,38 +1,112 @@
-﻿@*
-    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
-*@
-@{
-}
+﻿@model IEnumerable<RVSite.Models.SiteType>
 
-@model IEnumerable<RVSite.Models.SiteType>
+    @{
+    ViewData["Title"] = "Site Types";
+    }
 
-<h2>Site Types</h2>
+    <section class="card admin-hero mb-4">
+        <div class="card-body p-4 p-lg-5">
+            <div class="d-flex flex-column flex-lg-row justify-content-between align-items-lg-center gap-3">
+                <div>
+                    <span class="home-kicker">Site Configuration</span>
 
-<a asp-action="Create" class="btn btn-primary">Add Site Type</a>
+                    <h1 class="page-title">Site Types</h1>
 
-<table class="table mt-3">
-    <thead>
-        <tr>
-            <th>Name</th>
-            <th>Pricing</th>
-            <th>Actions</th>
-        </tr>
-    </thead>
-    <tbody>
-        @foreach (var t in Model)
+                    <p class="page-subtitle mb-0">
+                        Create and manage campsite categories and their seasonal pricing.
+                    </p>
+                </div>
+
+                <a asp-action="Create"
+                   class="btn btn-primary px-4">
+                    Add Site Type
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <section class="card">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <div>
+                <h2 class="h5 mb-1">Available Site Types</h2>
+
+                <p class="mb-0 text-muted">
+                    @Model.Count() total site type(s)
+                </p>
+            </div>
+        </div>
+
+        <div class="card-body p-0">
+            @if (Model.Any())
         {
-            <tr>
-                <td>@t.Name</td>
-                <td>
-                    <a asp-controller="SiteTypePrice" asp-action="Index" asp-route-siteTypeId="@t.SiteTypeID">
-                        Manage Pricing
-                    </a>
-                </td>
-                <td>
-                    <a asp-action="Edit" asp-route-id="@t.SiteTypeID">Edit</a> |
-                    <a asp-action="Delete" asp-route-id="@t.SiteTypeID">Delete</a>
-                </td>
-            </tr>
+            <div class="table-responsive">
+                <table class="table table-hover align-middle admin-table mb-0">
+                    <thead>
+                        <tr>
+                            <th>Site Type</th>
+                            <th>Pricing</th>
+                            <th class="text-end">Actions</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+                        @foreach (var siteType in Model)
+                        {
+                        <tr>
+                            <td>
+                                <div class="fw-semibold">
+                                    @siteType.Name
+                                </div>
+
+                                <small class="text-muted">
+                                    Site type ID: @siteType.SiteTypeID
+                                </small>
+                            </td>
+
+                            <td>
+                                <a asp-controller="SiteTypePrice"
+                                   asp-action="Index"
+                                   asp-route-siteTypeId="@siteType.SiteTypeID"
+                                   class="btn btn-sm btn-outline-primary">
+                                    Manage Pricing
+                                </a>
+                            </td>
+
+                            <td class="text-end">
+                                <div class="d-inline-flex flex-wrap justify-content-end gap-2">
+                                    <a asp-action="Edit"
+                                       asp-route-id="@siteType.SiteTypeID"
+                                       class="btn btn-sm btn-outline-primary">
+                                        Edit
+                                    </a>
+
+                                    <a asp-action="Delete"
+                                       asp-route-id="@siteType.SiteTypeID"
+                                       class="btn btn-sm btn-outline-danger">
+                                        Delete
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
         }
-    </tbody>
-</table>
+        else
+        {
+            <div class="text-center p-5">
+                <h2 class="h5 mb-2">No site types have been created</h2>
+
+                <p class="text-muted mb-4">
+                    Add a site type before creating or assigning campsites.
+                </p>
+
+                <a asp-action="Create"
+                   class="btn btn-primary">
+                    Add Site Type
+                </a>
+            </div>
+        }
+        </div>
+    </section>

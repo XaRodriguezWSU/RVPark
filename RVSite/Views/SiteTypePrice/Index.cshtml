@@ -1,38 +1,192 @@
-﻿@*
-    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
-*@
-@{
-}
+﻿@model IEnumerable<RVSite.Models.SiteTypePrice>
 
-@model IEnumerable<RVSite.Models.SiteTypePrice>
+    @{
+    ViewData["Title"] = "Site Type Pricing";
 
-<h2>Pricing for @ViewBag.SiteType.Name</h2>
+    var siteType = ViewBag.SiteType as RVSite.Models.SiteType;
 
-<a asp-action="Create" asp-route-id="@ViewBag.SiteType.SiteTypeID" class="btn btn-primary">
-    Add Price Range
-</a>
+    var siteTypeId =
+        siteType?.SiteTypeID
+        ?? (ViewBag.SiteTypeID is int id ? id : 0);
 
-<table class="table mt-3">
-    <thead>
-        <tr>
-            <th>Start</th>
-            <th>End</th>
-            <th>Price</th>
-            <th>Actions</th>
-        </tr>
-    </thead>
-    <tbody>
-        @foreach (var p in Model)
+    var siteTypeName =
+        siteType?.Name
+        ?? ViewBag.SiteTypeName as string
+        ?? "Site Type";
+    }
+
+    <section class="card admin-hero mb-4">
+        <div class="card-body p-4 p-lg-5">
+            <div class="d-flex flex-column flex-lg-row
+                    justify-content-between
+                    align-items-lg-center
+                    gap-3">
+
+                <div>
+                    <span class="home-kicker">
+                        Seasonal Pricing
+                    </span>
+
+                    <h1 class="page-title">
+                        Pricing for @siteTypeName
+                    </h1>
+
+                    <p class="page-subtitle mb-0">
+                        Manage date-based nightly rates for this campsite category.
+                    </p>
+                </div>
+
+                @if (siteTypeId > 0)
+            {
+                <a asp-controller="SiteTypePrice"
+                   asp-action="Create"
+                   asp-route-siteTypeId="@siteTypeId"
+                   class="btn btn-primary px-4">
+                    Add Price Range
+                </a>
+            }
+            </div>
+        </div>
+    </section>
+
+    <section class="card">
+        <div class="card-header">
+            <div class="d-flex flex-column flex-sm-row
+                    justify-content-between
+                    align-items-sm-center
+                    gap-3">
+
+                <div>
+                    <h2 class="h5 mb-1">
+                        Pricing Schedule
+                    </h2>
+
+                    <p class="mb-0 text-muted">
+                        @Model.Count() price range(s)
+                    </p>
+                </div>
+
+                <div class="d-flex flex-wrap gap-2">
+                    <a asp-controller="SiteType"
+                       asp-action="Index"
+                       class="btn btn-sm btn-outline-secondary">
+                        Back to Site Types
+                    </a>
+
+                    @if (siteTypeId > 0)
+                {
+                    <a asp-controller="SiteTypePrice"
+                       asp-action="Create"
+                       asp-route-siteTypeId="@siteTypeId"
+                       class="btn btn-primary px-4">
+                        Add Price Range
+                    </a>
+                }
+                </div>
+            </div>
+        </div>
+
+        <div class="card-body p-0">
+            @if (Model.Any())
         {
-            <tr>
-                <td>@p.StartDate.ToShortDateString()</td>
-                <td>@(p.EndDate?.ToShortDateString() ?? "Current")</td>
-                <td>@p.Price</td>
-                <td>
-                    <a asp-action="Edit" asp-route-id="@p.SiteTypePriceID" class="btn btn-sm btn-warning">Edit</a>
-                    <a asp-action="Delete" asp-route-id="@p.SiteTypePriceID" class="btn btn-sm btn-danger">Delete</a>
-                </td>
-            </tr>
+            <div class="table-responsive">
+                <table class="table table-hover
+                              align-middle
+                              admin-table
+                              mb-0">
+
+                    <thead>
+                        <tr>
+                            <th>Start Date</th>
+                            <th>End Date</th>
+                            <th class="text-end">
+                                Nightly Rate
+                            </th>
+                            <th class="text-end">
+                                Actions
+                            </th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+                        @foreach (var price in Model.OrderBy(p => p.StartDate))
+                        {
+                        <tr>
+                            <td>
+                                @price.StartDate.ToString("MMM d, yyyy")
+                            </td>
+
+                            <td>
+                                @if (price.EndDate.HasValue)
+                                    {
+                                @price.EndDate.Value.ToString("MMM d, yyyy")
+                                    }
+                                    else
+                                    {
+                                <span class="badge bg-success">
+                                    Current
+                                </span>
+                                    }
+                            </td>
+
+                            <td class="text-end fw-semibold">
+                                @price.Price.ToString("C")
+                            </td>
+
+                            <td class="text-end">
+                                <div class="d-inline-flex
+                                                flex-wrap
+                                                justify-content-end
+                                                gap-2">
+
+                                    <a asp-controller="SiteTypePrice"
+                                       asp-action="Edit"
+                                       asp-route-id="@price.SiteTypePriceID"
+                                       class="btn btn-sm btn-outline-primary">
+                                        Edit
+                                    </a>
+
+                                    <a asp-controller="SiteTypePrice"
+                                       asp-action="Delete"
+                                       asp-route-id="@price.SiteTypePriceID"
+                                       class="btn btn-sm btn-outline-danger">
+                                        Delete
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
         }
-    </tbody>
-</table>
+        else
+        {
+            <div class="text-center p-5">
+                <h2 class="h5 mb-2">
+                    No pricing ranges have been added
+                </h2>
+
+                <p class="text-muted mb-4">
+                    Add a price range to define the nightly rate for this site type.
+                </p>
+
+                @if (siteTypeId > 0)
+                {
+                <a asp-controller="SiteTypePrice"
+                   asp-action="Create"
+                   asp-route-id="@siteTypeId"
+                   class="btn btn-primary">
+                    Add First Price Range
+                </a>
+                }
+                else
+                {
+                <div class="alert alert-warning mb-0">
+                    The site type information was not supplied to this page.
+                </div>
+                }
+            </div>
+        }
+        </div>
+    </section>

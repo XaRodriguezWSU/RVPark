@@ -1,20 +1,83 @@
-﻿@*
-    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
-*@
+﻿@model RVSite.Models.SiteType
+
 @{
+    ViewData["Title"] = "Edit Site Type";
 }
 
-@model RVSite.Models.SiteType
+<section class="card admin-hero mb-4">
+    <div class="card-body p-4 p-lg-5">
+        <span class="home-kicker">Site Configuration</span>
 
-<h2>Edit Site Type</h2>
+        <h1 class="page-title">Edit Site Type</h1>
 
-<form asp-action="Edit">
-    <input type="hidden" asp-for="SiteTypeID" />
-
-    <div class="form-group">
-        <label>Name</label>
-        <input asp-for="Name" class="form-control" />
+        <p class="page-subtitle mb-0">
+            Update the name used to identify this campsite category.
+        </p>
     </div>
+</section>
 
-    <button class="btn btn-success">Save</button>
-</form>
+<div class="row justify-content-center">
+    <div class="col-lg-8 col-xl-7">
+        <section class="card">
+            <div class="card-header">
+                <h2 class="h5 mb-0">Site Type Details</h2>
+            </div>
+
+            <form asp-action="Edit"
+                  asp-route-id="@Model.SiteTypeID"
+                  method="post">
+
+                @Html.AntiForgeryToken()
+
+                <input type="hidden"
+                       asp-for="SiteTypeID" />
+
+                <div class="card-body p-4">
+                    <div asp-validation-summary="ModelOnly"
+                         class="alert alert-danger"
+                         role="alert">
+                    </div>
+
+                    <div>
+                        <label asp-for="Name"
+                               class="form-label">
+                            Site Type Name
+                        </label>
+
+                        <input asp-for="Name"
+                               class="form-control" />
+
+                        <span asp-validation-for="Name"
+                              class="text-danger">
+                        </span>
+                    </div>
+
+                    <div class="alert alert-light border mt-4 mb-0">
+                        Changing this name will affect how this site type appears
+                        throughout the application.
+                    </div>
+                </div>
+
+                <div class="card-footer bg-white">
+                    <div class="d-flex flex-column flex-sm-row justify-content-end gap-2">
+                        <a asp-action="Index"
+                           class="btn btn-outline-secondary">
+                            Cancel
+                        </a>
+
+                        <button type="submit"
+                                class="btn btn-primary px-4">
+                            Save Changes
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </section>
+    </div>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}
