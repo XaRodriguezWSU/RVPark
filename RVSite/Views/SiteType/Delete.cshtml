@@ -1,16 +1,69 @@
-﻿@*
-    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
-*@
+﻿@model RVSite.Models.SiteType
+
 @{
+    ViewData["Title"] = "Delete Site Type";
 }
 
-@model RVSite.Models.SiteType
+<section class="card admin-hero mb-4">
+    <div class="card-body p-4 p-lg-5">
+        <span class="home-kicker">Site Configuration</span>
 
-<h2>Delete Site Type</h2>
+        <h1 class="page-title">Delete Site Type</h1>
 
-<p>Are you sure you want to delete @Model.Name?</p>
+        <p class="page-subtitle mb-0">
+            Review this site type before permanently removing it.
+        </p>
+    </div>
+</section>
 
-<form asp-action="Delete">
-    <input type="hidden" asp-for="SiteTypeID" />
-    <button class="btn btn-danger">Delete</button>
-</form>
+<div class="row justify-content-center">
+    <div class="col-lg-8 col-xl-7">
+        <section class="card border-danger">
+            <div class="card-header bg-danger-subtle border-danger">
+                <h2 class="h5 mb-0 text-danger">
+                    Confirm Deletion
+                </h2>
+            </div>
+
+            <div class="card-body p-4">
+                <div class="alert alert-warning">
+                    <strong>This action cannot be undone.</strong>
+                    Make sure this site type is not currently assigned to any campsites
+                    or pricing records before deleting it.
+                </div>
+
+                <div class="detail-box">
+                    <span class="detail-label">Site Type</span>
+
+                    <strong class="fs-5">
+                        @Model.Name
+                    </strong>
+                </div>
+            </div>
+
+            <div class="card-footer bg-white">
+                <form asp-action="Delete"
+                      asp-route-id="@Model.SiteTypeID"
+                      method="post">
+
+                    @Html.AntiForgeryToken()
+
+                    <input type="hidden"
+                           asp-for="SiteTypeID" />
+
+                    <div class="d-flex flex-column flex-sm-row justify-content-end gap-2">
+                        <a asp-action="Index"
+                           class="btn btn-outline-secondary">
+                            Cancel
+                        </a>
+
+                        <button type="submit"
+                                class="btn btn-danger px-4">
+                            Delete Site Type
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </section>
+    </div>
+</div>
