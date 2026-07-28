@@ -5,9 +5,11 @@ namespace RVSite.Data
 {
     public class DataSeeder
     {
-        public static void Seed(AppDbContext db)
+        public static void Seed(AppDbContext db, IWebHostEnvironment env)
         {
-            // Ensure roles exist
+            // ---------------------------
+            // 1. ROLES
+            // ---------------------------
             if (!db.Role.Any())
             {
                 db.Role.AddRange(new[]
@@ -24,7 +26,9 @@ namespace RVSite.Data
             var staffRole = db.Role.First(r => r.Type == RoleType.Staff);
             var customerRole = db.Role.First(r => r.Type == RoleType.Customer);
 
-            // Seed Site Types
+            // ---------------------------
+            // 2. SITE TYPES
+            // ---------------------------
             if (!db.SiteTypes.Any())
             {
                 db.SiteTypes.AddRange(new[]
@@ -41,7 +45,9 @@ namespace RVSite.Data
             var tentType = db.SiteTypes.First(st => st.Name == "Tent");
             var cabinType = db.SiteTypes.First(st => st.Name == "Cabin");
 
-            // Seed Site Type Prices
+            // ---------------------------
+            // 3. SITE TYPE PRICES
+            // ---------------------------
             if (!db.SiteTypePrices.Any())
             {
                 db.SiteTypePrices.AddRange(new[]
@@ -79,7 +85,9 @@ namespace RVSite.Data
                 db.SaveChanges();
             }
 
-            // Seed Sites (2–3 per type)
+            // ---------------------------
+            // 4. SITES (2–3 per type)
+            // ---------------------------
             if (!db.Sites.Any())
             {
                 db.Sites.AddRange(new[]
@@ -101,7 +109,9 @@ namespace RVSite.Data
                 db.SaveChanges();
             }
 
-            // Seed Users
+            // ---------------------------
+            // 5. USERS (Admin, Employee, Customer)
+            // ---------------------------
             if (!db.Users.Any())
             {
                 db.Users.AddRange(new[]
@@ -112,11 +122,13 @@ namespace RVSite.Data
                         LastName = "User",
                         Email = "admin@rvpark.com",
                         PhoneNumber = "555-0001",
-                        PasswordHash = "admin123",
+                        PasswordHash = "admin123", // plain text for demo
                         MilitaryID = "A001",
                         BaseName = "Hill AFB",
                         Rank = "E-6",
-                        RoleID = adminRole.RoleID
+                        RoleID = adminRole.RoleID,
+                        EmailConfirmed = true,
+                        IsLocked = false
                     },
                     new User
                     {
@@ -128,7 +140,9 @@ namespace RVSite.Data
                         MilitaryID = "S001",
                         BaseName = "Hill AFB",
                         Rank = "E-4",
-                        RoleID = staffRole.RoleID
+                        RoleID = staffRole.RoleID,
+                        EmailConfirmed = true,
+                        IsLocked = false
                     },
                     new User
                     {
@@ -140,7 +154,9 @@ namespace RVSite.Data
                         MilitaryID = "C001",
                         BaseName = "Hill AFB",
                         Rank = "E-3",
-                        RoleID = customerRole.RoleID
+                        RoleID = customerRole.RoleID,
+                        EmailConfirmed = true,
+                        IsLocked = false
                     }
                 });
 
@@ -150,17 +166,18 @@ namespace RVSite.Data
             var demoCustomer = db.Users.First(u => u.Email == "customer@rvpark.com");
             var allSites = db.Sites.ToList();
 
-            // Seed 12 Reservations
+            // ---------------------------
+            // 6. RESERVATIONS (12 varied)
+            // ---------------------------
             if (!db.Reservations.Any())
             {
                 var reservations = new List<Reservation>();
                 var today = DateTime.Today;
 
-                // Create varied reservations
                 for (int i = 0; i < 12; i++)
                 {
                     var site = allSites[i % allSites.Count];
-                    var checkIn = today.AddDays(i - 6);   // some past, some future
+                    var checkIn = today.AddDays(i - 6);   // mix past & future
                     var checkOut = checkIn.AddDays(3);
 
                     reservations.Add(new Reservation
@@ -169,15 +186,61 @@ namespace RVSite.Data
                         SiteID = site.SiteID,
                         CheckInDate = checkIn,
                         CheckOutDate = checkOut,
+                        ReservationDate = checkIn.AddDays(-10),
                         NumberOfAdults = 2,
                         NumberOfChildren = i % 3,
                         NumberOfPets = i % 2,
-                        ReservationStatus = (ReservationStatus)(i % 4), // rotates through statuses
-                        TotalCost = site.BaseRate * 3
+                        ReservationStatus = (ReservationStatus)(i % 4), // rotates statuses
+                        TotalCost = site.BaseRate * 3,
+                        BalanceDue = site.BaseRate * 3,
+                        SpecialRequests = (i % 2 == 0) ? "Near restroom" : "Quiet area"
                     });
                 }
 
                 db.Reservations.AddRange(reservations);
+                db.SaveChanges();
+            }
+
+            // ---------------------------
+            // 7. SITE PHOTOS (seed demo images)
+            // ---------------------------
+            if (!db.SitePhoto.Any())
+            {
+                var sites = db.Sites.ToList();
+                var now = DateTime.Now;
+
+                foreach (var site in sites)
+                {
+                    // Create folder: wwwroot/storage/photos/<SiteID>/
+                    var folderPath = Path.Combine(env.WebRootPath, "storage", "photos", site.SiteID.ToString());
+                    Directory.CreateDirectory(folderPath);
+
+                    // Seed 1–2 photos per site
+                    for (int i = 1; i <= 2; i++)
+                    {
+                        // Use GUID filenames (same as your upload logic)
+                        var fileName = $"{Guid.NewGuid()}.jpg";
+
+                        // Physical file path
+                        var physicalPath = Path.Combine(folderPath, fileName);
+
+                        // Copy a placeholder image into the folder
+                        // (You must place a placeholder file in wwwroot/storage/seed/placeholder.jpg)
+                        var placeholder = Path.Combine(env.WebRootPath, "storage", "seed", "placeholder.jpg");
+                        System.IO.File.Copy(placeholder, physicalPath, overwrite: true);
+
+                        // Save DB record
+                        db.SitePhoto.Add(new SitePhoto
+                        {
+                            SiteID = site.SiteID,
+                            Caption = $"{site.SiteNumber} - Photo {i}",
+                            FilePath = $"/storage/photos/{site.SiteID}/{fileName}",
+                            SortOrder = i,
+                            UploadedAt = now
+                        });
+                    }
+                }
+
                 db.SaveChanges();
             }
         }
