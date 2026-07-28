@@ -39,5 +39,11 @@ namespace RVSite.Controllers
         {
             return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
         }
+
+        // RBA Access denied
+        public IActionResult AccessDenied()
+        {
+            return View();
+        }
     }
 }

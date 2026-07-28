@@ -1,32 +1,127 @@
 ﻿@model RVSite.Models.SiteTypePrice
-@*
-    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
-*@
+
 @{
+    ViewData["Title"] = "Add Price Range";
 }
 
-<h2>Add Price Range</h2>
+<section class="card admin-hero mb-4">
+    <div class="card-body p-4 p-lg-5">
+        <span class="home-kicker">Seasonal Pricing</span>
 
-<form asp-action="Create" asp-route-id="@Model.SiteTypeID">
-    <div asp-validation-summary="All" class="text-danger"></div>
+        <h1 class="page-title">Add Price Range</h1>
 
-    <input type="hidden" asp-for="SiteTypeID" />
-
-
-    <div class="form-group">
-        <label>Start Date</label>
-        <input asp-for="StartDate" type="date" class="form-control" />
+        <p class="page-subtitle mb-0">
+            Define a nightly rate for a specific date range.
+        </p>
     </div>
+</section>
 
-    <div class="form-group">
-        <label>End Date (optional)</label>
-        <input asp-for="EndDate" type="date" class="form-control" />
+<div class="row justify-content-center">
+    <div class="col-lg-9 col-xl-8">
+        <section class="card">
+            <div class="card-header">
+                <h2 class="h5 mb-0">Pricing Details</h2>
+            </div>
+
+            <form asp-action="Create"
+                  asp-route-id="@Model.SiteTypeID"
+                  method="post">
+
+                @Html.AntiForgeryToken()
+
+                <input type="hidden"
+                       asp-for="SiteTypeID" />
+
+                <div class="card-body p-4">
+                    <div asp-validation-summary="All"
+                         class="alert alert-danger"
+                         role="alert">
+                    </div>
+
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label asp-for="StartDate"
+                                   class="form-label">
+                                Start Date
+                            </label>
+
+                            <input asp-for="StartDate"
+                                   type="date"
+                                   class="form-control" />
+
+                            <span asp-validation-for="StartDate"
+                                  class="text-danger">
+                            </span>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label asp-for="EndDate"
+                                   class="form-label">
+                                End Date
+                                <span class="text-muted fw-normal">
+                                    (optional)
+                                </span>
+                            </label>
+
+                            <input asp-for="EndDate"
+                                   type="date"
+                                   class="form-control" />
+
+                            <span asp-validation-for="EndDate"
+                                  class="text-danger">
+                            </span>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label asp-for="Price"
+                                   class="form-label">
+                                Nightly Rate
+                            </label>
+
+                            <div class="input-group">
+                                <span class="input-group-text">$</span>
+
+                                <input asp-for="Price"
+                                       type="number"
+                                       min="0"
+                                       step="0.01"
+                                       class="form-control"
+                                       placeholder="0.00" />
+                            </div>
+
+                            <span asp-validation-for="Price"
+                                  class="text-danger">
+                            </span>
+                        </div>
+                    </div>
+
+                    <div class="alert alert-light border mt-4 mb-0">
+                        Leave the end date blank when the price should remain active
+                        until another pricing range replaces it.
+                    </div>
+                </div>
+
+                <div class="card-footer bg-white">
+                    <div class="d-flex flex-column flex-sm-row justify-content-end gap-2">
+                        <a asp-action="Index"
+                           asp-route-siteTypeId="@Model.SiteTypeID"
+                           class="btn btn-outline-secondary">
+                            Cancel
+                        </a>
+
+                        <button type="submit"
+                                class="btn btn-primary px-4">
+                            Add Price Range
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </section>
     </div>
+</div>
 
-    <div class="form-group">
-        <label>Price</label>
-        <input asp-for="Price" class="form-control" />
-    </div>
-
-    <button class="btn btn-success">Save</button>
-</form>
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}

@@ -1,4 +1,5 @@
 ﻿@model RVSite.Models.Fee
+@inject RVSite.Services.CostService CostService
 
 @{
     ViewData["Title"] = "Delete Fee";
@@ -64,6 +65,21 @@
 
                 </div>
 
+            </div>
+
+            <div class="col-md-6">
+                <div class="detail-box">
+                    <span>Accrued Amount</span>
+
+                    @if (Model.NameCode == RVSite.Models.FeeCodes.Cancellation)
+                    {
+                        <strong>@CostService.CalculateFeeAmount(Model).ToString("C")</strong>
+                    }
+                    else
+                    {
+                        <strong class="text-muted">N/A</strong>
+                    }
+                </div>
             </div>
 
             <div class="col-md-6">

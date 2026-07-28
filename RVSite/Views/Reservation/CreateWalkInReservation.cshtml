@@ -1,0 +1,465 @@
+﻿@using RVSite.Models
+
+@{
+    ViewData["Title"] = "Create Walk-In Reservation";
+
+    var customer = ViewBag.Customer as User;
+    var availableSites =
+        ViewBag.AvailableSites as List<Site> ?? new List<Site>();
+
+    DateTime checkInDate =
+        ViewBag.CheckInDate is DateTime checkIn
+            ? checkIn
+            : DateTime.Today;
+
+    DateTime checkOutDate =
+        ViewBag.CheckOutDate is DateTime checkOut
+            ? checkOut
+            : DateTime.Today.AddDays(1);
+
+    int numberOfAdults =
+        ViewBag.NumberOfAdults is int adults
+            ? adults
+            : 1;
+
+    int numberOfChildren =
+        ViewBag.NumberOfChildren is int children
+            ? children
+            : 0;
+
+    int numberOfPets =
+        ViewBag.NumberOfPets is int pets
+            ? pets
+            : 0;
+
+    string specialRequests =
+        ViewBag.SpecialRequests as string ?? string.Empty;
+
+    bool dateSearchPerformed =
+        ViewBag.DateSearchPerformed == true;
+}
+
+<section class="card admin-hero mb-4">
+    <div class="card-body p-4 p-lg-5">
+        <div class="d-flex flex-column flex-lg-row justify-content-between align-items-lg-center gap-3">
+            <div>
+                <span class="home-kicker">
+                    Employee Reservation Management
+                </span>
+
+                <h1 class="page-title">
+                    Create Walk-In Reservation
+                </h1>
+
+                <p class="page-subtitle mb-0">
+                    Choose reservation dates, select an available site and enter guest information.
+                </p>
+            </div>
+
+            <a asp-controller="Reservation"
+               asp-action="WalkIn"
+               asp-route-selectedCustomerId="@customer?.UserID"
+               class="btn btn-outline-secondary">
+                Back to Customer
+            </a>
+        </div>
+    </div>
+</section>
+
+@if (customer == null)
+{
+    <div class="alert alert-danger">
+        The selected customer could not be found.
+    </div>
+}
+else
+{
+    <section class="card mb-4">
+        <div class="card-header">
+            <h2 class="h5 mb-1">
+                Customer Information
+            </h2>
+
+            <p class="mb-0 text-muted">
+                This reservation will be created for the customer below.
+            </p>
+        </div>
+
+        <div class="card-body">
+            <div class="row g-3">
+                <div class="col-md-4">
+                    <div class="border rounded p-3 h-100">
+                        <div class="small text-muted mb-1">
+                            Customer
+                        </div>
+
+                        <div class="fw-semibold">
+                            @customer.FirstName @customer.LastName
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-4">
+                    <div class="border rounded p-3 h-100">
+                        <div class="small text-muted mb-1">
+                            Email
+                        </div>
+
+                        <div class="fw-semibold text-break">
+                            @customer.Email
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-4">
+                    <div class="border rounded p-3 h-100">
+                        <div class="small text-muted mb-1">
+                            Phone
+                        </div>
+
+                        <div class="fw-semibold">
+                            @customer.PhoneNumber
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="card mb-4">
+        <div class="card-header">
+            <h2 class="h5 mb-1">
+                Check Site Availability
+            </h2>
+
+            <p class="mb-0 text-muted">
+                Select the check-in and check-out dates to find available sites.
+            </p>
+        </div>
+
+        <div class="card-body">
+            @if (ViewBag.DateError != null)
+            {
+                <div class="alert alert-danger">
+                    @ViewBag.DateError
+                </div>
+            }
+
+            <form method="get"
+                  asp-controller="Reservation"
+                  asp-action="CreateWalkInReservation">
+
+                <input type="hidden"
+                       name="customerId"
+                       value="@customer.UserID" />
+
+                <div class="row g-3 align-items-end">
+                    <div class="col-md-5">
+                        <label for="checkInDateSearch"
+                               class="form-label">
+                            Check-In Date
+                        </label>
+
+                        <input id="checkInDateSearch"
+                               name="checkInDate"
+                               type="date"
+                               class="form-control"
+                               value="@checkInDate.ToString("yyyy-MM-dd")"
+                               min="@DateTime.Today.ToString("yyyy-MM-dd")"
+                               required />
+                    </div>
+
+                    <div class="col-md-5">
+                        <label for="checkOutDateSearch"
+                               class="form-label">
+                            Check-Out Date
+                        </label>
+
+                        <input id="checkOutDateSearch"
+                               name="checkOutDate"
+                               type="date"
+                               class="form-control"
+                               value="@checkOutDate.ToString("yyyy-MM-dd")"
+                               min="@DateTime.Today.AddDays(1).ToString("yyyy-MM-dd")"
+                               required />
+                    </div>
+
+                    <div class="col-md-2">
+                        <button type="submit"
+                                class="btn btn-primary w-100">
+                            Find Sites
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </section>
+
+    <form method="post"
+          asp-controller="Reservation"
+          asp-action="CreateWalkInReservation">
+
+        @Html.AntiForgeryToken()
+
+        <input type="hidden"
+               name="customerId"
+               value="@customer.UserID" />
+
+        <input type="hidden"
+               name="checkInDate"
+               value="@checkInDate.ToString("yyyy-MM-dd")" />
+
+        <input type="hidden"
+               name="checkOutDate"
+               value="@checkOutDate.ToString("yyyy-MM-dd")" />
+
+        @if (ViewData.ModelState.ErrorCount > 0)
+        {
+            <div asp-validation-summary="All"
+                 class="alert alert-danger"
+                 role="alert">
+            </div>
+        }
+
+        <div class="row g-4">
+            <div class="col-lg-7">
+                <section class="card h-100">
+                    <div class="card-header">
+                        <h2 class="h5 mb-1">
+                            Available Sites
+                        </h2>
+
+                        <p class="mb-0 text-muted">
+                            Choose one site for the selected dates.
+                        </p>
+                    </div>
+
+                    <div class="card-body">
+                        @if (!dateSearchPerformed)
+                        {
+                            <div class="text-center py-5">
+                                <h3 class="h6 mb-2">
+                                    Search for available sites
+                                </h3>
+
+                                <p class="text-muted mb-0">
+                                    Select reservation dates above and click Find Sites.
+                                </p>
+                            </div>
+                        }
+                        else if (!availableSites.Any())
+                        {
+                            <div class="text-center py-5">
+                                <h3 class="h6 mb-2">
+                                    No sites are available
+                                </h3>
+
+                                <p class="text-muted mb-0">
+                                    Try selecting different reservation dates.
+                                </p>
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="row g-3">
+                                @foreach (var site in availableSites)
+                                {
+                                    int nights =
+                                        (checkOutDate - checkInDate).Days;
+
+                                    decimal estimatedCost =
+                                        nights * site.BaseRate;
+
+                                    <div class="col-12">
+                                        <label class="border rounded p-3 d-block">
+                                            <div class="d-flex align-items-start gap-3">
+                                                <input type="radio"
+                                                       name="siteId"
+                                                       value="@site.SiteID"
+                                                       class="form-check-input mt-1"
+                                                       required />
+
+                                                <div class="flex-grow-1">
+                                                    <div class="d-flex flex-column flex-md-row justify-content-between gap-2">
+                                                        <div>
+                                                            <div class="fw-semibold">
+                                                                Site @site.SiteNumber
+                                                            </div>
+
+                                                            <div class="small text-muted">
+                                                                @(site.SiteType?.Name ?? "Site")
+                                                            </div>
+                                                        </div>
+
+                                                        <div class="text-md-end">
+                                                            <div class="fw-semibold">
+                                                                @site.BaseRate.ToString("C") per night
+                                                            </div>
+
+                                                            <div class="small text-muted">
+                                                                Estimated total:
+                                                                @estimatedCost.ToString("C")
+                                                            </div>
+                                                        </div>
+                                                    </div>
+
+                                                    <div class="row g-2 mt-2">
+                                                        <div class="col-sm-4">
+                                                            <span class="small text-muted">
+                                                                Max RV Length
+                                                            </span>
+
+                                                            <div>
+                                                                @site.MaxRVLength ft
+                                                            </div>
+                                                        </div>
+
+                                                        <div class="col-sm-4">
+                                                            <span class="small text-muted">
+                                                                Status
+                                                            </span>
+
+                                                            <div>
+                                                                @site.SiteStatus
+                                                            </div>
+                                                        </div>
+
+                                                        <div class="col-sm-4">
+                                                            <span class="small text-muted">
+                                                                Nights
+                                                            </span>
+
+                                                            <div>
+                                                                @nights
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </label>
+                                    </div>
+                                }
+                            </div>
+                        }
+                    </div>
+                </section>
+            </div>
+
+            <div class="col-lg-5">
+                <section class="card h-100">
+                    <div class="card-header">
+                        <h2 class="h5 mb-1">
+                            Guest Details
+                        </h2>
+
+                        <p class="mb-0 text-muted">
+                            Enter the number of guests, pets and any special requests.
+                        </p>
+                    </div>
+
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <label for="numberOfAdults"
+                                   class="form-label">
+                                Number of Adults
+                            </label>
+
+                            <input id="numberOfAdults"
+                                   name="numberOfAdults"
+                                   type="number"
+                                   class="form-control"
+                                   value="@numberOfAdults"
+                                   min="1"
+                                   max="20"
+                                   required />
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="numberOfChildren"
+                                   class="form-label">
+                                Number of Children
+                            </label>
+
+                            <input id="numberOfChildren"
+                                   name="numberOfChildren"
+                                   type="number"
+                                   class="form-control"
+                                   value="@numberOfChildren"
+                                   min="0"
+                                   max="20"
+                                   required />
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="numberOfPets"
+                                   class="form-label">
+                                Number of Pets
+                            </label>
+
+                            <input id="numberOfPets"
+                                   name="numberOfPets"
+                                   type="number"
+                                   class="form-control"
+                                   value="@numberOfPets"
+                                   min="0"
+                                   max="20"
+                                   required />
+                        </div>
+
+                        <div class="mb-4">
+                            <label for="specialRequests"
+                                   class="form-label">
+                                Special Requests
+                            </label>
+
+                            <textarea id="specialRequests"
+                                      name="specialRequests"
+                                      class="form-control"
+                                      rows="5"
+                                      maxlength="500"
+                                      placeholder="Accessibility needs, arrival notes or other requests">@specialRequests</textarea>
+                        </div>
+
+                        <div class="border rounded p-3 mb-4">
+                            <div class="d-flex justify-content-between mb-2">
+                                <span class="text-muted">
+                                    Check-In
+                                </span>
+
+                                <span class="fw-semibold">
+                                    @checkInDate.ToString("MMM d, yyyy")
+                                </span>
+                            </div>
+
+                            <div class="d-flex justify-content-between mb-2">
+                                <span class="text-muted">
+                                    Check-Out
+                                </span>
+
+                                <span class="fw-semibold">
+                                    @checkOutDate.ToString("MMM d, yyyy")
+                                </span>
+                            </div>
+
+                            <div class="d-flex justify-content-between">
+                                <span class="text-muted">
+                                    Number of Nights
+                                </span>
+
+                                <span class="fw-semibold">
+                                    @((checkOutDate - checkInDate).Days)
+                                </span>
+                            </div>
+                        </div>
+
+                        <button type="submit"
+                                class="btn btn-primary w-100"
+                                disabled="@(!dateSearchPerformed || !availableSites.Any())">
+                            Create Reservation
+                        </button>
+                    </div>
+                </section>
+            </div>
+        </div>
+    </form>
+}

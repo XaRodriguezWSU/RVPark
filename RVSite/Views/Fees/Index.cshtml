@@ -1,4 +1,5 @@
 ﻿@model IEnumerable<RVSite.Models.Fee>
+@inject RVSite.Services.CostService CostService
 
     @{
     ViewData["Title"] = "Manage Fees";
@@ -61,7 +62,20 @@
 
                             <td>@item.NameCode</td>
 
-                            <td>@item.Amount.ToString("C")</td>
+                            <td>
+                                @if (item.NameCode == RVSite.Models.FeeCodes.Cancellation)
+                                {
+                                    @CostService.CalculateFeeAmount(item).ToString("C")
+                                }
+                                else if(item.NameCode != RVSite.Models.FeeCodes.Cancellation)
+                                {
+                                    @item.Amount.ToString("C")
+                                }
+                                else
+                                {
+                                    <span class="text-muted">N/A</span>
+                                }
+                            </td>
 
                             <td>@item.EffectiveDate.ToShortDateString()</td>
 

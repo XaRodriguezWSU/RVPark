@@ -63,7 +63,7 @@
         <div class="col-sm-6 col-xl-3">
             <div class="card stat-card">
                 <div class="card-body">
-                    <span>Maintenance</span>
+                    <span>Maintenance Tasks</span>
                     <strong class="text-danger">@ViewBag.MaintenanceSites</strong>
                 </div>
             </div>
@@ -173,12 +173,33 @@
                         Edit Reservations
                     </a>
 
+                    <a asp-controller="Admin" asp-action="ReservationPolicies" class="btn btn-outline-secondary">
+                        Manage Reservation Policies
+                    </a>
+
                     <a asp-controller="Admin" asp-action="Employees" class="btn btn-outline-secondary">
                         Manage Employees
                     </a>
 
                     <a asp-controller="Fees" asp-action="Index" class="btn btn-outline-secondary">
                         Manage Fees
+                    </a>
+                    <a asp-controller="SiteType"
+                       asp-action="Index"
+                       class="btn btn-outline-secondary">
+                        Manage Site Types and Pricing
+                    </a>
+
+                    <a asp-controller="Maintenance"
+                       asp-action="Index"
+                       class="btn btn-outline-secondary">
+                        Maintenance Tasks
+                    </a>
+
+                    <a asp-controller="Admin"
+                       asp-action="SpecialEventPolicies"
+                       class="btn btn-outline-secondary">
+                        Special Event Policies
                     </a>
                 </div>
             </div>

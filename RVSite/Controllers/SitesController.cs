@@ -1,100 +1,229 @@
-
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using RVSite.Data;
 using RVSite.Models;
 
-public class SitesController : Controller
+namespace RVSite.Controllers
 {
-    private readonly AppDbContext _context;
-
-    public SitesController(AppDbContext context)
+    [Authorize(Roles = "Admin")]
+    public class SitesController : Controller
     {
-        _context = context;
-    }
+        private readonly AppDbContext _context;
 
-    // GET: SITES
-    public async Task<IActionResult> Index()    
-    {
-        return View(await _context.Sites.Include(s => s.SiteType).ToListAsync());
-    }
-
-    // GET: SITES/Details/5
-    public async Task<IActionResult> Details(int id)
-    {
-        if (id == null)
+        public SitesController(AppDbContext context)
         {
-            return NotFound();
+            _context = context;
         }
 
-        var site = await _context.Sites
-            .Include(s => s.SiteType)
-            .FirstOrDefaultAsync(m => m.SiteID == id);
-        if (site == null)
+        // ---------------------------------------------------------
+        // PUBLIC CAMPSITE SEARCH
+        // ---------------------------------------------------------
+
+        [AllowAnonymous]
+        [HttpGet]
+        public async Task<IActionResult> Search()
         {
-            return NotFound();
+            ViewBag.SiteTypes = await _context.SiteTypes
+                .OrderBy(st => st.Name)
+                .ToListAsync();
+
+            return View();
         }
 
-        return View(site);
-    }
-
-    // GET: SITES/Create
-    public IActionResult Create()
-    {
-        ViewBag.SiteTypes = _context.SiteTypes.ToList();
-        return View();
-    }
-
-    // POST: SITES/Create
-    // To protect from overposting attacks, enable the specific properties you want to bind to.
-    // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
-    [HttpPost]
-    [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Create([Bind("SiteID,SiteNumber,SiteTypeID,SiteStatus,MaxRVLength,BaseRate")] Site site)
-    {
-        if (ModelState.IsValid)
+        [AllowAnonymous]
+        [HttpGet]
+        public async Task<IActionResult> SearchResults(
+            DateTime? checkInDate,
+            DateTime? checkOutDate,
+            int? siteTypeId,
+            int? maxRVLength)
         {
-            _context.Add(site);
-            await _context.SaveChangesAsync();
-            return RedirectToAction(nameof(Index));
+            ViewBag.SiteTypes = await _context.SiteTypes
+                .OrderBy(st => st.Name)
+                .ToListAsync();
+
+            ViewBag.CheckInDate = checkInDate;
+            ViewBag.CheckOutDate = checkOutDate;
+            ViewBag.SiteTypeId = siteTypeId;
+            ViewBag.MaxRVLength = maxRVLength;
+
+            if (checkInDate.HasValue &&
+                checkOutDate.HasValue &&
+                checkOutDate.Value.Date <= checkInDate.Value.Date)
+            {
+                ModelState.AddModelError(
+                    "",
+                    "The check-out date must be after the check-in date.");
+
+                return View(
+                    "Search",
+                    new List<Site>());
+            }
+
+            var sitesQuery = _context.Sites
+                .Include(s => s.SiteType)
+                .Include(s => s.Photos)
+                .Where(s =>
+                    s.SiteStatus == SiteStatus.Available.ToString())
+                .AsQueryable();
+
+            if (siteTypeId.HasValue)
+            {
+                sitesQuery = sitesQuery.Where(s =>
+                    s.SiteTypeID == siteTypeId.Value);
+            }
+
+            if (maxRVLength.HasValue)
+            {
+                sitesQuery = sitesQuery.Where(s =>
+                    s.MaxRVLength >= maxRVLength.Value);
+            }
+
+            /*
+             * A site is unavailable when an existing, non-cancelled
+             * reservation overlaps the requested date range.
+             *
+             * Existing check-in < requested check-out
+             * Existing check-out > requested check-in
+             */
+            if (checkInDate.HasValue && checkOutDate.HasValue)
+            {
+                DateTime requestedCheckIn =
+                    checkInDate.Value.Date;
+
+                DateTime requestedCheckOut =
+                    checkOutDate.Value.Date;
+
+                sitesQuery = sitesQuery.Where(site =>
+                    !_context.Reservations.Any(reservation =>
+                        reservation.SiteID == site.SiteID &&
+                        reservation.ReservationStatus !=
+                            ReservationStatus.Cancelled &&
+                        reservation.CheckInDate < requestedCheckOut &&
+                        reservation.CheckOutDate > requestedCheckIn));
+            }
+
+            var availableSites = await sitesQuery
+                .OrderBy(s => s.SiteNumber)
+                .ToListAsync();
+
+            return View(availableSites);
         }
-        ViewBag.SiteTypes = _context.SiteTypes.ToList();
-        return View(site);
-    }
 
-    // GET: SITES/Edit/5
-    public async Task<IActionResult> Edit(int id)
-    {
-        if (id == null)
+        // ---------------------------------------------------------
+        // ADMIN SITE MANAGEMENT
+        // ---------------------------------------------------------
+
+        // GET: Sites
+        [HttpGet]
+        public async Task<IActionResult> Index()
         {
-            return NotFound();
+            var sites = await _context.Sites
+                .Include(s => s.SiteType)
+                .OrderBy(s => s.SiteNumber)
+                .ToListAsync();
+
+            return View(sites);
         }
 
-        var site = await _context.Sites.FindAsync(id);
-        if (site == null)
+        // GET: Sites/Details/5
+        [HttpGet]
+        public async Task<IActionResult> Details(int id)
         {
-            return NotFound();
-        }
-        ViewBag.SiteTypes = _context.SiteTypes.ToList();
-        return View(site);
-    }
+            var site = await _context.Sites
+                .Include(s => s.SiteType)
+                .Include(s => s.Photos)
+                .FirstOrDefaultAsync(s => s.SiteID == id);
 
-    // POST: SITES/Edit/5
-    // To protect from overposting attacks, enable the specific properties you want to bind to.
-    // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
-    [HttpPost]
-    [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Edit(int id, [Bind("SiteID,SiteNumber,SiteTypeID,SiteStatus,MaxRVLength,BaseRate")] Site site)
-    {
-        if (id != site.SiteID)
-        {
-            return NotFound();
+            if (site == null)
+            {
+                return NotFound();
+            }
+
+            return View(site);
         }
 
-        if (ModelState.IsValid)
+        // GET: Sites/Create
+        [HttpGet]
+        public async Task<IActionResult> Create()
         {
+            ViewBag.SiteTypes = await _context.SiteTypes
+                .OrderBy(st => st.Name)
+                .ToListAsync();
+
+            return View();
+        }
+
+        // POST: Sites/Create
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Create(
+            [Bind(
+                "SiteID,SiteNumber,SiteTypeID,SiteStatus," +
+                "MaxRVLength,BaseRate")]
+            Site site)
+        {
+            if (ModelState.IsValid)
+            {
+                _context.Sites.Add(site);
+                await _context.SaveChangesAsync();
+
+                return RedirectToAction(nameof(Index));
+            }
+
+            ViewBag.SiteTypes = await _context.SiteTypes
+                .OrderBy(st => st.Name)
+                .ToListAsync();
+
+            return View(site);
+        }
+
+        // GET: Sites/Edit/5
+        [HttpGet]
+        public async Task<IActionResult> Edit(int id)
+        {
+            var site = await _context.Sites.FindAsync(id);
+
+            if (site == null)
+            {
+                return NotFound();
+            }
+
+            ViewBag.SiteTypes = await _context.SiteTypes
+                .OrderBy(st => st.Name)
+                .ToListAsync();
+
+            return View(site);
+        }
+
+        // POST: Sites/Edit/5
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Edit(
+            int id,
+            [Bind(
+                "SiteID,SiteNumber,SiteTypeID,SiteStatus," +
+                "MaxRVLength,BaseRate")]
+            Site site)
+        {
+            if (id != site.SiteID)
+            {
+                return NotFound();
+            }
+
+            if (!ModelState.IsValid)
+            {
+                ViewBag.SiteTypes = await _context.SiteTypes
+                    .OrderBy(st => st.Name)
+                    .ToListAsync();
+
+                return View(site);
+            }
+
             try
             {
-                _context.Update(site);
+                _context.Sites.Update(site);
                 await _context.SaveChangesAsync();
             }
             catch (DbUpdateConcurrencyException)
@@ -103,51 +232,52 @@ public class SitesController : Controller
                 {
                     return NotFound();
                 }
-                else
-                {
-                    throw;
-                }
+
+                throw;
             }
+
             return RedirectToAction(nameof(Index));
         }
-        return View(site);
-    }
 
-    // GET: SITES/Delete/5
-    public async Task<IActionResult> Delete(int id)
-    {
-        if (id == null)
+        // GET: Sites/Delete/5
+        [HttpGet]
+        public async Task<IActionResult> Delete(int id)
         {
-            return NotFound();
+            var site = await _context.Sites
+                .Include(s => s.SiteType)
+                .FirstOrDefaultAsync(s => s.SiteID == id);
+
+            if (site == null)
+            {
+                return NotFound();
+            }
+
+            return View(site);
         }
 
-        var site = await _context.Sites
-            .FirstOrDefaultAsync(m => m.SiteID == id);
-        if (site == null)
+        // POST: Sites/Delete/5
+        [HttpPost]
+        [ActionName("Delete")]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> DeleteConfirmed(int id)
         {
-            return NotFound();
-        }
+            var site = await _context.Sites.FindAsync(id);
 
-        return View(site);
-    }
+            if (site == null)
+            {
+                return NotFound();
+            }
 
-    // POST: SITES/Delete/5
-    [HttpPost, ActionName("Delete")]
-    [ValidateAntiForgeryToken]
-    public async Task<IActionResult> DeleteConfirmed(int id)
-    {
-        var site = await _context.Sites.FindAsync(id);
-        if (site != null)
-        {
             _context.Sites.Remove(site);
+            await _context.SaveChangesAsync();
+
+            return RedirectToAction(nameof(Index));
         }
 
-        await _context.SaveChangesAsync();
-        return RedirectToAction(nameof(Index));
-    }
-
-    private bool SiteExists(int id)
-    {
-        return _context.Sites.Any(e => e.SiteID == id);
+        private bool SiteExists(int id)
+        {
+            return _context.Sites.Any(s =>
+                s.SiteID == id);
+        }
     }
 }

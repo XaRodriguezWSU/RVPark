@@ -1,4 +1,5 @@
 ﻿@model RVSite.Models.ReportsViewModel
+@inject RVSite.Services.CostService CostService
 
 @{
     ViewData["Title"] = "Reports Dashboard";
@@ -11,7 +12,7 @@
             <span class="home-kicker">Administration</span>
             <h1 class="page-title">Reports Dashboard</h1>
             <p class="page-subtitle">
-                Generate arrivals, departures, occupancy, reservation history, and revenue reports.
+                Generate arrivals, departures, occupancy, site usage, reservation history, and revenue reports.
             </p>
         </div>
     </section>
@@ -82,6 +83,16 @@
                asp-route-startDate="@Model.StartDate.ToString("yyyy-MM-dd")"
                asp-route-endDate="@Model.EndDate.ToString("yyyy-MM-dd")">
                 Occupancy
+            </a>
+        </div>
+
+        <div class="col-md">
+            <a class="btn w-100 @(Model.ReportType == "SiteUsage" ? "btn-primary" : "btn-outline-secondary")"
+               asp-action="Reports"
+               asp-route-reportType="SiteUsage"
+               asp-route-startDate="@Model.StartDate.ToString("yyyy-MM-dd")"
+               asp-route-endDate="@Model.EndDate.ToString("yyyy-MM-dd")">
+                Site Usage
             </a>
         </div>
 
@@ -228,7 +239,8 @@
                         <tr>
                             <th>Reservation ID</th>
                             <th>Guest</th>
-                            <th class="text-end">Charges</th>
+                            <th class="text-end">Reservation Total</th>
+                            <th class="text-end">Fees</th>
                             <th class="text-end">Payments</th>
                             <th class="text-end">Balance Due</th>
                             <th>Status</th>
@@ -237,18 +249,69 @@
                     <tbody>
                         @foreach (var r in Model.Reservations)
                             {
-                                var charges = r.TotalCost;
-                                var balanceDue = r.BalanceDue;
-                                var payments = charges - balanceDue;
+                                var fees = r.Fees != null
+                                    ? r.Fees.ToList()
+                                    : new List<RVSite.Models.Fee>();
 
-                        <tr>
-                            <td>@r.ReservationID</td>
-                            <td>@r.User?.FirstName @r.User?.LastName</td>
-                            <td class="text-end">@charges.ToString("C")</td>
-                            <td class="text-end">@payments.ToString("C")</td>
-                            <td class="text-end">@balanceDue.ToString("C")</td>
-                            <td>@r.ReservationStatus</td>
-                        </tr>
+                                var isCancelled =
+                                    r.ReservationStatus == RVSite.Models.ReservationStatus.Cancelled;
+
+                                var cancellationFeeTotal = fees
+                                    .Where(f => f.NameCode == RVSite.Models.FeeCodes.Cancellation)
+                                    .Sum(f => CostService.CalculateFeeAmount(f));
+
+                                var regularFeeTotal = fees
+                                    .Where(f => f.NameCode != RVSite.Models.FeeCodes.Cancellation)
+                                    .Sum(f => CostService.CalculateFeeAmount(f));
+
+                                var feeTotal = isCancelled
+                                    ? cancellationFeeTotal
+                                    : regularFeeTotal + cancellationFeeTotal;
+
+                                var reservationTotal = isCancelled
+                                    ? 0
+                                    : r.TotalCost;
+
+                                var payments = Model.Payments != null
+                                    ? Model.Payments
+                                        .Where(p => p.ReservationID == r.ReservationID &&
+                                                    p.Status == RVSite.Models.PaymentStatus.Paid)
+                                        .Sum(p => p.AmountPaid)
+                                    : 0;
+
+                                if (isCancelled)
+                                {
+                                    var cancellationFees = fees
+                                        .Where(f => f.NameCode == RVSite.Models.FeeCodes.Cancellation)
+                                        .ToList();
+
+                                    payments = 0;
+
+                                    if (cancellationFees.Any() && Model.Payments != null)
+                                    {
+                                        var cancellationFeeStartDate = cancellationFees
+                                            .Min(f => f.EffectiveDate);
+
+                                        payments = Model.Payments
+                                            .Where(p =>
+                                                p.ReservationID == r.ReservationID &&
+                                                p.Status == RVSite.Models.PaymentStatus.Paid &&
+                                                p.PaymentDate >= cancellationFeeStartDate)
+                                            .Sum(p => p.AmountPaid);
+                                    }
+                                }
+
+                                var balanceDue = Math.Max(0, feeTotal + reservationTotal - payments);
+
+                                <tr>
+                                    <td>@r.ReservationID</td>
+                                    <td>@r.User?.FirstName @r.User?.LastName</td>
+                                    <td class="text-end">@reservationTotal.ToString("C")</td>
+                                    <td class="text-end">@feeTotal.ToString("C")</td>
+                                    <td class="text-end">@payments.ToString("C")</td>
+                                    <td class="text-end">@balanceDue.ToString("C")</td>
+                                    <td>@r.ReservationStatus</td>
+                                </tr>
                             }
                     </tbody>
                 </table>
@@ -295,6 +358,34 @@
                     </div>
                 </div>
             </div>
+            }
+            else if (Model.ReportType == "SiteUsage")
+            {
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle admin-table">
+                        <thead>
+                            <tr>
+                                <th>Site Number</th>
+                                <th>Site Type</th>
+                                <th class="text-end">Reservations</th>
+                                <th class="text-end">Reserved Nights</th>
+                                <th class="text-end">Revenue</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var site in Model.SiteUsageRows)
+                            {
+                                <tr>
+                                    <td>@site.SiteNumber</td>
+                                    <td>@site.SiteTypeName</td>
+                                    <td class="text-end">@site.ReservationCount</td>
+                                    <td class="text-end">@site.ReservedNights</td>
+                                    <td class="text-end">@site.RevenueTotal.ToString("C")</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
             }
             else
             {

@@ -1,0 +1,352 @@
+﻿@model IEnumerable<RVSite.Models.User>
+
+@{
+    ViewData["Title"] = "Walk-In Reservation";
+
+    bool searchPerformed =
+        ViewBag.SearchPerformed == true;
+
+    var selectedCustomer =
+        ViewBag.SelectedCustomer as RVSite.Models.User;
+}
+
+<section class="card admin-hero mb-4">
+    <div class="card-body p-4 p-lg-5">
+        <div class="d-flex flex-column flex-lg-row justify-content-between align-items-lg-center gap-3">
+            <div>
+                <span class="home-kicker">
+                    Employee Reservation Management
+                </span>
+
+                <h1 class="page-title">
+                    Walk-In Reservation
+                </h1>
+
+                <p class="page-subtitle mb-0">
+                    Search for an existing customer or create a new customer account.
+                </p>
+            </div>
+
+            <a class="btn btn-outline-secondary"
+               asp-controller="Reservation"
+               asp-action="Index">
+                Back to Reservations
+            </a>
+        </div>
+    </div>
+</section>
+
+@if (TempData["SuccessMessage"] != null)
+{
+    <div class="alert alert-success alert-dismissible fade show"
+         role="alert">
+
+        @TempData["SuccessMessage"]
+
+        <button type="button"
+                class="btn-close"
+                data-bs-dismiss="alert">
+        </button>
+    </div>
+}
+
+@if (selectedCustomer != null)
+{
+    <section class="card mb-4">
+        <div class="card-header">
+            <h2 class="h5 mb-1">
+                Selected Customer
+            </h2>
+
+            <p class="mb-0 text-muted">
+                This customer will be used for the walk-in reservation.
+            </p>
+        </div>
+
+        <div class="card-body">
+            <div class="row g-3">
+                <div class="col-md-4">
+                    <div class="border rounded p-3 h-100">
+                        <div class="small text-muted mb-1">
+                            Customer
+                        </div>
+
+                        <div class="fw-semibold">
+                            @selectedCustomer.FirstName
+                            @selectedCustomer.LastName
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-4">
+                    <div class="border rounded p-3 h-100">
+                        <div class="small text-muted mb-1">
+                            Email
+                        </div>
+
+                        <div class="fw-semibold text-break">
+                            @selectedCustomer.Email
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-4">
+                    <div class="border rounded p-3 h-100">
+                        <div class="small text-muted mb-1">
+                            Phone
+                        </div>
+
+                        <div class="fw-semibold">
+                            @selectedCustomer.PhoneNumber
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="d-flex flex-wrap gap-2 mt-4">
+                <a asp-controller="Reservation"
+                   asp-action="CreateWalkInReservation"
+                   asp-route-customerId="@selectedCustomer.UserID"
+                   class="btn btn-primary">
+                    Continue to Reservation
+                </a>
+
+                <a asp-controller="Reservation"
+                   asp-action="WalkIn"
+                   class="btn btn-outline-secondary">
+                    Choose Another Customer
+                </a>
+            </div>
+        </div>
+    </section>
+}
+
+<div class="row g-4 align-items-stretch">
+    <div class="col-lg-8">
+        <section class="card h-100">
+            <div class="card-header">
+                <h2 class="h5 mb-1">
+                    Search Existing Customer
+                </h2>
+
+                <p class="mb-0 text-muted">
+                    Search by name, email address or phone number.
+                </p>
+            </div>
+
+            <div class="card-body">
+                <form method="get"
+                      asp-controller="Reservation"
+                      asp-action="WalkIn">
+
+                    <div class="row g-3">
+                        <div class="col-md-4">
+                            <label for="customerName"
+                                   class="form-label">
+                                Customer Name
+                            </label>
+
+                            <input id="customerName"
+                                   name="customerName"
+                                   type="text"
+                                   class="form-control"
+                                   value="@ViewBag.CustomerName"
+                                   placeholder="First or last name" />
+                        </div>
+
+                        <div class="col-md-4">
+                            <label for="email"
+                                   class="form-label">
+                                Email Address
+                            </label>
+
+                            <input id="email"
+                                   name="email"
+                                   type="email"
+                                   class="form-control"
+                                   value="@ViewBag.Email"
+                                   placeholder="customer@example.com" />
+                        </div>
+
+                        <div class="col-md-4">
+                            <label for="phoneNumber"
+                                   class="form-label">
+                                Phone Number
+                            </label>
+
+                            <input id="phoneNumber"
+                                   name="phoneNumber"
+                                   type="tel"
+                                   class="form-control"
+                                   value="@ViewBag.PhoneNumber"
+                                   placeholder="801-555-1234" />
+                        </div>
+                    </div>
+
+                    <div class="d-flex flex-wrap gap-2 mt-4">
+                        <button type="submit"
+                                class="btn btn-primary">
+                            Search Customer
+                        </button>
+
+                        <a asp-controller="Reservation"
+                           asp-action="WalkIn"
+                           class="btn btn-outline-secondary">
+                            Clear Search
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </section>
+    </div>
+
+    <div class="col-lg-4">
+        <section class="card h-100">
+            <div class="card-header">
+                <h2 class="h5 mb-1">
+                    New Customer
+                </h2>
+
+                <p class="mb-0 text-muted">
+                    Create an account when no matching customer exists.
+                </p>
+            </div>
+
+            <div class="card-body d-flex flex-column">
+                <div class="border rounded p-3 mb-3">
+                    <div class="small text-muted mb-1">
+                        Step 1
+                    </div>
+
+                    <div class="fw-semibold">
+                        Search for the customer
+                    </div>
+                </div>
+
+                <div class="border rounded p-3 mb-3">
+                    <div class="small text-muted mb-1">
+                        Step 2
+                    </div>
+
+                    <div class="fw-semibold">
+                        Select the correct account
+                    </div>
+                </div>
+
+                <div class="border rounded p-3 mb-4">
+                    <div class="small text-muted mb-1">
+                        Step 3
+                    </div>
+
+                    <div class="fw-semibold">
+                        Create an account if none exists
+                    </div>
+                </div>
+
+                <a asp-controller="Reservation"
+                   asp-action="CreateCustomer"
+                   class="btn btn-outline-primary w-100 mt-auto">
+                    Create New Customer
+                </a>
+            </div>
+        </section>
+    </div>
+</div>
+
+<section class="card mt-4 mb-5">
+    <div class="card-header">
+        <h2 class="h5 mb-1">
+            Customer Search Results
+        </h2>
+
+        <p class="mb-0 text-muted">
+            Select the customer account associated with the walk-in guest.
+        </p>
+    </div>
+
+    <div class="card-body p-0">
+        @if (!searchPerformed)
+        {
+            <div class="text-center py-5 px-3">
+                <h3 class="h6 mb-2">
+                    Search for a customer
+                </h3>
+
+                <p class="text-muted mb-0">
+                    Enter a customer name, email address or phone number above.
+                </p>
+            </div>
+        }
+        else if (!Model.Any())
+        {
+            <div class="text-center py-5 px-3">
+                <h3 class="h6 mb-2">
+                    No customer accounts found
+                </h3>
+
+                <p class="text-muted mb-3">
+                    Try another search or create a new customer account.
+                </p>
+
+                <a asp-controller="Reservation"
+                   asp-action="CreateCustomer"
+                   class="btn btn-primary">
+                    Create New Customer
+                </a>
+            </div>
+        }
+        else
+        {
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead>
+                        <tr>
+                            <th>Customer</th>
+                            <th>Email</th>
+                            <th>Phone</th>
+                            <th class="text-end">
+                                Action
+                            </th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+                        @foreach (var customer in Model)
+                        {
+                            <tr>
+                                <td>
+                                    <div class="fw-semibold">
+                                        @customer.FirstName
+                                        @customer.LastName
+                                    </div>
+
+                                    <small class="text-muted">
+                                        Customer ID:
+                                        @customer.UserID
+                                    </small>
+                                </td>
+
+                                <td class="text-break">
+                                    @customer.Email
+                                </td>
+
+                                <td>
+                                    @customer.PhoneNumber
+                                </td>
+
+                                <td class="text-end">
+                                    <a class="btn btn-sm btn-primary"
+                                       asp-controller="Reservation"
+                                       asp-action="WalkIn"
+                                       asp-route-selectedCustomerId="@customer.UserID">
+                                        Select Customer
+                                    </a>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+    </div>
+</section>

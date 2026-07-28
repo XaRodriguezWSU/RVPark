@@ -1,0 +1,144 @@
+@model IEnumerable<RVSite.Models.Site>
+
+    @{
+    ViewData["Title"] = "Available Campsites";
+
+    DateTime? checkInDate = ViewBag.CheckInDate as DateTime?;
+    DateTime? checkOutDate = ViewBag.CheckOutDate as DateTime?;
+    }
+
+    <section class="card admin-hero mb-4">
+        <div class="card-body p-4 p-lg-5">
+            <div class="d-flex flex-column flex-lg-row
+                    justify-content-between
+                    align-items-lg-center
+                    gap-3">
+
+                <div>
+                    <span class="home-kicker">
+                        Campsite Availability
+                    </span>
+
+                    <h1 class="page-title">
+                        Available Sites
+                    </h1>
+
+                    @if (checkInDate.HasValue &&
+                     checkOutDate.HasValue)
+                {
+                    <p class="page-subtitle mb-0">
+                        Showing availability from
+                        <strong>
+                            @checkInDate.Value.ToString("MMM d, yyyy")
+                        </strong>
+                        through
+                        <strong>
+                            @checkOutDate.Value.ToString("MMM d, yyyy")
+                        </strong>.
+                    </p>
+                }
+                </div>
+
+                <a asp-controller="Sites"
+                   asp-action="Search"
+                   class="btn btn-outline-primary">
+                    Modify Search
+                </a>
+            </div>
+        </div>
+    </section>
+
+    @if (Model.Any())
+{
+    <section class="card site-list-card">
+        <div class="card-header">
+            <h2 class="h5 mb-1">
+                Campsites Matching Your Search
+            </h2>
+
+            <p class="mb-0 text-muted">
+                @Model.Count() available site(s)
+            </p>
+        </div>
+
+        <div class="site-list">
+            @foreach (var site in Model)
+            {
+                var firstPhoto = site.Photos?
+                    .OrderBy(photo => photo.SortOrder)
+                    .FirstOrDefault();
+
+            <article class="site-row">
+
+                <div class="site-row-image">
+                    @if (firstPhoto != null)
+                        {
+                    <img src="@firstPhoto.FilePath"
+                         alt="Campsite @site.SiteNumber" />
+                        }
+                        else
+                        {
+                    <div class="site-image-placeholder">
+                        Image Coming Soon
+                    </div>
+                        }
+                </div>
+
+                <div class="site-row-main">
+                    <span class="site-type">
+                        @(site.SiteType?.Name ?? "Campsite")
+                    </span>
+
+                    <h3 class="h4">
+                        Site @site.SiteNumber
+                    </h3>
+
+                    <div class="site-meta">
+                        <span>
+                            Maximum RV length:
+                            <strong>@site.MaxRVLength ft</strong>
+                        </span>
+
+                        <span>
+                            Nightly rate:
+                            <strong>@site.BaseRate.ToString("C")</strong>
+                        </span>
+                    </div>
+                </div>
+
+                <div class="site-row-action">
+                    <a asp-controller="ClientReservation"
+                       asp-action="Book"
+                       asp-route-siteId="@site.SiteID"
+                       asp-route-checkInDate="@checkInDate?.ToString(" yyyy-MM-dd")"
+                       asp-route-checkOutDate="@checkOutDate?.ToString(" yyyy-MM-dd")"
+                       class="btn btn-primary">
+                        Make Reservation
+                    </a>
+                </div>
+
+            </article>
+            }
+        </div>
+    </section>
+}
+else
+{
+    <section class="card">
+        <div class="card-body text-center p-5">
+            <h2 class="h4">
+                No Available Sites Found
+            </h2>
+
+            <p class="text-muted mb-4">
+                Try different dates, another site type, or a smaller RV length.
+            </p>
+
+            <a asp-controller="Sites"
+               asp-action="Search"
+               class="btn btn-primary">
+                Modify Search
+            </a>
+        </div>
+    </section>
+}

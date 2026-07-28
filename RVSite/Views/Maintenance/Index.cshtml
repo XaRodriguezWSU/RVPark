@@ -1,0 +1,362 @@
+@model List<RVSite.Models.MaintenanceTask>
+
+@{
+    ViewData["Title"] = "Maintenance Tasks";
+
+    var sites =
+        ViewBag.Sites as List<RVSite.Models.Site>
+        ?? new List<RVSite.Models.Site>();
+
+    var newTask =
+        ViewBag.NewTask as RVSite.Models.MaintenanceTask
+        ?? new RVSite.Models.MaintenanceTask();
+}
+
+<section class="card admin-hero mb-4">
+    <div class="card-body p-4 p-lg-5">
+        <span class="home-kicker">Operations</span>
+
+        <h1 class="page-title">
+            Maintenance Tasks
+        </h1>
+
+        <p class="page-subtitle">
+            Review reported issues, monitor priority,
+            and record completed work.
+        </p>
+    </div>
+</section>
+
+@if (TempData["SuccessMessage"] != null)
+{
+    <div class="alert alert-success">
+        @TempData["SuccessMessage"]
+    </div>
+}
+
+@if (TempData["ErrorMessage"] != null)
+{
+    <div class="alert alert-danger">
+        @TempData["ErrorMessage"]
+    </div>
+}
+
+<div class="row g-4 mb-4">
+    <div class="col-md-4">
+        <section class="card stat-card">
+            <div class="card-body">
+                <span>Urgent</span>
+                <strong>@ViewBag.UrgentCount</strong>
+            </div>
+        </section>
+    </div>
+
+    <div class="col-md-4">
+        <section class="card stat-card">
+            <div class="card-body">
+                <span>Regular</span>
+                <strong>@ViewBag.RegularCount</strong>
+            </div>
+        </section>
+    </div>
+
+    <div class="col-md-4">
+        <section class="card stat-card">
+            <div class="card-body">
+                <span>Low Priority</span>
+                <strong>@ViewBag.LowCount</strong>
+            </div>
+        </section>
+    </div>
+</div>
+
+<div class="row g-4">
+
+    <div class="col-xl-8">
+        <section class="card">
+            <div class="card-header bg-white p-3">
+                <h2 class="h5 mb-0">
+                    Requested Maintenance Tasks
+                </h2>
+            </div>
+
+            <div class="card-body">
+                @if (Model.Count == 0)
+                {
+                    <div class="alert alert-info mb-0">
+                        There are no open maintenance tasks.
+                    </div>
+                }
+                else
+                {
+                    <div class="accordion"
+                         id="maintenanceAccordion">
+
+                        @foreach (var task in Model)
+                        {
+                            string priorityClass =
+                                task.Priority switch
+                                {
+                                    RVSite.Models.MaintenanceTaskPriority.Urgent
+                                        => "bg-danger",
+
+                                    RVSite.Models.MaintenanceTaskPriority.Regular
+                                        => "bg-warning text-dark",
+
+                                    _ => "bg-secondary"
+                                };
+
+                            <div class="accordion-item">
+
+                                <h2 class="accordion-header"
+                                    id="heading-@task.MaintenanceTaskID">
+
+                                    <button class="accordion-button collapsed"
+                                            type="button"
+                                            data-bs-toggle="collapse"
+                                            data-bs-target="#task-@task.MaintenanceTaskID"
+                                            aria-expanded="false"
+                                            aria-controls="task-@task.MaintenanceTaskID">
+
+                                        <span class="fw-bold me-2">
+                                            Site @task.Site?.SiteNumber
+                                        </span>
+
+                                        <span class="me-auto">
+                                            — @task.Title
+                                        </span>
+
+                                        <span class="badge @priorityClass me-3">
+                                            @task.Priority
+                                        </span>
+                                    </button>
+                                </h2>
+
+                                <div id="task-@task.MaintenanceTaskID"
+                                     class="accordion-collapse collapse"
+                                     aria-labelledby="heading-@task.MaintenanceTaskID"
+                                     data-bs-parent="#maintenanceAccordion">
+
+                                    <div class="accordion-body">
+
+                                        <div class="row g-3">
+                                            <div class="col-md-6">
+                                                <div class="detail-box">
+                                                    <span>Reported</span>
+                                                    <strong>
+                                                        @task.CreatedAt.ToString(
+                                                            "MMM d, yyyy h:mm tt")
+                                                    </strong>
+                                                </div>
+                                            </div>
+
+                                            <div class="col-md-6">
+                                                <div class="detail-box">
+                                                    <span>Reported By</span>
+                                                    <strong>
+                                                        @task.CreatedByUser?.FirstName
+                                                        @task.CreatedByUser?.LastName
+                                                    </strong>
+                                                </div>
+                                            </div>
+
+                                            <div class="col-md-6">
+                                                <div class="detail-box">
+                                                    <span>Task Type</span>
+                                                    <strong>
+                                                        @task.TaskType
+                                                    </strong>
+                                                </div>
+                                            </div>
+
+                                            <div class="col-md-6">
+                                                <div class="detail-box">
+                                                    <span>Status</span>
+                                                    <strong>
+                                                        @task.Status
+                                                    </strong>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div class="mt-3">
+                                            <h3 class="h6 fw-bold">
+                                                Details
+                                            </h3>
+
+                                            <p class="mb-0">
+                                                @task.Description
+                                            </p>
+                                        </div>
+
+                                        <div class="d-flex flex-wrap gap-2 mt-4">
+
+                                            @if (task.Status ==
+                                                RVSite.Models.MaintenanceTaskStatus.Open)
+                                            {
+                                                <form asp-controller="Maintenance"
+                                                      asp-action="Start"
+                                                      method="post">
+
+                                                    @Html.AntiForgeryToken()
+
+                                                    <input type="hidden"
+                                                           name="id"
+                                                           value="@task.MaintenanceTaskID" />
+
+                                                    <button type="submit"
+                                                            class="btn btn-outline-primary">
+                                                        Start Task
+                                                    </button>
+                                                </form>
+                                            }
+
+                                            <form asp-controller="Maintenance"
+                                                  asp-action="Complete"
+                                                  method="post">
+
+                                                @Html.AntiForgeryToken()
+
+                                                <input type="hidden"
+                                                       name="id"
+                                                       value="@task.MaintenanceTaskID" />
+
+                                                <button type="submit"
+                                                        class="btn btn-primary">
+                                                    Mark Complete
+                                                </button>
+                                            </form>
+
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        }
+
+                    </div>
+                }
+            </div>
+        </section>
+    </div>
+
+    <div class="col-xl-4">
+        <section class="card">
+            <div class="card-header bg-white p-3">
+                <h2 class="h5 mb-0">
+                    Submit a New Ticket
+                </h2>
+            </div>
+
+            <div class="card-body">
+
+                <form asp-controller="Maintenance"
+                      asp-action="Create"
+                      method="post">
+
+                    <div asp-validation-summary="All"
+                         class="text-danger mb-3">
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="SiteID"
+                               class="form-label">
+                            Site
+                        </label>
+
+                        <select id="SiteID"
+                                name="SiteID"
+                                class="form-select">
+
+                            <option value="">
+                                -- Select a Site --
+                            </option>
+
+                            @foreach (var site in sites)
+                            {
+                                if (newTask.SiteID == site.SiteID)
+                                {
+                                    <option value="@site.SiteID"
+                                            selected>
+                                        Site @site.SiteNumber
+                                    </option>
+                                }
+                                else
+                                {
+                                    <option value="@site.SiteID">
+                                        Site @site.SiteNumber
+                                    </option>
+                                }
+                            }
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="Title"
+                               class="form-label">
+                            Issue
+                        </label>
+
+                        <input id="Title"
+                               name="Title"
+                               value="@newTask.Title"
+                               class="form-control"
+                               placeholder="Example: Water hookup leaking" />
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="TaskType"
+                               class="form-label">
+                            Task Type
+                        </label>
+
+                        <select id="TaskType"
+                                name="TaskType"
+                                asp-items="Html.GetEnumSelectList<RVSite.Models.MaintenanceTaskType>()"
+                                class="form-select">
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="Priority"
+                               class="form-label">
+                            Priority
+                        </label>
+
+                        <select id="Priority"
+                                name="Priority"
+                                asp-items="Html.GetEnumSelectList<RVSite.Models.MaintenanceTaskPriority>()"
+                                class="form-select">
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="Description"
+                               class="form-label">
+                            Details
+                        </label>
+
+                        <textarea id="Description"
+                                  name="Description"
+                                  class="form-control"
+                                  rows="5"
+                                  placeholder="Describe the maintenance issue">@newTask.Description</textarea>
+                    </div>
+
+                    <button type="submit"
+                            class="btn btn-primary w-100">
+                        Submit Ticket
+                    </button>
+
+                </form>
+            </div>
+        </section>
+    </div>
+
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync(
+            "_ValidationScriptsPartial");
+    }
+}

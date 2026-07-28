@@ -1,17 +1,22 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
+using Microsoft.EntityFrameworkCore;
 using RVSite.Models;
+using RVSite.Services;
 
 namespace RVSite.Controllers
 {
+    [Authorize(Roles = "Admin")]
     public class FeesController : Controller
     {
         private readonly AppDbContext _context;
+        private readonly CostService _costService;
 
-        public FeesController(AppDbContext context)
+        public FeesController(AppDbContext context, CostService costService)
         {
             _context = context;
+            _costService = costService;
         }
 
         // GET: Fees & send to fee index view
@@ -55,6 +60,10 @@ namespace RVSite.Controllers
             {
                 _context.Add(fee);
                 await _context.SaveChangesAsync();
+
+                await _costService.UpdateReservationBalanceDueAsync(fee.ReservationID);
+                await _context.SaveChangesAsync();
+
                 return RedirectToAction(nameof(Index));
             }
 
@@ -93,9 +102,40 @@ namespace RVSite.Controllers
 
             if (ModelState.IsValid)
             {
+                var existingFee = await _context.Fees
+                   .AsNoTracking()
+                   .FirstOrDefaultAsync(f => f.FeeID == id);
+
+                if (existingFee == null)
+                {
+                    return NotFound();
+                }
+
+                if (existingFee.NameCode != FeeCodes.Cancellation &&
+                    fee.NameCode == FeeCodes.Cancellation)
+                {
+                    ModelState.AddModelError(
+                        "NameCode",
+                        "Cancellation fees are added automatically when a reservation is cancelled.");
+
+                    LoadReservationDropDown(fee.ReservationID);
+                    return View(fee);
+                }
+
+                int oldReservationID = existingFee.ReservationID;
+
                 try
                 {
                     _context.Update(fee);
+                    await _context.SaveChangesAsync();
+
+                    await _costService.UpdateReservationBalanceDueAsync(oldReservationID);
+
+                    if (oldReservationID != fee.ReservationID)
+                    {
+                        await _costService.UpdateReservationBalanceDueAsync(fee.ReservationID);
+                    }
+
                     await _context.SaveChangesAsync();
                 }
                 catch (DbUpdateConcurrencyException)
@@ -143,10 +183,15 @@ namespace RVSite.Controllers
 
             if (fee != null)
             {
+                int reservationID = fee.ReservationID;
+
                 _context.Fees.Remove(fee);
+                await _context.SaveChangesAsync();
+
+                await _costService.UpdateReservationBalanceDueAsync(reservationID);
+                await _context.SaveChangesAsync();
             }
 
-            await _context.SaveChangesAsync();
             return RedirectToAction(nameof(Index));
         }
 

@@ -49,6 +49,99 @@ namespace RVSite.Migrations
                     b.ToTable("Fees");
                 });
 
+            modelBuilder.Entity("RVSite.Models.MaintenanceTask", b =>
+                {
+                    b.Property<int>("MaintenanceTaskID")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("MaintenanceTaskID"));
+
+                    b.Property<int?>("ClosedByUserID")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("CompletedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("CompletionNotes")
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("CreatedByUserID")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasMaxLength(2000)
+                        .HasColumnType("nvarchar(2000)");
+
+                    b.Property<int>("Priority")
+                        .HasColumnType("int");
+
+                    b.Property<int>("SiteID")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("int");
+
+                    b.Property<int>("TaskType")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasMaxLength(150)
+                        .HasColumnType("nvarchar(150)");
+
+                    b.HasKey("MaintenanceTaskID");
+
+                    b.HasIndex("ClosedByUserID");
+
+                    b.HasIndex("CreatedByUserID");
+
+                    b.HasIndex("SiteID");
+
+                    b.ToTable("MaintenanceTasks");
+                });
+
+            modelBuilder.Entity("RVSite.Models.Payment", b =>
+                {
+                    b.Property<int>("PaymentID")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("PaymentID"));
+
+                    b.Property<decimal>("AmountPaid")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<int>("Method")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("PaymentDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int?>("ProcessedByUserID")
+                        .HasColumnType("int");
+
+                    b.Property<int>("ReservationID")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("int");
+
+                    b.Property<string>("TransactionReference")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("PaymentID");
+
+                    b.HasIndex("ReservationID");
+
+                    b.ToTable("Payments");
+                });
+
             modelBuilder.Entity("RVSite.Models.Reservation", b =>
                 {
                     b.Property<int>("ReservationID")
@@ -101,6 +194,53 @@ namespace RVSite.Migrations
                     b.HasIndex("UserID");
 
                     b.ToTable("Reservations");
+                });
+
+            modelBuilder.Entity("RVSite.Models.ReservationPolicy", b =>
+                {
+                    b.Property<int>("ReservationPolicyID")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("ReservationPolicyID"));
+
+                    b.Property<decimal>("CancellationDailyFeeAmount")
+                        .HasColumnType("decimal(10,2)");
+
+                    b.Property<string>("GeneralPolicyNotes")
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
+
+                    b.Property<DateTime>("LastUpdated")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("LateCancellationWindowDays")
+                        .HasColumnType("int");
+
+                    b.Property<int>("MaximumAdvanceBookingDays")
+                        .HasColumnType("int");
+
+                    b.Property<int>("PeakSeasonEndDay")
+                        .HasColumnType("int");
+
+                    b.Property<int>("PeakSeasonEndMonth")
+                        .HasColumnType("int");
+
+                    b.Property<int>("PeakSeasonMaximumStayNights")
+                        .HasColumnType("int");
+
+                    b.Property<int>("PeakSeasonStartDay")
+                        .HasColumnType("int");
+
+                    b.Property<int>("PeakSeasonStartMonth")
+                        .HasColumnType("int");
+
+                    b.Property<int>("RequiredDaysAwayBeforeReturn")
+                        .HasColumnType("int");
+
+                    b.HasKey("ReservationPolicyID");
+
+                    b.ToTable("ReservationPolicies");
                 });
 
             modelBuilder.Entity("RVSite.Models.Role", b =>
@@ -229,6 +369,48 @@ namespace RVSite.Migrations
                     b.ToTable("SiteTypePrices");
                 });
 
+            modelBuilder.Entity("RVSite.Models.SpecialEventPolicy", b =>
+                {
+                    b.Property<int>("SpecialEventPolicyID")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("SpecialEventPolicyID"));
+
+                    b.Property<int?>("CancellationWindowDays")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("EndDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("EventName")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<int?>("MaximumStayNights")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Notes")
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
+
+                    b.Property<int?>("SiteTypeID")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("StartDate")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("SpecialEventPolicyID");
+
+                    b.HasIndex("SiteTypeID");
+
+                    b.ToTable("SpecialEventPolicies");
+                });
+
             modelBuilder.Entity("RVSite.Models.User", b =>
                 {
                     b.Property<int>("UserID")
@@ -237,9 +419,19 @@ namespace RVSite.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("UserID"));
 
+                    b.Property<string>("BaseName")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
                     b.Property<string>("Email")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("EmailConfirmationToken")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<bool>("EmailConfirmed")
+                        .HasColumnType("bit");
 
                     b.Property<string>("FirstName")
                         .IsRequired()
@@ -254,6 +446,11 @@ namespace RVSite.Migrations
                         .HasMaxLength(50)
                         .HasColumnType("nvarchar(50)");
 
+                    b.Property<string>("MilitaryID")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
                     b.Property<string>("PasswordHash")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
@@ -261,6 +458,10 @@ namespace RVSite.Migrations
                     b.Property<string>("PhoneNumber")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Rank")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
 
                     b.Property<int>("RoleID")
                         .HasColumnType("int");
@@ -276,6 +477,42 @@ namespace RVSite.Migrations
                 {
                     b.HasOne("RVSite.Models.Reservation", "Reservation")
                         .WithMany("Fees")
+                        .HasForeignKey("ReservationID")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Reservation");
+                });
+
+            modelBuilder.Entity("RVSite.Models.MaintenanceTask", b =>
+                {
+                    b.HasOne("RVSite.Models.User", "ClosedByUser")
+                        .WithMany()
+                        .HasForeignKey("ClosedByUserID");
+
+                    b.HasOne("RVSite.Models.User", "CreatedByUser")
+                        .WithMany()
+                        .HasForeignKey("CreatedByUserID")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("RVSite.Models.Site", "Site")
+                        .WithMany()
+                        .HasForeignKey("SiteID")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("ClosedByUser");
+
+                    b.Navigation("CreatedByUser");
+
+                    b.Navigation("Site");
+                });
+
+            modelBuilder.Entity("RVSite.Models.Payment", b =>
+                {
+                    b.HasOne("RVSite.Models.Reservation", "Reservation")
+                        .WithMany()
                         .HasForeignKey("ReservationID")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -331,6 +568,15 @@ namespace RVSite.Migrations
                         .HasForeignKey("SiteTypeID")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.Navigation("SiteType");
+                });
+
+            modelBuilder.Entity("RVSite.Models.SpecialEventPolicy", b =>
+                {
+                    b.HasOne("RVSite.Models.SiteType", "SiteType")
+                        .WithMany()
+                        .HasForeignKey("SiteTypeID");
 
                     b.Navigation("SiteType");
                 });

@@ -1,0 +1,68 @@
+﻿@{
+    ViewData["Title"] = "Access Denied";
+}
+
+<div class="row justify-content-center py-5">
+    <div class="col-lg-8 col-xl-7">
+
+        <section class="card access-denied-card">
+            <div class="card-body text-center p-4 p-lg-5">
+
+                <div class="access-denied-icon mb-4">
+                    !
+                </div>
+
+                <span class="home-kicker">Restricted Area</span>
+
+                <h1 class="page-title">
+                    Access Denied
+                </h1>
+
+                <p class="page-subtitle mb-4">
+                    Your account does not have permission to access this page.
+                    Return to the home page or use a page available to your account.
+                </p>
+
+                <div class="d-flex flex-column flex-sm-row justify-content-center gap-2">
+
+                    <a asp-controller="Home"
+                       asp-action="Index"
+                       class="btn btn-primary">
+                        Return Home
+                    </a>
+
+                    @if (User.Identity?.IsAuthenticated ?? false)
+                    {
+                    @if (User.IsInRole("Admin") || User.IsInRole("Staff"))
+                        {
+                    <a asp-controller="Admin"
+                       asp-action="Dashboard"
+                       class="btn btn-outline-secondary">
+                        Go to Dashboard
+                    </a>
+                        }
+                        else
+                        {
+                    <a asp-controller="ClientReservation"
+                       asp-action="MyReservations"
+                       class="btn btn-outline-secondary">
+                        My Reservations
+                    </a>
+                        }
+                    }
+                    else
+                    {
+                    <a asp-controller="Login"
+                       asp-action="Index"
+                       class="btn btn-outline-secondary">
+                        Sign In
+                    </a>
+                    }
+
+                </div>
+
+            </div>
+        </section>
+
+    </div>
+</div>

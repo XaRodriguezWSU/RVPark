@@ -1,0 +1,120 @@
+@using RVSite.Models
+
+@{
+    ViewData["Title"] = "Search Campsites";
+
+    var siteTypes =
+        ViewBag.SiteTypes as IEnumerable<SiteType>
+        ?? Enumerable.Empty<SiteType>();
+}
+
+<section class="card admin-hero mb-4">
+    <div class="card-body p-4 p-lg-5">
+        <span class="home-kicker">Find Your Campsite</span>
+
+        <h1 class="page-title">Search Available Sites</h1>
+
+        <p class="page-subtitle mb-0">
+            Enter your stay dates and RV requirements to find an available campsite.
+            You do not need to sign in until you are ready to make a reservation.
+        </p>
+    </div>
+</section>
+
+<section class="card">
+    <div class="card-body p-4 p-lg-5">
+
+        <div asp-validation-summary="All"
+             class="text-danger mb-3">
+        </div>
+
+        <form asp-controller="Sites"
+              asp-action="SearchResults"
+              method="get">
+
+            <div class="row g-4">
+
+                <div class="col-md-6">
+                    <label for="checkInDate"
+                           class="form-label">
+                        Check-In Date
+                    </label>
+
+                    <input id="checkInDate"
+                           name="checkInDate"
+                           type="date"
+                           class="form-control"
+                           min="@DateTime.Today.ToString("yyyy-MM-dd")"
+                           value="@(ViewBag.CheckInDate?.ToString("yyyy-MM-dd"))"
+                           required />
+                </div>
+
+                <div class="col-md-6">
+                    <label for="checkOutDate"
+                           class="form-label">
+                        Check-Out Date
+                    </label>
+
+                    <input id="checkOutDate"
+                           name="checkOutDate"
+                           type="date"
+                           class="form-control"
+                           min="@DateTime.Today.AddDays(1).ToString("yyyy-MM-dd")"
+                           value="@(ViewBag.CheckOutDate?.ToString("yyyy-MM-dd"))"
+                           required />
+                </div>
+
+                <div class="col-md-6">
+                    <label for="siteTypeId"
+                           class="form-label">
+                        Site Type
+                    </label>
+
+                    <select id="siteTypeId"
+                            name="siteTypeId"
+                            class="form-select">
+
+                        <option value="">
+                            Any site type
+                        </option>
+
+                        @foreach (var siteType in siteTypes)
+                        {
+                        <option value="@siteType.SiteTypeID">
+                            @siteType.Name
+                        </option>
+                        }
+                    </select>
+                </div>
+
+                <div class="col-md-6">
+                    <label for="maxRVLength"
+                           class="form-label">
+                        RV Length
+                    </label>
+
+                    <div class="input-group">
+                        <input id="maxRVLength"
+                               name="maxRVLength"
+                               type="number"
+                               class="form-control"
+                               min="1"
+                               placeholder="Example: 35" />
+
+                        <span class="input-group-text">
+                            feet
+                        </span>
+                    </div>
+                </div>
+
+                <div class="col-12">
+                    <button type="submit"
+                            class="btn btn-primary px-4">
+                        Search Available Sites
+                    </button>
+                </div>
+
+            </div>
+        </form>
+    </div>
+</section>

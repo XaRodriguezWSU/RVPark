@@ -1,9 +1,11 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using RVSite.Models;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using RVSite.Models;
 
 namespace RVSite.Controllers
 {
+    [Authorize(Roles = "Admin")]
     public class SitePhotoController : Controller
     {
         private readonly AppDbContext _context;

@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using RVSite.Data;
@@ -8,6 +9,7 @@ using System.Threading.Tasks;
 
 namespace RVSite.Controllers
 {
+    [Authorize(Roles = "Admin")]
     public class AdminController : Controller
     {
         private readonly AppDbContext _context;
@@ -20,16 +22,25 @@ namespace RVSite.Controllers
         [HttpGet]
         public async Task<IActionResult> Dashboard()
         {
+            var today = DateTime.Today;
+
             var totalSites = await _context.Sites.CountAsync();
 
-            var availableSites = await _context.Sites
-                .CountAsync(s => s.SiteStatus == SiteStatus.Available.ToString());
+            var reservedSites = await _context.Reservations
+                .Where(r =>
+                    r.ReservationStatus != ReservationStatus.Cancelled &&
+                    r.CheckInDate.Date <= today &&
+                    r.CheckOutDate.Date >= today)
+                .Select(r => r.SiteID)
+                .Distinct()
+                .CountAsync();
 
-            var reservedSites = await _context.Sites
-                .CountAsync(s => s.SiteStatus == SiteStatus.Reserved.ToString());
+            var maintenanceTasks = await _context.MaintenanceTasks
+                .CountAsync(t =>
+                    t.Status == MaintenanceTaskStatus.Open ||
+                    t.Status == MaintenanceTaskStatus.InProgress);
 
-            var maintenanceSites = await _context.Sites
-                .CountAsync(s => s.SiteStatus == SiteStatus.Maintenance.ToString());
+            var availableSites = totalSites - reservedSites;
 
             var recentSites = await _context.Sites
                 .Include(s => s.SiteType)
@@ -40,7 +51,7 @@ namespace RVSite.Controllers
             ViewBag.TotalSites = totalSites;
             ViewBag.AvailableSites = availableSites;
             ViewBag.ReservedSites = reservedSites;
-            ViewBag.MaintenanceSites = maintenanceSites;
+            ViewBag.MaintenanceSites = maintenanceTasks;
             ViewBag.RecentSites = recentSites;
 
             return View();
@@ -83,12 +94,46 @@ namespace RVSite.Controllers
             var reservations = await _context.Reservations
                 .Include(r => r.User)
                 .Include(r => r.Site)
+                    .ThenInclude(s => s.SiteType)
+                .Include(r => r.Fees)
                 .Where(r => r.CheckInDate.Date <= end.Date &&
                             r.CheckOutDate.Date >= start.Date)
                 .ToListAsync();
 
             var nonCancelledReservations = reservations
                 .Where(r => r.ReservationStatus != ReservationStatus.Cancelled)
+                .ToList();
+
+            var payments = await _context.Payments
+                .Include(p => p.Reservation)
+                    .ThenInclude(r => r.User)
+                .Include(p => p.Reservation)
+                    .ThenInclude(r => r.Site)
+                        .ThenInclude(s => s.SiteType)
+                .Include(p => p.Reservation)
+                    .ThenInclude(r => r.Fees)
+                .Where(p =>
+                    p.PaymentDate.Date >= start.Date &&
+                    p.PaymentDate.Date <= end.Date)
+                .ToListAsync();
+
+            var paidPayments = payments
+                .Where(p => p.Status == PaymentStatus.Paid)
+                .ToList();
+
+            var pendingPayments = payments
+                .Where(p => p.Status == PaymentStatus.Pending)
+                .ToList();
+
+            var failedPayments = payments
+                .Where(p => p.Status == PaymentStatus.Failed)
+                .ToList();
+
+            var paymentReservations = payments
+                .Where(p => p.Reservation != null)
+                .Select(p => p.Reservation!)
+                .GroupBy(r => r.ReservationID)
+                .Select(g => g.First())
                 .ToList();
 
             var filteredReservations = selectedReportType switch
@@ -105,12 +150,17 @@ namespace RVSite.Controllers
                     .OrderBy(r => r.CheckOutDate)
                     .ToList(),
 
-                "Revenue" => nonCancelledReservations
-                    .OrderByDescending(r => r.TotalCost)
+                "Revenue" => reservations
+                    .OrderByDescending(r => r.ReservationDate)
                     .ToList(),
 
                 "Occupancy" => nonCancelledReservations
                     .OrderBy(r => r.SiteID)
+                    .ThenBy(r => r.CheckInDate)
+                    .ToList(),
+
+                "SiteUsage" => nonCancelledReservations
+                    .OrderBy(r => r.Site != null ? r.Site.SiteNumber : "")
                     .ThenBy(r => r.CheckInDate)
                     .ToList(),
 
@@ -126,6 +176,43 @@ namespace RVSite.Controllers
                 .Distinct()
                 .Count();
 
+            var sites = await _context.Sites
+                .Include(s => s.SiteType)
+                .OrderBy(s => s.SiteNumber)
+                .ToListAsync();
+
+            var reportEndExclusive = end.Date.AddDays(1);
+
+            var siteUsageRows = sites.Select(site =>
+            {
+                var siteReservations = nonCancelledReservations
+                    .Where(r => r.SiteID == site.SiteID)
+                    .ToList();
+
+                return new SiteUsageReportRow
+                {
+                    SiteID = site.SiteID,
+                    SiteNumber = site.SiteNumber,
+                    SiteTypeName = site.SiteType != null ? site.SiteType.Name : "Unknown",
+                    ReservationCount = siteReservations.Count,
+                    ReservedNights = siteReservations.Sum(r =>
+                    {
+                        var overlapStart = r.CheckInDate.Date > start.Date
+                            ? r.CheckInDate.Date
+                            : start.Date;
+
+                        var overlapEnd = r.CheckOutDate.Date < reportEndExclusive
+                            ? r.CheckOutDate.Date
+                            : reportEndExclusive;
+
+                        var nights = (overlapEnd - overlapStart).Days;
+
+                        return nights < 0 ? 0 : nights;
+                    }),
+                    RevenueTotal = siteReservations.Sum(r => r.TotalCost)
+                };
+            }).ToList();
+
             var model = new ReportsViewModel
             {
                 StartDate = start,
@@ -140,7 +227,20 @@ namespace RVSite.Controllers
                     r.CheckOutDate.Date >= start.Date &&
                     r.CheckOutDate.Date <= end.Date),
 
-                RevenueTotal = nonCancelledReservations.Sum(r => r.TotalCost),
+                RevenueTotal = paidPayments.Sum(p => p.AmountPaid),
+
+                FeeTotal = paymentReservations
+                    .SelectMany(r => r.Fees)
+                    .Sum(f => f.Amount),
+
+                PaymentCount = paidPayments.Count,
+
+                PendingPaymentTotal = pendingPayments.Sum(p => p.AmountPaid),
+                PendingPaymentCount = pendingPayments.Count,
+
+                FailedPaymentCount = failedPayments.Count,
+
+                OutstandingBalanceTotal = reservations.Sum(r => r.BalanceDue),
 
                 TotalSites = totalSites,
                 OccupiedSites = occupiedSiteCount,
@@ -149,7 +249,13 @@ namespace RVSite.Controllers
                     ? 0
                     : Math.Round((decimal)occupiedSiteCount / totalSites * 100, 1),
 
-                Reservations = filteredReservations
+                Reservations = filteredReservations,
+
+                Payments = payments
+                    .OrderByDescending(p => p.PaymentDate)
+                    .ToList(),
+
+                SiteUsageRows = siteUsageRows
             };
 
             return View(model);
@@ -232,20 +338,213 @@ namespace RVSite.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> CancelReservation(int id)
+        public IActionResult CancelReservation(int id)
         {
-            var reservation = await _context.Reservations.FindAsync(id);
+            return RedirectToAction(
+                "CancelReservation",
+                "Reservation",
+                new { id });
+        }
 
-            if (reservation == null)
+        private async Task<ReservationPolicy> GetOrCreateReservationPolicyAsync()
+        {
+            var policy = await _context.ReservationPolicies.FirstOrDefaultAsync();
+
+            if (policy == null)
+            {
+                policy = new ReservationPolicy();
+                _context.ReservationPolicies.Add(policy);
+                await _context.SaveChangesAsync();
+            }
+
+            return policy;
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> ReservationPolicies()
+        {
+            var policy = await GetOrCreateReservationPolicyAsync();
+
+            ViewBag.ActiveSpecialEventPolicies = await _context.SpecialEventPolicies
+                .Include(p => p.SiteType)
+                .Where(p => p.IsActive && p.EndDate.Date >= DateTime.Today)
+                .OrderBy(p => p.StartDate)
+                .ToListAsync();
+
+            return View(policy);
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> EditReservationPolicy()
+        {
+            var policy = await GetOrCreateReservationPolicyAsync();
+
+            return View(policy);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> EditReservationPolicy(ReservationPolicy policy)
+        {
+            if (!ModelState.IsValid)
+            {
+                return View(policy);
+            }
+
+            var existingPolicy = await _context.ReservationPolicies
+                .FirstOrDefaultAsync(p => p.ReservationPolicyID == policy.ReservationPolicyID);
+
+            if (existingPolicy == null)
             {
                 return NotFound();
             }
 
-            reservation.ReservationStatus = ReservationStatus.Cancelled;
+            existingPolicy.MaximumAdvanceBookingDays = policy.MaximumAdvanceBookingDays;
+            existingPolicy.PeakSeasonMaximumStayNights = policy.PeakSeasonMaximumStayNights;
+            existingPolicy.PeakSeasonStartMonth = policy.PeakSeasonStartMonth;
+            existingPolicy.PeakSeasonStartDay = policy.PeakSeasonStartDay;
+            existingPolicy.PeakSeasonEndMonth = policy.PeakSeasonEndMonth;
+            existingPolicy.PeakSeasonEndDay = policy.PeakSeasonEndDay;
+            existingPolicy.RequiredDaysAwayBeforeReturn = policy.RequiredDaysAwayBeforeReturn;
+            existingPolicy.LateCancellationWindowDays = policy.LateCancellationWindowDays;
+            existingPolicy.CancellationDailyFeeAmount = policy.CancellationDailyFeeAmount;
+            existingPolicy.GeneralPolicyNotes = policy.GeneralPolicyNotes;
+            existingPolicy.LastUpdated = DateTime.Now;
 
             await _context.SaveChangesAsync();
 
-            return RedirectToAction(nameof(Search));
+            TempData["SuccessMessage"] = "Reservation policies were updated.";
+
+            return RedirectToAction(nameof(ReservationPolicies));
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> SpecialEventPolicies(bool showArchived = false)
+        {
+            var today = DateTime.Today;
+
+            var query = _context.SpecialEventPolicies
+                .Include(p => p.SiteType)
+                .AsQueryable();
+
+            if (showArchived)
+            {
+                query = query.Where(p => !p.IsActive || p.EndDate.Date < today);
+                ViewBag.PageTitle = "Archived Special Event Policies";
+            }
+            else
+            {
+                query = query.Where(p => p.IsActive && p.EndDate.Date >= today);
+                ViewBag.PageTitle = "Active & Upcoming Special Event Policies";
+            }
+
+            ViewBag.ShowArchived = showArchived;
+
+            var policies = showArchived
+                ? await query.OrderByDescending(p => p.EndDate).ToListAsync()
+                : await query.OrderBy(p => p.StartDate).ToListAsync();
+
+            return View(policies);
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> SpecialEventPolicyForm(int? id)
+        {
+            ViewBag.SiteTypes = await _context.SiteTypes
+                .OrderBy(s => s.Name)
+                .ToListAsync();
+
+            if (id == null)
+            {
+                return View(new SpecialEventPolicy
+                {
+                    StartDate = DateTime.Today,
+                    EndDate = DateTime.Today,
+                    IsActive = true
+                });
+            }
+
+            var policy = await _context.SpecialEventPolicies
+                .FirstOrDefaultAsync(p => p.SpecialEventPolicyID == id);
+
+            if (policy == null)
+            {
+                return NotFound();
+            }
+
+            return View(policy);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> SaveSpecialEventPolicy(SpecialEventPolicy policy)
+        {
+            ModelState.Remove(nameof(SpecialEventPolicy.SiteType));
+
+            if (policy.StartDate > policy.EndDate)
+            {
+                ModelState.AddModelError("", "Start date cannot be after end date.");
+            }
+
+            if (!ModelState.IsValid)
+            {
+                ViewBag.SiteTypes = await _context.SiteTypes
+                    .OrderBy(s => s.Name)
+                    .ToListAsync();
+
+                return View("SpecialEventPolicyForm", policy);
+            }
+
+            if (policy.SpecialEventPolicyID == 0)
+            {
+                _context.SpecialEventPolicies.Add(policy);
+                TempData["SuccessMessage"] = "Special event policy was added.";
+            }
+            else
+            {
+                var existingPolicy = await _context.SpecialEventPolicies
+                    .FirstOrDefaultAsync(p => p.SpecialEventPolicyID == policy.SpecialEventPolicyID);
+
+                if (existingPolicy == null)
+                {
+                    return NotFound();
+                }
+
+                existingPolicy.EventName = policy.EventName;
+                existingPolicy.StartDate = policy.StartDate;
+                existingPolicy.EndDate = policy.EndDate;
+                existingPolicy.SiteTypeID = policy.SiteTypeID;
+                existingPolicy.MaximumStayNights = policy.MaximumStayNights;
+                existingPolicy.CancellationWindowDays = policy.CancellationWindowDays;
+                existingPolicy.IsActive = policy.IsActive;
+                existingPolicy.Notes = policy.Notes;
+
+                TempData["SuccessMessage"] = "Special event policy was updated.";
+            }
+
+            await _context.SaveChangesAsync();
+
+            return RedirectToAction(nameof(SpecialEventPolicies));
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> ArchiveSpecialEventPolicy(int id)
+        {
+            var policy = await _context.SpecialEventPolicies.FindAsync(id);
+
+            if (policy == null)
+            {
+                return NotFound();
+            }
+
+            policy.IsActive = false;
+
+            await _context.SaveChangesAsync();
+
+            TempData["SuccessMessage"] = "Special event policy was archived.";
+
+            return RedirectToAction(nameof(SpecialEventPolicies));
         }
 
         // Stuff for the employee management system below

@@ -144,14 +144,12 @@
                         </div>
                     </div>
 
-                    <div class="site-row-action">
-                        <a asp-controller="Reservation"
-                           asp-action="Create"
-                           asp-route-siteId="@site.SiteID"
-                           class="btn btn-primary">
-                            Reserve
-                        </a>
-                    </div>
+                    <a asp-controller="ClientReservation"
+                       asp-action="Book"
+                       asp-route-siteId="@site.SiteID"
+                       class="btn btn-primary">
+                        Reserve
+                    </a>
                 </article>
                 }
             </div>
