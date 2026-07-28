@@ -201,48 +201,46 @@ namespace RVSite.Data
                 db.SaveChanges();
             }
 
-            // ---------------------------
-            // 7. SITE PHOTOS (seed demo images)
-            // ---------------------------
-            if (!db.SitePhoto.Any())
-            {
-                var sites = db.Sites.ToList();
-                var now = DateTime.Now;
+            //// ---------------------------
+            //// 7. SITE PHOTOS (seed references to existing files)
+            //// ---------------------------
+            //if (!db.SitePhoto.Any())
+            //{
+            //    var sites = db.Sites.ToList();
+            //    var now = DateTime.Now;
 
-                foreach (var site in sites)
-                {
-                    // Create folder: wwwroot/storage/photos/<SiteID>/
-                    var folderPath = Path.Combine(env.WebRootPath, "storage", "photos", site.SiteID.ToString());
-                    Directory.CreateDirectory(folderPath);
+            //    foreach (var site in sites)
+            //    {
+            //        // Build the physical folder path
+            //        var folderPath = Path.Combine(env.WebRootPath, "storage", "photos", site.SiteID.ToString());
 
-                    // Seed 1–2 photos per site
-                    for (int i = 1; i <= 2; i++)
-                    {
-                        // Use GUID filenames (same as your upload logic)
-                        var fileName = $"{Guid.NewGuid()}.jpg";
+            //        if (!Directory.Exists(folderPath))
+            //            continue; // No photos for this site
 
-                        // Physical file path
-                        var physicalPath = Path.Combine(folderPath, fileName);
+            //        // Get all JPG files in the folder
+            //        var files = Directory.GetFiles(folderPath, "*.jpg");
 
-                        // Copy a placeholder image into the folder
-                        // (You must place a placeholder file in wwwroot/storage/seed/placeholder.jpg)
-                        var placeholder = Path.Combine(env.WebRootPath, "storage", "seed", "placeholder.jpg");
-                        System.IO.File.Copy(placeholder, physicalPath, overwrite: true);
+            //        int sortOrder = 1;
 
-                        // Save DB record
-                        db.SitePhoto.Add(new SitePhoto
-                        {
-                            SiteID = site.SiteID,
-                            Caption = $"{site.SiteNumber} - Photo {i}",
-                            FilePath = $"/storage/photos/{site.SiteID}/{fileName}",
-                            SortOrder = i,
-                            UploadedAt = now
-                        });
-                    }
-                }
+            //        foreach (var file in files)
+            //        {
+            //            var fileName = Path.GetFileName(file);
 
-                db.SaveChanges();
-            }
+            //            db.SitePhoto.Add(new SitePhoto
+            //            {
+            //                SiteID = site.SiteID,
+            //                Caption = $"{site.SiteNumber} - Photo {sortOrder}",
+            //                FilePath = $"/storage/photos/{site.SiteID}/{fileName}",
+            //                SortOrder = sortOrder,
+            //                UploadedAt = now
+            //            });
+
+            //            sortOrder++;
+            //        }
+            //    }
+
+            //    db.SaveChanges();
+            //}
         }
     }
 }
