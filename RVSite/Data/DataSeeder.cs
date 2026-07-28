@@ -7,8 +7,7 @@ namespace RVSite.Data
     {
         public static void Seed(AppDbContext db)
         {
-            //db.Database.Migrate();
-
+            // Ensure roles exist
             if (!db.Role.Any())
             {
                 db.Role.AddRange(new[]
@@ -21,8 +20,11 @@ namespace RVSite.Data
                 db.SaveChanges();
             }
 
-            var customerRole = db.Role.FirstOrDefault(r => r.Type == RoleType.Customer);
+            var adminRole = db.Role.First(r => r.Type == RoleType.Admin);
+            var staffRole = db.Role.First(r => r.Type == RoleType.Staff);
+            var customerRole = db.Role.First(r => r.Type == RoleType.Customer);
 
+            // Seed Site Types
             if (!db.SiteTypes.Any())
             {
                 db.SiteTypes.AddRange(new[]
@@ -37,7 +39,9 @@ namespace RVSite.Data
 
             var rvType = db.SiteTypes.First(st => st.Name == "RV");
             var tentType = db.SiteTypes.First(st => st.Name == "Tent");
+            var cabinType = db.SiteTypes.First(st => st.Name == "Cabin");
 
+            // Seed Site Type Prices
             if (!db.SiteTypePrices.Any())
             {
                 db.SiteTypePrices.AddRange(new[]
@@ -53,79 +57,129 @@ namespace RVSite.Data
                     {
                         SiteTypeID = rvType.SiteTypeID,
                         StartDate = new DateTime(2024, 6, 1),
-                        EndDate = null, // current price
+                        EndDate = null,
                         Price = 45m
+                    },
+                    new SiteTypePrice
+                    {
+                        SiteTypeID = tentType.SiteTypeID,
+                        StartDate = new DateTime(2024, 1, 1),
+                        EndDate = null,
+                        Price = 25m
+                    },
+                    new SiteTypePrice
+                    {
+                        SiteTypeID = cabinType.SiteTypeID,
+                        StartDate = new DateTime(2024, 1, 1),
+                        EndDate = null,
+                        Price = 80m
                     }
                 });
 
                 db.SaveChanges();
             }
 
+            // Seed Sites (2–3 per type)
             if (!db.Sites.Any())
             {
                 db.Sites.AddRange(new[]
                 {
-                    new Site { SiteNumber = "A1", SiteTypeID = rvType.SiteTypeID, SiteType = rvType, SiteStatus = SiteStatus.Available.ToString(), MaxRVLength = 40, BaseRate = 45m },
-                    new Site { SiteNumber = "A2", SiteTypeID = rvType.SiteTypeID, SiteType = rvType, SiteStatus = SiteStatus.Available.ToString(), MaxRVLength = 40, BaseRate = 45m },
-                    new Site { SiteNumber = "B1", SiteTypeID = tentType.SiteTypeID, SiteType = tentType, SiteStatus = SiteStatus.Available.ToString(), MaxRVLength = 0, BaseRate = 25m }
+                    // RV Sites
+                    new Site { SiteNumber = "RV-01", SiteTypeID = rvType.SiteTypeID, SiteStatus = "Available", MaxRVLength = 40, BaseRate = 45m },
+                    new Site { SiteNumber = "RV-02", SiteTypeID = rvType.SiteTypeID, SiteStatus = "Available", MaxRVLength = 35, BaseRate = 45m },
+                    new Site { SiteNumber = "RV-03", SiteTypeID = rvType.SiteTypeID, SiteStatus = "Available", MaxRVLength = 50, BaseRate = 45m },
+
+                    // Tent Sites
+                    new Site { SiteNumber = "T-01", SiteTypeID = tentType.SiteTypeID, SiteStatus = "Available", MaxRVLength = 0, BaseRate = 25m },
+                    new Site { SiteNumber = "T-02", SiteTypeID = tentType.SiteTypeID, SiteStatus = "Available", MaxRVLength = 0, BaseRate = 25m },
+
+                    // Cabin Sites
+                    new Site { SiteNumber = "C-01", SiteTypeID = cabinType.SiteTypeID, SiteStatus = "Available", MaxRVLength = 0, BaseRate = 80m },
+                    new Site { SiteNumber = "C-02", SiteTypeID = cabinType.SiteTypeID, SiteStatus = "Available", MaxRVLength = 0, BaseRate = 80m }
                 });
 
                 db.SaveChanges();
             }
 
+            // Seed Users
             if (!db.Users.Any())
             {
-                var adminRole = db.Role.First(r => r.Type == RoleType.Admin);
-
-                db.Users.Add(new User
-                {
-                    FirstName = "Boston",
-                    LastName = "Peterson",
-                    Email = "admin@rvpark.com",
-                    PhoneNumber = "123-456",
-                    PasswordHash = "admin123",
-                    MilitaryID = "0001",
-                    RoleID = adminRole.RoleID
-                });
-
                 db.Users.AddRange(new[]
                 {
-                    new User { FirstName = "John", LastName = "Doe", Email = "john@example.com", PhoneNumber = "555-5678", PasswordHash = "devHash1", MilitaryID = "0002", RoleID = customerRole.RoleID },
-                    new User { FirstName = "Sarah", LastName = "Smith", Email = "sarah@example.com", PhoneNumber = "555-1234", PasswordHash = "devHash2", MilitaryID = "0003", RoleID = customerRole.RoleID }
-                });
-
-                db.SaveChanges();
-            }
-
-            if (!db.Reservations.Any())
-            {
-                var user1 = db.Users.First();
-                var site1 = db.Sites.First();
-
-                db.Reservations.AddRange(new[]
-                {
-                    new Reservation
+                    new User
                     {
-                        UserID = user1.UserID,
-                        SiteID = site1.SiteID,
-
-                        CheckInDate = DateTime.Today.AddDays(1),
-                        CheckOutDate = DateTime.Today.AddDays(4),
-
-                        NumberOfAdults = 2,
-                        NumberOfChildren = 0,
-                        NumberOfPets = 0,
-
-                        ReservationStatus = ReservationStatus.Confirmed,
-
-                        TotalCost = site1.BaseRate * 3,
+                        FirstName = "Admin",
+                        LastName = "User",
+                        Email = "admin@rvpark.com",
+                        PhoneNumber = "555-0001",
+                        PasswordHash = "admin123",
+                        MilitaryID = "A001",
+                        BaseName = "Hill AFB",
+                        Rank = "E-6",
+                        RoleID = adminRole.RoleID
+                    },
+                    new User
+                    {
+                        FirstName = "Employee",
+                        LastName = "User",
+                        Email = "employee@rvpark.com",
+                        PhoneNumber = "555-0002",
+                        PasswordHash = "staff123",
+                        MilitaryID = "S001",
+                        BaseName = "Hill AFB",
+                        Rank = "E-4",
+                        RoleID = staffRole.RoleID
+                    },
+                    new User
+                    {
+                        FirstName = "Demo",
+                        LastName = "Customer",
+                        Email = "customer@rvpark.com",
+                        PhoneNumber = "555-0003",
+                        PasswordHash = "cust123",
+                        MilitaryID = "C001",
+                        BaseName = "Hill AFB",
+                        Rank = "E-3",
+                        RoleID = customerRole.RoleID
                     }
                 });
 
                 db.SaveChanges();
             }
 
-            db.SaveChanges();
+            var demoCustomer = db.Users.First(u => u.Email == "customer@rvpark.com");
+            var allSites = db.Sites.ToList();
+
+            // Seed 12 Reservations
+            if (!db.Reservations.Any())
+            {
+                var reservations = new List<Reservation>();
+                var today = DateTime.Today;
+
+                // Create varied reservations
+                for (int i = 0; i < 12; i++)
+                {
+                    var site = allSites[i % allSites.Count];
+                    var checkIn = today.AddDays(i - 6);   // some past, some future
+                    var checkOut = checkIn.AddDays(3);
+
+                    reservations.Add(new Reservation
+                    {
+                        UserID = demoCustomer.UserID,
+                        SiteID = site.SiteID,
+                        CheckInDate = checkIn,
+                        CheckOutDate = checkOut,
+                        NumberOfAdults = 2,
+                        NumberOfChildren = i % 3,
+                        NumberOfPets = i % 2,
+                        ReservationStatus = (ReservationStatus)(i % 4), // rotates through statuses
+                        TotalCost = site.BaseRate * 3
+                    });
+                }
+
+                db.Reservations.AddRange(reservations);
+                db.SaveChanges();
+            }
         }
     }
 }
