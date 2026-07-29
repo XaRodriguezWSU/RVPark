@@ -50,8 +50,9 @@ using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
     var env = scope.ServiceProvider.GetRequiredService<IWebHostEnvironment>();
+    var hasher = scope.ServiceProvider.GetRequiredService<IPasswordHasher<User>>();
     db.Database.Migrate();
-    DataSeeder.Seed(db, env);
+    DataSeeder.Seed(db, env, hasher);
 }
 
 // Configure the HTTP request pipeline.

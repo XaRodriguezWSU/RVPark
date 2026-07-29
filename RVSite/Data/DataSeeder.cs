@@ -1,11 +1,12 @@
-﻿using RVSite.Models;
+﻿using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using RVSite.Models;
 
 namespace RVSite.Data
 {
     public class DataSeeder
     {
-        public static void Seed(AppDbContext db, IWebHostEnvironment env)
+        public static void Seed(AppDbContext db, IWebHostEnvironment env, IPasswordHasher<User> hasher)
         {
             // ---------------------------
             // 1. ROLES
@@ -114,52 +115,52 @@ namespace RVSite.Data
             // ---------------------------
             if (!db.Users.Any())
             {
-                db.Users.AddRange(new[]
+                var admin = new User
                 {
-                    new User
-                    {
-                        FirstName = "Admin",
-                        LastName = "User",
-                        Email = "admin@rvpark.com",
-                        PhoneNumber = "555-0001",
-                        PasswordHash = "admin123", // plain text for demo
-                        MilitaryID = "A001",
-                        BaseName = "Hill AFB",
-                        Rank = "E-6",
-                        RoleID = adminRole.RoleID,
-                        EmailConfirmed = true,
-                        IsLocked = false
-                    },
-                    new User
-                    {
-                        FirstName = "Employee",
-                        LastName = "User",
-                        Email = "employee@rvpark.com",
-                        PhoneNumber = "555-0002",
-                        PasswordHash = "staff123",
-                        MilitaryID = "S001",
-                        BaseName = "Hill AFB",
-                        Rank = "E-4",
-                        RoleID = staffRole.RoleID,
-                        EmailConfirmed = true,
-                        IsLocked = false
-                    },
-                    new User
-                    {
-                        FirstName = "Demo",
-                        LastName = "Customer",
-                        Email = "customer@rvpark.com",
-                        PhoneNumber = "555-0003",
-                        PasswordHash = "cust123",
-                        MilitaryID = "C001",
-                        BaseName = "Hill AFB",
-                        Rank = "E-3",
-                        RoleID = customerRole.RoleID,
-                        EmailConfirmed = true,
-                        IsLocked = false
-                    }
-                });
+                    FirstName = "Admin",
+                    LastName = "User",
+                    Email = "admin@rvpark.com",
+                    PhoneNumber = "555-0001",
+                    MilitaryID = "A001",
+                    BaseName = "Hill AFB",
+                    Rank = "E-6",
+                    RoleID = adminRole.RoleID,
+                    EmailConfirmed = true,
+                    IsLocked = false
+                };
+                admin.PasswordHash = hasher.HashPassword(admin, "admin123");
 
+                var employee = new User
+                {
+                    FirstName = "Employee",
+                    LastName = "User",
+                    Email = "employee@rvpark.com",
+                    PhoneNumber = "555-0002",
+                    MilitaryID = "S001",
+                    BaseName = "Hill AFB",
+                    Rank = "E-4",
+                    RoleID = staffRole.RoleID,
+                    EmailConfirmed = true,
+                    IsLocked = false
+                };
+                employee.PasswordHash = hasher.HashPassword(employee, "staff123");
+
+                var customer = new User
+                {
+                    FirstName = "Demo",
+                    LastName = "Customer",
+                    Email = "customer@rvpark.com",
+                    PhoneNumber = "555-0003",
+                    MilitaryID = "C001",
+                    BaseName = "Hill AFB",
+                    Rank = "E-3",
+                    RoleID = customerRole.RoleID,
+                    EmailConfirmed = true,
+                    IsLocked = false
+                };
+                customer.PasswordHash = hasher.HashPassword(customer, "cust123");
+
+                db.Users.AddRange(admin, employee, customer);
                 db.SaveChanges();
             }
 
@@ -201,46 +202,64 @@ namespace RVSite.Data
                 db.SaveChanges();
             }
 
-            //// ---------------------------
-            //// 7. SITE PHOTOS (seed references to existing files)
-            //// ---------------------------
-            //if (!db.SitePhoto.Any())
-            //{
-            //    var sites = db.Sites.ToList();
-            //    var now = DateTime.Now;
+            // ---------------------------
+            // 7. SITE PHOTOS (seed references to existing files)
+            // ---------------------------
+            if (!db.SitePhoto.Any())
+            {
+                Console.WriteLine("📸 Starting SitePhoto seeding...");
 
-            //    foreach (var site in sites)
-            //    {
-            //        // Build the physical folder path
-            //        var folderPath = Path.Combine(env.WebRootPath, "storage", "photos", site.SiteID.ToString());
+                var sites = db.Sites.ToList();
+                var now = DateTime.Now;
 
-            //        if (!Directory.Exists(folderPath))
-            //            continue; // No photos for this site
+                foreach (var site in sites)
+                {
+                    Console.WriteLine($"➡️ Checking site: {site.SiteID} ({site.SiteNumber})");
 
-            //        // Get all JPG files in the folder
-            //        var files = Directory.GetFiles(folderPath, "*.jpg");
+                    // Build the physical folder path
+                    var folderPath = Path.Combine(env.WebRootPath, "storage", "photos", site.SiteNumber);
 
-            //        int sortOrder = 1;
+                    Console.WriteLine($"   Folder path: {folderPath}");
 
-            //        foreach (var file in files)
-            //        {
-            //            var fileName = Path.GetFileName(file);
+                    if (!Directory.Exists(folderPath))
+                    {
+                        Console.WriteLine("   ❌ Folder does NOT exist. Skipping this site.");
+                        continue;
+                    }
 
-            //            db.SitePhoto.Add(new SitePhoto
-            //            {
-            //                SiteID = site.SiteID,
-            //                Caption = $"{site.SiteNumber} - Photo {sortOrder}",
-            //                FilePath = $"/storage/photos/{site.SiteID}/{fileName}",
-            //                SortOrder = sortOrder,
-            //                UploadedAt = now
-            //            });
+                    // Get all JPG files in the folder
+                    var files = Directory.GetFiles(folderPath, "*.jpg");
+                    Console.WriteLine($"   Found {files.Length} JPG files.");
 
-            //            sortOrder++;
-            //        }
-            //    }
+                    int sortOrder = 1;
 
-            //    db.SaveChanges();
-            //}
+                    foreach (var file in files)
+                    {
+                        var fileName = Path.GetFileName(file);
+
+                        Console.WriteLine($"   ➕ Adding photo: {fileName}");
+
+                        db.SitePhoto.Add(new SitePhoto
+                        {
+                            SiteID = site.SiteID,
+                            Caption = $"{site.SiteNumber} - Photo {sortOrder}",
+                            FilePath = $"/storage/photos/{site.SiteNumber}/{fileName}",
+                            SortOrder = sortOrder,
+                            UploadedAt = now
+                        });
+
+                        sortOrder++;
+                    }
+                }
+
+                db.SaveChanges();
+                Console.WriteLine("✅ Finished seeding SitePhoto records.");
+            }
+            else
+            {
+                Console.WriteLine("ℹ️ SitePhoto table already contains data. Skipping seeding.");
+            }
+
         }
     }
 }
