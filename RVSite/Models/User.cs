@@ -35,7 +35,8 @@ namespace RVSite.Models
 
         public string? EmailConfirmationToken { get; set; }
 
-        [Required]
+        // Military information is optional because
+        // employees may not have military information.
         [StringLength(50)]
         public string? MilitaryID { get; set; }
 
@@ -45,8 +46,8 @@ namespace RVSite.Models
         [StringLength(50)]
         public string? Rank { get; set; }
 
-        public ICollection<Reservation> Reservations { get; set; } = new List<Reservation>();
-
+        public ICollection<Reservation> Reservations { get; set; }
+            = new List<Reservation>();
 
         public bool HasRole(string roleName)
         {

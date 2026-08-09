@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using RVSite.Data;
@@ -13,11 +14,16 @@ namespace RVSite.Controllers
     public class AdminController : Controller
     {
         private readonly AppDbContext _context;
+        private readonly IPasswordHasher<User> _passwordHasher;
 
-        public AdminController(AppDbContext context)
+        public AdminController(
+            AppDbContext context,
+            IPasswordHasher<User> passwordHasher)
         {
             _context = context;
+            _passwordHasher = passwordHasher;
         }
+
 
         [HttpGet]
         public async Task<IActionResult> Dashboard()
@@ -64,16 +70,12 @@ namespace RVSite.Controllers
             return View();
         }
 
-        /// <summary>
-        /// Displays the admin/reservation reports dashboard and generates summary metrics for the
-        /// selected reporting period. 
-        /// </summary>
-        /// <param name="startDate">The beginning of reporting period</param>
-        /// <param name="endDate">The end of the reporting period</param>
-        /// <param name="reportType">The selected report type to display</param>
-        /// <returns>The admin/reservations report dashboard view</returns>
+
         [HttpGet]
-        public async Task<IActionResult> Reports(DateTime? startDate, DateTime? endDate, string? reportType)
+        public async Task<IActionResult> Reports(
+            DateTime? startDate,
+            DateTime? endDate,
+            string? reportType)
         {
             var start = startDate ?? DateTime.Today;
             var end = endDate ?? DateTime.Today;
@@ -81,7 +83,9 @@ namespace RVSite.Controllers
 
             if (start > end)
             {
-                ModelState.AddModelError("", "Start date cannot be after end date.");
+                ModelState.AddModelError(
+                    "",
+                    "Start date cannot be after end date.");
 
                 return View(new ReportsViewModel
                 {
@@ -96,12 +100,15 @@ namespace RVSite.Controllers
                 .Include(r => r.Site)
                     .ThenInclude(s => s.SiteType)
                 .Include(r => r.Fees)
-                .Where(r => r.CheckInDate.Date <= end.Date &&
-                            r.CheckOutDate.Date >= start.Date)
+                .Where(r =>
+                    r.CheckInDate.Date <= end.Date &&
+                    r.CheckOutDate.Date >= start.Date)
                 .ToListAsync();
 
             var nonCancelledReservations = reservations
-                .Where(r => r.ReservationStatus != ReservationStatus.Cancelled)
+                .Where(r =>
+                    r.ReservationStatus !=
+                    ReservationStatus.Cancelled)
                 .ToList();
 
             var payments = await _context.Payments
@@ -136,82 +143,117 @@ namespace RVSite.Controllers
                 .Select(g => g.First())
                 .ToList();
 
-            var filteredReservations = selectedReportType switch
-            {
-                "Arrivals" => nonCancelledReservations
-                    .Where(r => r.CheckInDate.Date >= start.Date &&
-                                r.CheckInDate.Date <= end.Date)
-                    .OrderBy(r => r.CheckInDate)
-                    .ToList(),
+            var filteredReservations =
+                selectedReportType switch
+                {
+                    "Arrivals" => nonCancelledReservations
+                        .Where(r =>
+                            r.CheckInDate.Date >= start.Date &&
+                            r.CheckInDate.Date <= end.Date)
+                        .OrderBy(r => r.CheckInDate)
+                        .ToList(),
 
-                "Departures" => nonCancelledReservations
-                    .Where(r => r.CheckOutDate.Date >= start.Date &&
-                                r.CheckOutDate.Date <= end.Date)
-                    .OrderBy(r => r.CheckOutDate)
-                    .ToList(),
+                    "Departures" => nonCancelledReservations
+                        .Where(r =>
+                            r.CheckOutDate.Date >= start.Date &&
+                            r.CheckOutDate.Date <= end.Date)
+                        .OrderBy(r => r.CheckOutDate)
+                        .ToList(),
 
-                "Revenue" => reservations
-                    .OrderByDescending(r => r.ReservationDate)
-                    .ToList(),
+                    "Revenue" => reservations
+                        .OrderByDescending(
+                            r => r.ReservationDate)
+                        .ToList(),
 
-                "Occupancy" => nonCancelledReservations
-                    .OrderBy(r => r.SiteID)
-                    .ThenBy(r => r.CheckInDate)
-                    .ToList(),
+                    "Occupancy" => nonCancelledReservations
+                        .OrderBy(r => r.SiteID)
+                        .ThenBy(r => r.CheckInDate)
+                        .ToList(),
 
-                "SiteUsage" => nonCancelledReservations
-                    .OrderBy(r => r.Site != null ? r.Site.SiteNumber : "")
-                    .ThenBy(r => r.CheckInDate)
-                    .ToList(),
+                    "SiteUsage" => nonCancelledReservations
+                        .OrderBy(r =>
+                            r.Site != null
+                                ? r.Site.SiteNumber
+                                : "")
+                        .ThenBy(r => r.CheckInDate)
+                        .ToList(),
 
-                _ => reservations
-                    .OrderBy(r => r.CheckInDate)
-                    .ToList()
-            };
+                    _ => reservations
+                        .OrderBy(r => r.CheckInDate)
+                        .ToList()
+                };
 
-            var totalSites = await _context.Sites.CountAsync();
+            var totalSites =
+                await _context.Sites.CountAsync();
 
-            var occupiedSiteCount = nonCancelledReservations
-                .Select(r => r.SiteID)
-                .Distinct()
-                .Count();
+            var occupiedSiteCount =
+                nonCancelledReservations
+                    .Select(r => r.SiteID)
+                    .Distinct()
+                    .Count();
 
             var sites = await _context.Sites
                 .Include(s => s.SiteType)
                 .OrderBy(s => s.SiteNumber)
                 .ToListAsync();
 
-            var reportEndExclusive = end.Date.AddDays(1);
+            var reportEndExclusive =
+                end.Date.AddDays(1);
 
-            var siteUsageRows = sites.Select(site =>
-            {
-                var siteReservations = nonCancelledReservations
-                    .Where(r => r.SiteID == site.SiteID)
-                    .ToList();
-
-                return new SiteUsageReportRow
+            var siteUsageRows = sites
+                .Select(site =>
                 {
-                    SiteID = site.SiteID,
-                    SiteNumber = site.SiteNumber,
-                    SiteTypeName = site.SiteType != null ? site.SiteType.Name : "Unknown",
-                    ReservationCount = siteReservations.Count,
-                    ReservedNights = siteReservations.Sum(r =>
+                    var siteReservations =
+                        nonCancelledReservations
+                            .Where(r =>
+                                r.SiteID == site.SiteID)
+                            .ToList();
+
+                    return new SiteUsageReportRow
                     {
-                        var overlapStart = r.CheckInDate.Date > start.Date
-                            ? r.CheckInDate.Date
-                            : start.Date;
+                        SiteID = site.SiteID,
 
-                        var overlapEnd = r.CheckOutDate.Date < reportEndExclusive
-                            ? r.CheckOutDate.Date
-                            : reportEndExclusive;
+                        SiteNumber =
+                            site.SiteNumber,
 
-                        var nights = (overlapEnd - overlapStart).Days;
+                        SiteTypeName =
+                            site.SiteType != null
+                                ? site.SiteType.Name
+                                : "Unknown",
 
-                        return nights < 0 ? 0 : nights;
-                    }),
-                    RevenueTotal = siteReservations.Sum(r => r.TotalCost)
-                };
-            }).ToList();
+                        ReservationCount =
+                            siteReservations.Count,
+
+                        ReservedNights =
+                            siteReservations.Sum(r =>
+                            {
+                                var overlapStart =
+                                    r.CheckInDate.Date >
+                                    start.Date
+                                        ? r.CheckInDate.Date
+                                        : start.Date;
+
+                                var overlapEnd =
+                                    r.CheckOutDate.Date <
+                                    reportEndExclusive
+                                        ? r.CheckOutDate.Date
+                                        : reportEndExclusive;
+
+                                var nights =
+                                    (overlapEnd -
+                                     overlapStart).Days;
+
+                                return nights < 0
+                                    ? 0
+                                    : nights;
+                            }),
+
+                        RevenueTotal =
+                            siteReservations
+                                .Sum(r => r.TotalCost)
+                    };
+                })
+                .ToList();
 
             var model = new ReportsViewModel
             {
@@ -219,93 +261,141 @@ namespace RVSite.Controllers
                 EndDate = end,
                 ReportType = selectedReportType,
 
-                ArrivalsCount = nonCancelledReservations.Count(r =>
-                    r.CheckInDate.Date >= start.Date &&
-                    r.CheckInDate.Date <= end.Date),
+                ArrivalsCount =
+                    nonCancelledReservations.Count(r =>
+                        r.CheckInDate.Date >= start.Date &&
+                        r.CheckInDate.Date <= end.Date),
 
-                DeparturesCount = nonCancelledReservations.Count(r =>
-                    r.CheckOutDate.Date >= start.Date &&
-                    r.CheckOutDate.Date <= end.Date),
+                DeparturesCount =
+                    nonCancelledReservations.Count(r =>
+                        r.CheckOutDate.Date >= start.Date &&
+                        r.CheckOutDate.Date <= end.Date),
 
-                RevenueTotal = paidPayments.Sum(p => p.AmountPaid),
+                RevenueTotal =
+                    paidPayments.Sum(
+                        p => p.AmountPaid),
 
-                FeeTotal = paymentReservations
-                    .SelectMany(r => r.Fees)
-                    .Sum(f => f.Amount),
+                FeeTotal =
+                    paymentReservations
+                        .SelectMany(r => r.Fees)
+                        .Sum(f => f.Amount),
 
-                PaymentCount = paidPayments.Count,
+                PaymentCount =
+                    paidPayments.Count,
 
-                PendingPaymentTotal = pendingPayments.Sum(p => p.AmountPaid),
-                PendingPaymentCount = pendingPayments.Count,
+                PendingPaymentTotal =
+                    pendingPayments.Sum(
+                        p => p.AmountPaid),
 
-                FailedPaymentCount = failedPayments.Count,
+                PendingPaymentCount =
+                    pendingPayments.Count,
 
-                OutstandingBalanceTotal = reservations.Sum(r => r.BalanceDue),
+                FailedPaymentCount =
+                    failedPayments.Count,
 
-                TotalSites = totalSites,
-                OccupiedSites = occupiedSiteCount,
+                OutstandingBalanceTotal =
+                    reservations.Sum(
+                        r => r.BalanceDue),
 
-                OccupancyRate = totalSites == 0
-                    ? 0
-                    : Math.Round((decimal)occupiedSiteCount / totalSites * 100, 1),
+                TotalSites =
+                    totalSites,
 
-                Reservations = filteredReservations,
+                OccupiedSites =
+                    occupiedSiteCount,
 
-                Payments = payments
-                    .OrderByDescending(p => p.PaymentDate)
-                    .ToList(),
+                OccupancyRate =
+                    totalSites == 0
+                        ? 0
+                        : Math.Round(
+                            (decimal)occupiedSiteCount /
+                            totalSites * 100,
+                            1),
 
-                SiteUsageRows = siteUsageRows
+                Reservations =
+                    filteredReservations,
+
+                Payments =
+                    payments
+                        .OrderByDescending(
+                            p => p.PaymentDate)
+                        .ToList(),
+
+                SiteUsageRows =
+                    siteUsageRows
             };
 
             return View(model);
         }
 
+
         [HttpPost]
-        public async Task<IActionResult> Search(string? reservationNumber, string? customerName)
+        public async Task<IActionResult> Search(
+            string? reservationNumber,
+            string? customerName)
         {
-            var reservations = _context.Reservations
-                .Include(r => r.User)
-                .Include(r => r.Site)
-                .AsQueryable();
+            var reservations =
+                _context.Reservations
+                    .Include(r => r.User)
+                    .Include(r => r.Site)
+                    .AsQueryable();
 
-            if (!string.IsNullOrWhiteSpace(reservationNumber)
-                && int.TryParse(reservationNumber, out int reservationId))
+            if (!string.IsNullOrWhiteSpace(
+                    reservationNumber) &&
+                int.TryParse(
+                    reservationNumber,
+                    out int reservationId))
             {
-                reservations = reservations.Where(r => r.ReservationID == reservationId);
+                reservations =
+                    reservations.Where(r =>
+                        r.ReservationID ==
+                        reservationId);
             }
 
-            if (!string.IsNullOrWhiteSpace(customerName))
+            if (!string.IsNullOrWhiteSpace(
+                    customerName))
             {
-                reservations = reservations.Where(r =>
-                    r.User.FirstName.Contains(customerName) ||
-                    r.User.LastName.Contains(customerName));
+                reservations =
+                    reservations.Where(r =>
+                        r.User.FirstName
+                            .Contains(customerName) ||
+                        r.User.LastName
+                            .Contains(customerName));
             }
 
-            var results = await reservations.ToListAsync();
+            var results =
+                await reservations.ToListAsync();
 
-            return View("SearchResults", results);
+            return View(
+                "SearchResults",
+                results);
         }
+
 
         [HttpGet]
         public async Task<IActionResult> Edit(int id)
         {
-            var reservation = await _context.Reservations
-                .Include(r => r.User)
-                .Include(r => r.Site)
-                .FirstOrDefaultAsync(r => r.ReservationID == id);
+            var reservation =
+                await _context.Reservations
+                    .Include(r => r.User)
+                    .Include(r => r.Site)
+                    .FirstOrDefaultAsync(r =>
+                        r.ReservationID == id);
 
             if (reservation == null)
             {
                 return NotFound();
             }
 
-            ViewBag.AvailableSites = await _context.Sites
-                .Where(s => s.SiteStatus == SiteStatus.Available.ToString())
-                .ToListAsync();
+            ViewBag.AvailableSites =
+                await _context.Sites
+                    .Where(s =>
+                        s.SiteStatus ==
+                        SiteStatus.Available.ToString())
+                    .ToListAsync();
 
             return View(reservation);
         }
+
 
         [HttpPost]
         [ValidateAntiForgeryToken]
@@ -315,30 +405,39 @@ namespace RVSite.Controllers
             DateTime checkOutDate,
             int? newSiteID)
         {
-            var reservation = await _context.Reservations
-                .Include(r => r.Site)
-                .FirstOrDefaultAsync(r => r.ReservationID == id);
+            var reservation =
+                await _context.Reservations
+                    .Include(r => r.Site)
+                    .FirstOrDefaultAsync(r =>
+                        r.ReservationID == id);
 
             if (reservation == null)
             {
                 return NotFound();
             }
 
-            reservation.CheckInDate = checkInDate;
-            reservation.CheckOutDate = checkOutDate;
+            reservation.CheckInDate =
+                checkInDate;
+
+            reservation.CheckOutDate =
+                checkOutDate;
 
             if (newSiteID.HasValue)
             {
-                reservation.SiteID = newSiteID.Value;
+                reservation.SiteID =
+                    newSiteID.Value;
             }
 
             await _context.SaveChangesAsync();
 
-            return RedirectToAction(nameof(Search));
+            return RedirectToAction(
+                nameof(Search));
         }
 
+
         [HttpGet]
-        public IActionResult CancelReservation(int id)
+        public IActionResult CancelReservation(
+            int id)
         {
             return RedirectToAction(
                 "CancelReservation",
@@ -346,126 +445,219 @@ namespace RVSite.Controllers
                 new { id });
         }
 
-        private async Task<ReservationPolicy> GetOrCreateReservationPolicyAsync()
+
+        private async Task<ReservationPolicy>
+            GetOrCreateReservationPolicyAsync()
         {
-            var policy = await _context.ReservationPolicies.FirstOrDefaultAsync();
+            var policy =
+                await _context.ReservationPolicies
+                    .FirstOrDefaultAsync();
 
             if (policy == null)
             {
-                policy = new ReservationPolicy();
-                _context.ReservationPolicies.Add(policy);
-                await _context.SaveChangesAsync();
+                policy =
+                    new ReservationPolicy();
+
+                _context.ReservationPolicies
+                    .Add(policy);
+
+                await _context
+                    .SaveChangesAsync();
             }
 
             return policy;
         }
 
-        [HttpGet]
-        public async Task<IActionResult> ReservationPolicies()
-        {
-            var policy = await GetOrCreateReservationPolicyAsync();
 
-            ViewBag.ActiveSpecialEventPolicies = await _context.SpecialEventPolicies
-                .Include(p => p.SiteType)
-                .Where(p => p.IsActive && p.EndDate.Date >= DateTime.Today)
-                .OrderBy(p => p.StartDate)
-                .ToListAsync();
+        [HttpGet]
+        public async Task<IActionResult>
+            ReservationPolicies()
+        {
+            var policy =
+                await GetOrCreateReservationPolicyAsync();
+
+            ViewBag.ActiveSpecialEventPolicies =
+                await _context.SpecialEventPolicies
+                    .Include(p => p.SiteType)
+                    .Where(p =>
+                        p.IsActive &&
+                        p.EndDate.Date >=
+                        DateTime.Today)
+                    .OrderBy(p => p.StartDate)
+                    .ToListAsync();
 
             return View(policy);
         }
 
+
         [HttpGet]
-        public async Task<IActionResult> EditReservationPolicy()
+        public async Task<IActionResult>
+            EditReservationPolicy()
         {
-            var policy = await GetOrCreateReservationPolicyAsync();
+            var policy =
+                await GetOrCreateReservationPolicyAsync();
 
             return View(policy);
         }
+
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> EditReservationPolicy(ReservationPolicy policy)
+        public async Task<IActionResult>
+            EditReservationPolicy(
+                ReservationPolicy policy)
         {
             if (!ModelState.IsValid)
             {
                 return View(policy);
             }
 
-            var existingPolicy = await _context.ReservationPolicies
-                .FirstOrDefaultAsync(p => p.ReservationPolicyID == policy.ReservationPolicyID);
+            var existingPolicy =
+                await _context.ReservationPolicies
+                    .FirstOrDefaultAsync(p =>
+                        p.ReservationPolicyID ==
+                        policy.ReservationPolicyID);
 
             if (existingPolicy == null)
             {
                 return NotFound();
             }
 
-            existingPolicy.MaximumAdvanceBookingDays = policy.MaximumAdvanceBookingDays;
-            existingPolicy.PeakSeasonMaximumStayNights = policy.PeakSeasonMaximumStayNights;
-            existingPolicy.PeakSeasonStartMonth = policy.PeakSeasonStartMonth;
-            existingPolicy.PeakSeasonStartDay = policy.PeakSeasonStartDay;
-            existingPolicy.PeakSeasonEndMonth = policy.PeakSeasonEndMonth;
-            existingPolicy.PeakSeasonEndDay = policy.PeakSeasonEndDay;
-            existingPolicy.RequiredDaysAwayBeforeReturn = policy.RequiredDaysAwayBeforeReturn;
-            existingPolicy.LateCancellationWindowDays = policy.LateCancellationWindowDays;
-            existingPolicy.CancellationDailyFeeAmount = policy.CancellationDailyFeeAmount;
-            existingPolicy.GeneralPolicyNotes = policy.GeneralPolicyNotes;
-            existingPolicy.LastUpdated = DateTime.Now;
+            existingPolicy
+                .MaximumAdvanceBookingDays =
+                policy.MaximumAdvanceBookingDays;
+
+            existingPolicy
+                .PeakSeasonMaximumStayNights =
+                policy.PeakSeasonMaximumStayNights;
+
+            existingPolicy
+                .PeakSeasonStartMonth =
+                policy.PeakSeasonStartMonth;
+
+            existingPolicy
+                .PeakSeasonStartDay =
+                policy.PeakSeasonStartDay;
+
+            existingPolicy
+                .PeakSeasonEndMonth =
+                policy.PeakSeasonEndMonth;
+
+            existingPolicy
+                .PeakSeasonEndDay =
+                policy.PeakSeasonEndDay;
+
+            existingPolicy
+                .RequiredDaysAwayBeforeReturn =
+                policy.RequiredDaysAwayBeforeReturn;
+
+            existingPolicy
+                .LateCancellationWindowDays =
+                policy.LateCancellationWindowDays;
+
+            existingPolicy
+                .CancellationDailyFeeAmount =
+                policy.CancellationDailyFeeAmount;
+
+            existingPolicy
+                .GeneralPolicyNotes =
+                policy.GeneralPolicyNotes;
+
+            existingPolicy.LastUpdated =
+                DateTime.Now;
 
             await _context.SaveChangesAsync();
 
-            TempData["SuccessMessage"] = "Reservation policies were updated.";
+            TempData["SuccessMessage"] =
+                "Reservation policies were updated.";
 
-            return RedirectToAction(nameof(ReservationPolicies));
+            return RedirectToAction(
+                nameof(ReservationPolicies));
         }
 
-        [HttpGet]
-        public async Task<IActionResult> SpecialEventPolicies(bool showArchived = false)
-        {
-            var today = DateTime.Today;
 
-            var query = _context.SpecialEventPolicies
-                .Include(p => p.SiteType)
-                .AsQueryable();
+        [HttpGet]
+        public async Task<IActionResult>
+            SpecialEventPolicies(
+                bool showArchived = false)
+        {
+            var today =
+                DateTime.Today;
+
+            var query =
+                _context.SpecialEventPolicies
+                    .Include(p => p.SiteType)
+                    .AsQueryable();
 
             if (showArchived)
             {
-                query = query.Where(p => !p.IsActive || p.EndDate.Date < today);
-                ViewBag.PageTitle = "Archived Special Event Policies";
+                query =
+                    query.Where(p =>
+                        !p.IsActive ||
+                        p.EndDate.Date < today);
+
+                ViewBag.PageTitle =
+                    "Archived Special Event Policies";
             }
             else
             {
-                query = query.Where(p => p.IsActive && p.EndDate.Date >= today);
-                ViewBag.PageTitle = "Active & Upcoming Special Event Policies";
+                query =
+                    query.Where(p =>
+                        p.IsActive &&
+                        p.EndDate.Date >= today);
+
+                ViewBag.PageTitle =
+                    "Active & Upcoming Special Event Policies";
             }
 
-            ViewBag.ShowArchived = showArchived;
+            ViewBag.ShowArchived =
+                showArchived;
 
-            var policies = showArchived
-                ? await query.OrderByDescending(p => p.EndDate).ToListAsync()
-                : await query.OrderBy(p => p.StartDate).ToListAsync();
+            var policies =
+                showArchived
+                    ? await query
+                        .OrderByDescending(
+                            p => p.EndDate)
+                        .ToListAsync()
+                    : await query
+                        .OrderBy(
+                            p => p.StartDate)
+                        .ToListAsync();
 
             return View(policies);
         }
 
+
         [HttpGet]
-        public async Task<IActionResult> SpecialEventPolicyForm(int? id)
+        public async Task<IActionResult>
+            SpecialEventPolicyForm(int? id)
         {
-            ViewBag.SiteTypes = await _context.SiteTypes
-                .OrderBy(s => s.Name)
-                .ToListAsync();
+            ViewBag.SiteTypes =
+                await _context.SiteTypes
+                    .OrderBy(s => s.Name)
+                    .ToListAsync();
 
             if (id == null)
             {
-                return View(new SpecialEventPolicy
-                {
-                    StartDate = DateTime.Today,
-                    EndDate = DateTime.Today,
-                    IsActive = true
-                });
+                return View(
+                    new SpecialEventPolicy
+                    {
+                        StartDate =
+                            DateTime.Today,
+
+                        EndDate =
+                            DateTime.Today,
+
+                        IsActive =
+                            true
+                    });
             }
 
-            var policy = await _context.SpecialEventPolicies
-                .FirstOrDefaultAsync(p => p.SpecialEventPolicyID == id);
+            var policy =
+                await _context.SpecialEventPolicies
+                    .FirstOrDefaultAsync(p =>
+                        p.SpecialEventPolicyID ==
+                        id);
 
             if (policy == null)
             {
@@ -475,63 +667,104 @@ namespace RVSite.Controllers
             return View(policy);
         }
 
+
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> SaveSpecialEventPolicy(SpecialEventPolicy policy)
+        public async Task<IActionResult>
+            SaveSpecialEventPolicy(
+                SpecialEventPolicy policy)
         {
-            ModelState.Remove(nameof(SpecialEventPolicy.SiteType));
+            ModelState.Remove(
+                nameof(
+                    SpecialEventPolicy.SiteType));
 
-            if (policy.StartDate > policy.EndDate)
+            if (policy.StartDate >
+                policy.EndDate)
             {
-                ModelState.AddModelError("", "Start date cannot be after end date.");
+                ModelState.AddModelError(
+                    "",
+                    "Start date cannot be after end date.");
             }
 
             if (!ModelState.IsValid)
             {
-                ViewBag.SiteTypes = await _context.SiteTypes
-                    .OrderBy(s => s.Name)
-                    .ToListAsync();
+                ViewBag.SiteTypes =
+                    await _context.SiteTypes
+                        .OrderBy(s => s.Name)
+                        .ToListAsync();
 
-                return View("SpecialEventPolicyForm", policy);
+                return View(
+                    "SpecialEventPolicyForm",
+                    policy);
             }
 
             if (policy.SpecialEventPolicyID == 0)
             {
-                _context.SpecialEventPolicies.Add(policy);
-                TempData["SuccessMessage"] = "Special event policy was added.";
+                _context.SpecialEventPolicies
+                    .Add(policy);
+
+                TempData["SuccessMessage"] =
+                    "Special event policy was added.";
             }
             else
             {
-                var existingPolicy = await _context.SpecialEventPolicies
-                    .FirstOrDefaultAsync(p => p.SpecialEventPolicyID == policy.SpecialEventPolicyID);
+                var existingPolicy =
+                    await _context
+                        .SpecialEventPolicies
+                        .FirstOrDefaultAsync(p =>
+                            p.SpecialEventPolicyID ==
+                            policy.SpecialEventPolicyID);
 
                 if (existingPolicy == null)
                 {
                     return NotFound();
                 }
 
-                existingPolicy.EventName = policy.EventName;
-                existingPolicy.StartDate = policy.StartDate;
-                existingPolicy.EndDate = policy.EndDate;
-                existingPolicy.SiteTypeID = policy.SiteTypeID;
-                existingPolicy.MaximumStayNights = policy.MaximumStayNights;
-                existingPolicy.CancellationWindowDays = policy.CancellationWindowDays;
-                existingPolicy.IsActive = policy.IsActive;
-                existingPolicy.Notes = policy.Notes;
+                existingPolicy.EventName =
+                    policy.EventName;
 
-                TempData["SuccessMessage"] = "Special event policy was updated.";
+                existingPolicy.StartDate =
+                    policy.StartDate;
+
+                existingPolicy.EndDate =
+                    policy.EndDate;
+
+                existingPolicy.SiteTypeID =
+                    policy.SiteTypeID;
+
+                existingPolicy
+                    .MaximumStayNights =
+                    policy.MaximumStayNights;
+
+                existingPolicy
+                    .CancellationWindowDays =
+                    policy.CancellationWindowDays;
+
+                existingPolicy.IsActive =
+                    policy.IsActive;
+
+                existingPolicy.Notes =
+                    policy.Notes;
+
+                TempData["SuccessMessage"] =
+                    "Special event policy was updated.";
             }
 
             await _context.SaveChangesAsync();
 
-            return RedirectToAction(nameof(SpecialEventPolicies));
+            return RedirectToAction(
+                nameof(SpecialEventPolicies));
         }
+
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> ArchiveSpecialEventPolicy(int id)
+        public async Task<IActionResult>
+            ArchiveSpecialEventPolicy(int id)
         {
-            var policy = await _context.SpecialEventPolicies.FindAsync(id);
+            var policy =
+                await _context.SpecialEventPolicies
+                    .FindAsync(id);
 
             if (policy == null)
             {
@@ -542,119 +775,368 @@ namespace RVSite.Controllers
 
             await _context.SaveChangesAsync();
 
-            TempData["SuccessMessage"] = "Special event policy was archived.";
+            TempData["SuccessMessage"] =
+                "Special event policy was archived.";
 
-            return RedirectToAction(nameof(SpecialEventPolicies));
+            return RedirectToAction(
+                nameof(SpecialEventPolicies));
         }
 
-        // Stuff for the employee management system below
+
+        // ----------------------------------
+        // EMPLOYEE MANAGEMENT
+        // ----------------------------------
+
         [HttpGet]
         public async Task<IActionResult> Employees()
         {
-            var employees = await _context.Users
-                .Include(u => u.Role)
-                .Where(u => u.Role.Type == RoleType.Staff || u.Role.Type == RoleType.Admin)
-                .OrderBy(u => u.LastName)
-                .ToListAsync();
+            var employees =
+                await _context.Users
+                    .Include(u => u.Role)
+                    .Where(u =>
+                        u.Role.Type == RoleType.Staff ||
+                        u.Role.Type == RoleType.Admin)
+                    .OrderBy(u => u.LastName)
+                    .ToListAsync();
 
             return View(employees);
         }
 
+
         [HttpGet]
-        public async Task<IActionResult> CreateEmployee()
+        public async Task<IActionResult>
+            CreateEmployee()
         {
-            ViewBag.AvailableRoles = await _context.Role
-                .Where(r => r.Type == RoleType.Staff || r.Type == RoleType.Admin)
-                .ToListAsync();
+            ViewBag.AvailableRoles =
+                await _context.Role
+                    .Where(r =>
+                        r.Type == RoleType.Staff ||
+                        r.Type == RoleType.Admin)
+                    .ToListAsync();
 
             return View();
         }
 
+
         [HttpPost]
-        public async Task<IActionResult> CreateEmployee(
-            string firstName, string lastName,
-            string email, string phoneNumber, int selectedRoleID, string password)
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult>
+            CreateEmployee(
+                string firstName,
+                string lastName,
+                string email,
+                string phoneNumber,
+                int selectedRoleID,
+                string password)
         {
+            firstName =
+                firstName?.Trim() ?? "";
+
+            lastName =
+                lastName?.Trim() ?? "";
+
+            email =
+                email?.Trim() ?? "";
+
+            phoneNumber =
+                phoneNumber?.Trim() ?? "";
+
+            password =
+                password ?? "";
+
+
+            // First name validation
+            if (string.IsNullOrWhiteSpace(
+                    firstName))
+            {
+                ModelState.AddModelError(
+                    "firstName",
+                    "First name is required.");
+            }
+
+
+            // Last name validation
+            if (string.IsNullOrWhiteSpace(
+                    lastName))
+            {
+                ModelState.AddModelError(
+                    "lastName",
+                    "Last name is required.");
+            }
+
+
+            // Email validation
+            if (string.IsNullOrWhiteSpace(
+                    email))
+            {
+                ModelState.AddModelError(
+                    "email",
+                    "Email is required.");
+            }
+
+
+            // Phone validation
+            if (string.IsNullOrWhiteSpace(
+                    phoneNumber))
+            {
+                ModelState.AddModelError(
+                    "phoneNumber",
+                    "Phone number is required.");
+            }
+
+
+            // Password validation
+            if (string.IsNullOrWhiteSpace(
+                    password))
+            {
+                ModelState.AddModelError(
+                    "password",
+                    "Temporary password is required.");
+            }
+            else if (password.Length < 8)
+            {
+                ModelState.AddModelError(
+                    "password",
+                    "Password must be at least 8 characters.");
+            }
+
+
+            // Check duplicate email
+            if (!string.IsNullOrWhiteSpace(
+                    email))
+            {
+                var normalizedEmail =
+                    email.ToLower();
+
+                bool emailExists =
+                    await _context.Users
+                        .AnyAsync(u =>
+                            u.Email.ToLower() ==
+                            normalizedEmail);
+
+                if (emailExists)
+                {
+                    ModelState.AddModelError(
+                        "email",
+                        "A user with this email already exists.");
+                }
+            }
+
+
+            // Validate employee role
+            bool validRole =
+                await _context.Role
+                    .AnyAsync(r =>
+                        r.RoleID ==
+                        selectedRoleID &&
+                        (
+                            r.Type ==
+                            RoleType.Staff ||
+                            r.Type ==
+                            RoleType.Admin
+                        ));
+
+            if (!validRole)
+            {
+                ModelState.AddModelError(
+                    "selectedRoleID",
+                    "Please select a valid employee role.");
+            }
+
+
+            // Return form if validation failed
             if (!ModelState.IsValid)
             {
-                ViewBag.AvailableRoles = await _context.Role
-                    .Where(r => r.Type == RoleType.Staff || r.Type == RoleType.Admin)
-                    .ToListAsync();
+                ViewBag.AvailableRoles =
+                    await _context.Role
+                        .Where(r =>
+                            r.Type ==
+                            RoleType.Staff ||
+                            r.Type ==
+                            RoleType.Admin)
+                        .ToListAsync();
+
+                ViewBag.FirstName =
+                    firstName;
+
+                ViewBag.LastName =
+                    lastName;
+
+                ViewBag.Email =
+                    email;
+
+                ViewBag.PhoneNumber =
+                    phoneNumber;
+
+                ViewBag.SelectedRoleID =
+                    selectedRoleID;
 
                 return View();
             }
 
+
+            // Create new employee
             var employee = new User
             {
-                FirstName = firstName,
-                LastName = lastName,
-                Email = email,
-                PhoneNumber = phoneNumber,
-                RoleID = selectedRoleID,
-                PasswordHash = password
+                FirstName =
+                    firstName,
+
+                LastName =
+                    lastName,
+
+                Email =
+                    email,
+
+                PhoneNumber =
+                    phoneNumber,
+
+                RoleID =
+                    selectedRoleID,
+
+                // Employees do not need
+                // military information.
+                // These values prevent
+                // database NULL errors.
+                MilitaryID =
+                    "N/A",
+
+                BaseName =
+                    "N/A",
+
+                Rank =
+                    "N/A",
+
+                EmailConfirmed =
+                    true,
+
+                EmailConfirmationToken =
+                    null,
+
+                IsLocked =
+                    false,
+
+                PasswordHash =
+                    ""
             };
 
-            _context.Users.Add(employee);
-            await _context.SaveChangesAsync();
 
-            return RedirectToAction(nameof(Employees));
+            // Hash password before saving
+            employee.PasswordHash =
+                _passwordHasher.HashPassword(
+                    employee,
+                    password);
+
+
+            _context.Users.Add(employee);
+
+            await _context
+                .SaveChangesAsync();
+
+
+            TempData["SuccessMessage"] =
+                "Employee account created successfully.";
+
+
+            return RedirectToAction(
+                nameof(Employees));
         }
 
+
         [HttpGet]
-        public async Task<IActionResult> EditEmployee(int id)
+        public async Task<IActionResult>
+            EditEmployee(int id)
         {
-            var user = await _context.Users
-                .Include(u => u.Role)
-                .FirstOrDefaultAsync(u => u.UserID == id);
+            var user =
+                await _context.Users
+                    .Include(u => u.Role)
+                    .FirstOrDefaultAsync(u =>
+                        u.UserID == id);
 
-            if (user == null) return NotFound();
+            if (user == null)
+            {
+                return NotFound();
+            }
 
-            ViewBag.AvailableRoles = await _context.Role
-                .Where(r => r.Type == RoleType.Staff || r.Type == RoleType.Admin)
-                .ToListAsync();
+            ViewBag.AvailableRoles =
+                await _context.Role
+                    .Where(r =>
+                        r.Type == RoleType.Staff ||
+                        r.Type == RoleType.Admin)
+                    .ToListAsync();
 
             return View(user);
         }
 
+
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> EditEmployee(
-            int id,
-            string firstName,
-            string lastName,
-            string email,
-            string phoneNumber,
-            int selectedRoleID,
-            bool isLocked = false)
+        public async Task<IActionResult>
+            EditEmployee(
+                int id,
+                string firstName,
+                string lastName,
+                string email,
+                string phoneNumber,
+                int selectedRoleID,
+                bool isLocked = false)
         {
-            var user = await _context.Users.FindAsync(id);
+            var user =
+                await _context.Users
+                    .FindAsync(id);
 
-            if (user == null) return NotFound();
+            if (user == null)
+            {
+                return NotFound();
+            }
 
-            user.FirstName = firstName;
-            user.LastName = lastName;
-            user.Email = email;
-            user.PhoneNumber = phoneNumber;
-            user.RoleID = selectedRoleID;
-            user.IsLocked = isLocked;
+            user.FirstName =
+                firstName;
 
-            await _context.SaveChangesAsync();
+            user.LastName =
+                lastName;
 
-            return RedirectToAction(nameof(Employees));
+            user.Email =
+                email;
+
+            user.PhoneNumber =
+                phoneNumber;
+
+            user.RoleID =
+                selectedRoleID;
+
+            user.IsLocked =
+                isLocked;
+
+            await _context
+                .SaveChangesAsync();
+
+            return RedirectToAction(
+                nameof(Employees));
         }
 
+
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> ToggleLock(int id)
+        public async Task<IActionResult>
+            ToggleLock(int id)
         {
-            var user = await _context.Users.FindAsync(id);
+            var user =
+                await _context.Users
+                    .FindAsync(id);
 
-            if (user == null) return NotFound();
+            if (user == null)
+            {
+                return NotFound();
+            }
 
-            user.IsLocked = !user.IsLocked;
-            await _context.SaveChangesAsync();
+            user.IsLocked =
+                !user.IsLocked;
 
-            return RedirectToAction(nameof(Employees));
+            await _context
+                .SaveChangesAsync();
+
+            return RedirectToAction(
+                nameof(Employees));
         }
     }
 }
