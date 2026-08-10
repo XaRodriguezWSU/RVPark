@@ -1,0 +1,439 @@
+@using RVSite.Models
+
+@{
+    ViewData["Title"] = "Employee Dashboard";
+
+    var todaysArrivals =
+        ViewBag.TodaysArrivals as List<Reservation>
+        ?? new List<Reservation>();
+
+    var todaysDepartures =
+        ViewBag.TodaysDepartures as List<Reservation>
+        ?? new List<Reservation>();
+
+    var maintenanceTasks =
+        ViewBag.OpenMaintenanceTasks as List<MaintenanceTask>
+        ?? new List<MaintenanceTask>();
+
+    var unpaidReservations =
+        ViewBag.UnpaidReservations as List<Reservation>
+        ?? new List<Reservation>();
+}
+
+<div class="employee-dashboard">
+
+    <section class="card admin-hero mb-4">
+        <div class="card-body p-4 p-lg-5">
+            <div class="d-flex flex-column flex-lg-row
+                        justify-content-between
+                        align-items-lg-center
+                        gap-3">
+
+                <div>
+                    <span class="home-kicker">Employee Operations</span>
+
+                    <h1 class="page-title">
+                        Employee Dashboard
+                    </h1>
+
+                    <p class="page-subtitle">
+                        Manage daily reservations, payments, arrivals,
+                        departures, and maintenance tasks.
+                    </p>
+                </div>
+
+                <div class="d-flex flex-wrap gap-2">
+                    <a asp-controller="Reservation"
+                       asp-action="WalkIn"
+                       class="btn btn-primary">
+                        New Walk-In
+                    </a>
+
+                    <a asp-controller="Reservation"
+                       asp-action="Index"
+                       class="btn btn-outline-secondary">
+                        Reservation List
+                    </a>
+                </div>
+
+            </div>
+        </div>
+    </section>
+
+    <section class="row g-3 mb-4">
+
+        <div class="col-sm-6 col-xl-3">
+            <div class="card stat-card">
+                <div class="card-body">
+                    <span>Today's Arrivals</span>
+                    <strong>
+                        @ViewBag.TodayArrivalsCount
+                    </strong>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-sm-6 col-xl-3">
+            <div class="card stat-card">
+                <div class="card-body">
+                    <span>Today's Departures</span>
+                    <strong>
+                        @ViewBag.TodayDeparturesCount
+                    </strong>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-sm-6 col-xl-3">
+            <div class="card stat-card">
+                <div class="card-body">
+                    <span>Maintenance Tasks</span>
+                    <strong class="text-warning">
+                        @ViewBag.OpenMaintenanceCount
+                    </strong>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-sm-6 col-xl-3">
+            <div class="card stat-card">
+                <div class="card-body">
+                    <span>Payments Due</span>
+                    <strong class="text-danger">
+                        @ViewBag.OutstandingPaymentsCount
+                    </strong>
+                </div>
+            </div>
+        </div>
+
+    </section>
+
+    <div class="row g-4">
+
+        <div class="col-xl-8">
+
+            <section class="card mb-4">
+                <div class="card-header d-flex
+                            justify-content-between
+                            align-items-center">
+
+                    <div>
+                        <h2 class="h5 mb-1">
+                            Today's Arrivals
+                        </h2>
+
+                        <p class="text-muted mb-0">
+                            Customers scheduled to check in today.
+                        </p>
+                    </div>
+
+                    <a asp-controller="Employee"
+                       asp-action="Daily"
+                       class="btn btn-sm btn-outline-primary">
+                        View Daily Report
+                    </a>
+                </div>
+
+                <div class="card-body p-0">
+
+                    @if (!todaysArrivals.Any())
+                    {
+                    <div class="p-4 text-muted">
+                        No arrivals are scheduled for today.
+                    </div>
+                    }
+                    else
+                    {
+                    <div class="table-responsive">
+
+                        <table class="table
+                                          table-hover
+                                          align-middle
+                                          admin-table
+                                          mb-0">
+
+                            <thead>
+                                <tr>
+                                    <th>Customer</th>
+                                    <th>Site</th>
+                                    <th>Status</th>
+                                    <th>Balance</th>
+                                    <th class="text-end">
+                                        Action
+                                    </th>
+                                </tr>
+                            </thead>
+
+                            <tbody>
+                                @foreach (var reservation in todaysArrivals)
+                                    {
+                                <tr>
+                                    <td>
+                                        <div class="fw-semibold">
+                                            @reservation.User?.FirstName
+                                            @reservation.User?.LastName
+                                        </div>
+
+                                        <small class="text-muted">
+                                            #@reservation.ReservationID
+                                        </small>
+                                    </td>
+
+                                    <td>
+                                        Site @reservation.Site?.SiteNumber
+                                    </td>
+
+                                    <td>
+                                        <span class="badge bg-secondary">
+                                            @reservation.ReservationStatus
+                                        </span>
+                                    </td>
+
+                                    <td>
+                                        @if (reservation.BalanceDue > 0)
+                                                {
+                                        <span class="text-danger fw-semibold">
+                                            @reservation.BalanceDue.ToString("C")
+                                        </span>
+                                                }
+                                                else
+                                                {
+                                        <span class="text-success fw-semibold">
+                                            Paid
+                                        </span>
+                                                }
+                                    </td>
+
+                                    <td class="text-end">
+                                        <a asp-controller="Reservation"
+                                           asp-action="Edit"
+                                           asp-route-id="@reservation.ReservationID"
+                                           class="btn btn-sm btn-outline-primary">
+                                            Open
+                                        </a>
+                                    </td>
+                                </tr>
+                                    }
+                            </tbody>
+
+                        </table>
+                    </div>
+                    }
+
+                </div>
+            </section>
+
+            <section class="card">
+                <div class="card-header d-flex
+                            justify-content-between
+                            align-items-center">
+
+                    <div>
+                        <h2 class="h5 mb-1">
+                            Outstanding Payments
+                        </h2>
+
+                        <p class="text-muted mb-0">
+                            Reservations that still have a balance due.
+                        </p>
+                    </div>
+                </div>
+
+                <div class="card-body p-0">
+
+                    @if (!unpaidReservations.Any())
+                    {
+                    <div class="p-4 text-muted">
+                        No outstanding reservation balances.
+                    </div>
+                    }
+                    else
+                    {
+                    <div class="table-responsive">
+
+                        <table class="table
+                                          table-hover
+                                          align-middle
+                                          admin-table
+                                          mb-0">
+
+                            <thead>
+                                <tr>
+                                    <th>Reservation</th>
+                                    <th>Customer</th>
+                                    <th>Site</th>
+                                    <th>Balance Due</th>
+                                    <th class="text-end">
+                                        Action
+                                    </th>
+                                </tr>
+                            </thead>
+
+                            <tbody>
+                                @foreach (var reservation in unpaidReservations)
+                                    {
+                                <tr>
+                                    <td class="fw-semibold">
+                                        #@reservation.ReservationID
+                                    </td>
+
+                                    <td>
+                                        @reservation.User?.FirstName
+                                        @reservation.User?.LastName
+                                    </td>
+
+                                    <td>
+                                        Site @reservation.Site?.SiteNumber
+                                    </td>
+
+                                    <td class="text-danger fw-semibold">
+                                        @reservation.BalanceDue.ToString("C")
+                                    </td>
+
+                                    <td class="text-end">
+                                        <a asp-controller="Payment"
+                                           asp-action="Checkout"
+                                           asp-route-reservationId="@reservation.ReservationID"
+                                           class="btn btn-sm btn-primary">
+                                            Process Payment
+                                        </a>
+                                    </td>
+                                </tr>
+                                    }
+                            </tbody>
+
+                        </table>
+                    </div>
+                    }
+
+                </div>
+            </section>
+
+        </div>
+
+        <div class="col-xl-4">
+
+            <section class="card mb-4">
+                <div class="card-header">
+                    <h2 class="h5 mb-0">
+                        Employee Tools
+                    </h2>
+                </div>
+
+                <div class="card-body d-grid gap-2">
+
+                    <a asp-controller="Reservation"
+                       asp-action="Index"
+                       class="btn btn-primary">
+                        Reservation List
+                    </a>
+
+                    <a asp-controller="Reservation"
+                       asp-action="Search"
+                       class="btn btn-outline-primary">
+                        Search Reservations
+                    </a>
+
+                    <a asp-controller="Reservation"
+                       asp-action="WalkIn"
+                       class="btn btn-outline-secondary">
+                        Create Walk-In Reservation
+                    </a>
+
+                    <a asp-controller="Maintenance"
+                       asp-action="Index"
+                       class="btn btn-outline-secondary">
+                        Maintenance Tasks
+                    </a>
+
+                    <a asp-controller="Employee"
+                       asp-action="Daily"
+                       class="btn btn-outline-primary">
+                        Today's Arrivals & Departures
+                    </a>
+                </div>
+            </section>
+
+            <section class="card">
+                <div class="card-header d-flex
+                            justify-content-between
+                            align-items-center">
+
+                    <h2 class="h5 mb-0">
+                        Maintenance
+                    </h2>
+
+                    <a asp-controller="Maintenance"
+                       asp-action="Index"
+                       class="btn btn-sm btn-outline-primary">
+                        View All
+                    </a>
+                </div>
+
+                <div class="card-body">
+
+                    @if (!maintenanceTasks.Any())
+                    {
+                    <p class="text-muted mb-0">
+                        No open maintenance tasks.
+                    </p>
+                    }
+                    else
+                    {
+                    <div class="d-grid gap-3">
+
+                        @foreach (var task in maintenanceTasks)
+                            {
+                        <div class="detail-box">
+
+                            <div class="d-flex
+                                                justify-content-between
+                                                gap-2">
+
+                                <div>
+                                    <span>
+                                        Site @task.Site?.SiteNumber
+                                    </span>
+
+                                    <strong>
+                                        @task.Title
+                                    </strong>
+                                </div>
+
+                                @if (task.Priority ==
+                                             MaintenanceTaskPriority.Urgent)
+                                        {
+                                <span class="badge bg-danger align-self-start">
+                                    Urgent
+                                </span>
+                                        }
+                                        else if (task.Priority ==
+                                                  MaintenanceTaskPriority.Regular)
+                                        {
+                                <span class="badge bg-warning text-dark align-self-start">
+                                    Regular
+                                </span>
+                                        }
+                                        else
+                                        {
+                                <span class="badge bg-secondary align-self-start">
+                                    Low
+                                </span>
+                                        }
+
+                            </div>
+
+                        </div>
+                            }
+
+                    </div>
+                    }
+
+                </div>
+            </section>
+
+        </div>
+
+    </div>
+
+</div>

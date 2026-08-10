@@ -33,11 +33,61 @@
 
                     @if (User.Identity?.IsAuthenticated ?? false)
                     {
-                    if (User.IsInRole("Admin") || User.IsInRole("Staff"))
+                    @if (User.IsInRole("Admin"))
                         {
                     <li class="nav-item">
                         <a class="nav-link app-nav-link"
                            asp-controller="Admin"
+                           asp-action="Dashboard">
+                            Dashboard
+                        </a>
+                    </li>
+
+                    <li class="nav-item dropdown">
+                        <a class="nav-link app-nav-link dropdown-toggle"
+                           href="#"
+                           id="adminToolsDropdown"
+                           role="button"
+                           data-bs-toggle="dropdown"
+                           aria-expanded="false">
+                            Admin Tools
+                        </a>
+
+                        <ul class="dropdown-menu dropdown-menu-end"
+                            aria-labelledby="adminToolsDropdown">
+
+                            <li>
+                                <a class="dropdown-item"
+                                   asp-controller="Reservation"
+                                   asp-action="Index">
+                                    Reservations
+                                </a>
+                            </li>
+
+                            <li>
+                                <a class="dropdown-item"
+                                   asp-controller="Maintenance"
+                                   asp-action="Index">
+                                    Maintenance
+                                </a>
+                            </li>
+
+                            <li>
+                                <a class="dropdown-item"
+                                   asp-controller="Admin"
+                                   asp-action="Reports">
+                                    Reports
+                                </a>
+                            </li>
+
+                        </ul>
+                    </li>
+                        }
+                        else if (User.IsInRole("Staff"))
+                        {
+                    <li class="nav-item">
+                        <a class="nav-link app-nav-link"
+                           asp-controller="Employee"
                            asp-action="Dashboard">
                             Dashboard
                         </a>
@@ -58,17 +108,9 @@
 
                             <li>
                                 <a class="dropdown-item"
-                                   asp-controller="Admin"
-                                   asp-action="Reports">
-                                    Reports
-                                </a>
-                            </li>
-
-                            <li>
-                                <a class="dropdown-item"
-                                   asp-controller="Maintenance"
-                                   asp-action="Index">
-                                    Maintenance Tasks
+                                   asp-controller="Employee"
+                                   asp-action="Daily">
+                                    Arrivals & Departures
                                 </a>
                             </li>
 
@@ -77,6 +119,14 @@
                                    asp-controller="Reservation"
                                    asp-action="Index">
                                     Reservation List
+                                </a>
+                            </li>
+
+                            <li>
+                                <a class="dropdown-item"
+                                   asp-controller="Maintenance"
+                                   asp-action="Index">
+                                    Maintenance Tasks
                                 </a>
                             </li>
 
@@ -122,7 +172,7 @@
                     <li class="nav-item ms-lg-2">
                         <a asp-controller="Sites"
                            asp-action="Search"
-                           class="btn btn-primary rounded-pill px-4">
+                           class="btn btn-outline-dark rounded-pill px-4">
                             Search Sites
                         </a>
                     </li>
