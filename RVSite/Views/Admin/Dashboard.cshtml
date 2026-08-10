@@ -10,6 +10,7 @@
 
 <section class="card admin-hero mb-4">
     <div class="card-body p-4 p-lg-5">
+
         <div class="d-flex flex-column flex-lg-row
                     justify-content-between
                     align-items-lg-center
@@ -31,6 +32,7 @@
             </div>
 
             <div class="d-flex flex-wrap gap-2">
+
                 <a asp-controller="Reservation"
                    asp-action="Search"
                    class="btn btn-primary">
@@ -42,9 +44,11 @@
                    class="btn btn-outline-secondary">
                     Generate Reports
                 </a>
+
             </div>
 
         </div>
+
     </div>
 </section>
 
@@ -241,6 +245,7 @@
                 else
                 {
                 <div class="text-center p-5">
+
                     <h3 class="h5 mb-2">
                         No sites found
                     </h3>
@@ -254,6 +259,7 @@
                        class="btn btn-primary">
                         Add Site
                     </a>
+
                 </div>
                 }
 
@@ -295,6 +301,12 @@
                         Manage Employees
                     </a>
 
+                    <a asp-controller="Admin"
+                       asp-action="CreateEmployee"
+                       class="btn btn-outline-secondary">
+                        Create Employee Account
+                    </a>
+
                     <a asp-controller="Maintenance"
                        asp-action="Index"
                        class="btn btn-outline-secondary">
@@ -313,7 +325,7 @@
 
 <section class="row g-4">
 
-    <div class="col-lg-4">
+    <div class="col-md-6 col-xl-3">
 
         <div class="card h-100">
 
@@ -349,7 +361,7 @@
 
     </div>
 
-    <div class="col-lg-4">
+    <div class="col-md-6 col-xl-3">
 
         <div class="card h-100">
 
@@ -385,7 +397,43 @@
 
     </div>
 
-    <div class="col-lg-4">
+    <div class="col-md-6 col-xl-3">
+
+        <div class="card h-100">
+
+            <div class="card-header">
+                <h2 class="h5 mb-0">
+                    Staff Management
+                </h2>
+            </div>
+
+            <div class="card-body d-grid gap-2">
+
+                <a asp-controller="Admin"
+                   asp-action="Employees"
+                   class="btn btn-primary">
+                    Manage Employees
+                </a>
+
+                <a asp-controller="Admin"
+                   asp-action="CreateEmployee"
+                   class="btn btn-outline-primary">
+                    Create Employee Account
+                </a>
+
+                <a asp-controller="Maintenance"
+                   asp-action="Index"
+                   class="btn btn-outline-secondary">
+                    Maintenance Tasks
+                </a>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <div class="col-md-6 col-xl-3">
 
         <div class="card h-100">
 
@@ -398,8 +446,8 @@
             <div class="card-body d-flex flex-column">
 
                 <p class="text-muted">
-                    Preview, upload, and maintain photos
-                    used throughout customer-facing site listings.
+                    Preview, upload, and maintain photos used throughout
+                    customer-facing campsite listings.
                 </p>
 
                 <a asp-controller="SitePhoto"
