@@ -99,10 +99,18 @@ namespace RVSite.Controllers
 
             await SignInUser(user);
 
-            if (user.Role?.Type == RoleType.Admin ||
-                user.Role?.Type == RoleType.Staff)
+            if (user.Role?.Type == RoleType.Admin)
             {
-                return RedirectToAction("Dashboard", "Admin");
+                return RedirectToAction(
+                    "Dashboard",
+                    "Admin");
+            }
+
+            if (user.Role?.Type == RoleType.Staff)
+            {
+                return RedirectToAction(
+                    "Dashboard",
+                    "Employee");
             }
 
             if (!string.IsNullOrWhiteSpace(returnUrl) &&
