@@ -73,6 +73,19 @@ namespace RVSite.Controllers
         [HttpPost]
         public async Task<IActionResult> Book(Reservation model, string? siteType, int? rvLength, bool search = false)
         {
+            int userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier).Value);
+            var user = await _context.Users.FirstOrDefaultAsync(u => u.UserID == userId);
+
+            if (user == null)
+                return Challenge();
+
+            if (!user.EmailConfirmed)
+            {
+                TempData["ErrorMessage"] = "Please confirm your email before booking a reservation.";
+                return RedirectToAction("Index", "Home");
+            }
+
+
             ViewBag.SiteTypes = _context.SiteTypes.ToList();
             ViewBag.SelectedSiteType = siteType;
             ViewBag.RvLength = rvLength;
@@ -130,10 +143,10 @@ namespace RVSite.Controllers
             model.Site = _context.Sites.FirstOrDefault(s => s.SiteID == model.SiteID);
 
             // Step 3: Confirm reservation meets policy requirements
-            if (!int.TryParse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value, out int userId))
-            {
-                return Challenge();
-            }
+            //if (!int.TryParse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value, out int userId))
+            //{
+            //    return Challenge();
+            //}
 
             model.UserID = userId;
             model.CheckInDate = model.CheckInDate.Date;
