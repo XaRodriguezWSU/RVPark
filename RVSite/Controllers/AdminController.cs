@@ -28,25 +28,20 @@ namespace RVSite.Controllers
         [HttpGet]
         public async Task<IActionResult> Dashboard()
         {
-            var today = DateTime.Today;
-
             var totalSites = await _context.Sites.CountAsync();
 
-            var reservedSites = await _context.Reservations
-                .Where(r =>
-                    r.ReservationStatus != ReservationStatus.Cancelled &&
-                    r.CheckInDate.Date <= today &&
-                    r.CheckOutDate.Date >= today)
-                .Select(r => r.SiteID)
-                .Distinct()
-                .CountAsync();
+            var availableSites = await _context.Sites
+                .CountAsync(s =>
+                    s.SiteStatus == SiteStatus.Available.ToString());
+
+            var reservedSites = await _context.Sites
+                .CountAsync(s =>
+                    s.SiteStatus == SiteStatus.Reserved.ToString());
 
             var maintenanceTasks = await _context.MaintenanceTasks
                 .CountAsync(t =>
                     t.Status == MaintenanceTaskStatus.Open ||
                     t.Status == MaintenanceTaskStatus.InProgress);
-
-            var availableSites = totalSites - reservedSites;
 
             var recentSites = await _context.Sites
                 .Include(s => s.SiteType)
