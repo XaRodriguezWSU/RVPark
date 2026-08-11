@@ -5,6 +5,14 @@
     var sites = Model?.ToList() ?? new List<RVSite.Models.Site>();
     }
 
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="alert alert-warning alert-dismissible fade show" role="alert">
+            @TempData["ErrorMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
     <section class="home-hero mb-4">
         <div id="homeCarousel" class="carousel slide" data-bs-ride="carousel">
             @if (sites.Any())
