@@ -1,0 +1,474 @@
+@using RVSite.Models
+
+@{
+    ViewData["Title"] = "Daily Arrivals & Departures";
+
+    var selectedDate =
+        ViewBag.SelectedDate is DateTime date
+            ? date
+            : DateTime.Today;
+
+    var arrivals =
+        ViewBag.Arrivals as List<Reservation>
+        ?? new List<Reservation>();
+
+    var departures =
+        ViewBag.Departures as List<Reservation>
+        ?? new List<Reservation>();
+}
+
+<section class="card admin-hero mb-4">
+    <div class="card-body p-4 p-lg-5">
+        <div class="d-flex flex-column flex-lg-row
+                    justify-content-between
+                    align-items-lg-center
+                    gap-3">
+
+            <div>
+                <span class="home-kicker">
+                    Daily Operations
+                </span>
+
+                <h1 class="page-title">
+                    Arrivals & Departures
+                </h1>
+
+                <p class="page-subtitle">
+                    Review customers checking in and checking out for
+                    @selectedDate.ToString("dddd, MMMM d, yyyy").
+                </p>
+            </div>
+
+            <a asp-controller="Employee"
+               asp-action="Dashboard"
+               class="btn btn-outline-secondary">
+                Back to Dashboard
+            </a>
+
+        </div>
+    </div>
+</section>
+
+<section class="card mb-4">
+    <div class="card-body">
+
+        <form asp-controller="Employee"
+              asp-action="Daily"
+              method="get">
+
+            <div class="row g-3 align-items-end">
+
+                <div class="col-md-5 col-lg-4">
+                    <label for="date"
+                           class="form-label">
+                        View Date
+                    </label>
+
+                    <input id="date"
+                           name="date"
+                           type="date"
+                           class="form-control"
+                           value="@selectedDate.ToString("yyyy-MM-dd")" />
+                </div>
+
+                <div class="col-md-auto">
+                    <button type="submit"
+                            class="btn btn-primary">
+                        View Day
+                    </button>
+                </div>
+
+                @if (selectedDate.Date != DateTime.Today)
+                {
+                <div class="col-md-auto">
+                    <a asp-controller="Employee"
+                       asp-action="Daily"
+                       class="btn btn-outline-secondary">
+                        Today
+                    </a>
+                </div>
+                }
+
+            </div>
+
+        </form>
+
+    </div>
+</section>
+
+<div class="row g-3 mb-4">
+
+    <div class="col-md-6">
+        <div class="card stat-card">
+            <div class="card-body">
+                <span>Arrivals</span>
+                <strong>@arrivals.Count</strong>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-6">
+        <div class="card stat-card">
+            <div class="card-body">
+                <span>Departures</span>
+                <strong>@departures.Count</strong>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<section class="card mb-4">
+
+    <div class="card-header">
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <h2 class="h5 mb-1">
+                    Arrivals
+                </h2>
+
+                <p class="text-muted mb-0">
+                    Customers scheduled to check in.
+                </p>
+            </div>
+
+            <span class="badge bg-success">
+                @arrivals.Count
+            </span>
+        </div>
+    </div>
+
+    <div class="card-body p-0">
+
+        @if (!arrivals.Any())
+        {
+        <div class="p-4 text-muted">
+            No arrivals are scheduled for this date.
+        </div>
+        }
+        else
+        {
+        <div class="table-responsive">
+
+            <table class="table table-hover
+                              align-middle
+                              admin-table
+                              mb-0">
+
+                <thead>
+                    <tr>
+                        <th>Reservation</th>
+                        <th>Customer</th>
+                        <th>Contact</th>
+                        <th>Site</th>
+                        <th>Guests</th>
+                        <th>Status</th>
+                        <th>Balance</th>
+                        <th class="text-end">
+                            Actions
+                        </th>
+                    </tr>
+                </thead>
+
+                <tbody>
+
+                    @foreach (var reservation in arrivals)
+                        {
+                    <tr>
+
+                        <td class="fw-semibold">
+                            #@reservation.ReservationID
+                        </td>
+
+                        <td>
+                            <div class="fw-semibold">
+                                @reservation.User?.FirstName
+                                @reservation.User?.LastName
+                            </div>
+
+                            <small class="text-muted">
+                                @reservation.User?.Email
+                            </small>
+                        </td>
+
+                        <td>
+                            @(reservation.User?.PhoneNumber
+                                        ?? "Not provided")
+                        </td>
+
+                        <td>
+                            <div class="fw-semibold">
+                                Site @reservation.Site?.SiteNumber
+                            </div>
+
+                            <small class="text-muted">
+                                @reservation.Site?.SiteType?.Name
+                            </small>
+                        </td>
+
+                        <td>
+                            <span>
+                                @reservation.NumberOfAdults adult(s)
+                            </span>
+
+                            @if (reservation.NumberOfChildren > 0)
+                                    {
+                            <br />
+
+                            <small class="text-muted">
+                                @reservation.NumberOfChildren child(ren)
+                            </small>
+                                    }
+                        </td>
+
+                        <td>
+                            @if (reservation.ReservationStatus ==
+                                         ReservationStatus.Confirmed)
+                                    {
+                            <span class="badge bg-success">
+                                Confirmed
+                            </span>
+                                    }
+                                    else if (reservation.ReservationStatus ==
+                                             ReservationStatus.Pending)
+                                    {
+                            <span class="badge bg-warning text-dark">
+                                Pending
+                            </span>
+                                    }
+                                    else
+                                    {
+                            <span class="badge bg-secondary">
+                                @reservation.ReservationStatus
+                            </span>
+                                    }
+                        </td>
+
+                        <td>
+                            @if (reservation.BalanceDue > 0)
+                                    {
+                            <span class="text-danger fw-semibold">
+                                @reservation.BalanceDue.ToString("C")
+                            </span>
+                                    }
+                                    else
+                                    {
+                            <span class="text-success fw-semibold">
+                                Paid
+                            </span>
+                                    }
+                        </td>
+
+                        <td class="text-end">
+                            <div class="dropdown">
+
+                                <button type="button"
+                                        class="btn btn-sm btn-outline-dark dropdown-toggle"
+                                        data-bs-toggle="dropdown"
+                                        aria-expanded="false">
+                                    Actions
+                                </button>
+
+                                <ul class="dropdown-menu dropdown-menu-end">
+
+                                    <li>
+                                        <a class="dropdown-item"
+                                           asp-controller="Reservation"
+                                           asp-action="Edit"
+                                           asp-route-id="@reservation.ReservationID">
+                                            Open Reservation
+                                        </a>
+                                    </li>
+
+                                    @if (reservation.BalanceDue > 0)
+                                            {
+                                    <li>
+                                        <a class="dropdown-item"
+                                           asp-controller="Payment"
+                                           asp-action="Checkout"
+                                           asp-route-reservationId="@reservation.ReservationID">
+                                            Process Payment
+                                        </a>
+                                    </li>
+                                            }
+
+                                </ul>
+
+                            </div>
+                        </td>
+
+                    </tr>
+                        }
+
+                </tbody>
+
+            </table>
+
+        </div>
+        }
+
+    </div>
+
+</section>
+
+<section class="card">
+
+    <div class="card-header">
+        <div class="d-flex justify-content-between align-items-center">
+
+            <div>
+                <h2 class="h5 mb-1">
+                    Departures
+                </h2>
+
+                <p class="text-muted mb-0">
+                    Customers scheduled to check out.
+                </p>
+            </div>
+
+            <span class="badge bg-secondary">
+                @departures.Count
+            </span>
+
+        </div>
+    </div>
+
+    <div class="card-body p-0">
+
+        @if (!departures.Any())
+        {
+        <div class="p-4 text-muted">
+            No departures are scheduled for this date.
+        </div>
+        }
+        else
+        {
+        <div class="table-responsive">
+
+            <table class="table table-hover
+                              align-middle
+                              admin-table
+                              mb-0">
+
+                <thead>
+                    <tr>
+                        <th>Reservation</th>
+                        <th>Customer</th>
+                        <th>Contact</th>
+                        <th>Site</th>
+                        <th>Stay</th>
+                        <th>Balance</th>
+                        <th class="text-end">
+                            Actions
+                        </th>
+                    </tr>
+                </thead>
+
+                <tbody>
+
+                    @foreach (var reservation in departures)
+                        {
+                    <tr>
+
+                        <td class="fw-semibold">
+                            #@reservation.ReservationID
+                        </td>
+
+                        <td>
+                            <div class="fw-semibold">
+                                @reservation.User?.FirstName
+                                @reservation.User?.LastName
+                            </div>
+
+                            <small class="text-muted">
+                                @reservation.User?.Email
+                            </small>
+                        </td>
+
+                        <td>
+                            @(reservation.User?.PhoneNumber
+                                        ?? "Not provided")
+                        </td>
+
+                        <td>
+                            <div class="fw-semibold">
+                                Site @reservation.Site?.SiteNumber
+                            </div>
+
+                            <small class="text-muted">
+                                @reservation.Site?.SiteType?.Name
+                            </small>
+                        </td>
+
+                        <td>
+                            @reservation.CheckInDate.ToString("MMM d")
+                            -
+                            @reservation.CheckOutDate.ToString("MMM d")
+                        </td>
+
+                        <td>
+                            @if (reservation.BalanceDue > 0)
+                                    {
+                            <span class="text-danger fw-semibold">
+                                @reservation.BalanceDue.ToString("C")
+                            </span>
+                                    }
+                                    else
+                                    {
+                            <span class="text-success fw-semibold">
+                                Paid
+                            </span>
+                                    }
+                        </td>
+
+                        <td class="text-end">
+                            <div class="dropdown">
+
+                                <button type="button"
+                                        class="btn btn-sm btn-outline-dark dropdown-toggle"
+                                        data-bs-toggle="dropdown"
+                                        aria-expanded="false">
+                                    Actions
+                                </button>
+
+                                <ul class="dropdown-menu dropdown-menu-end">
+
+                                    <li>
+                                        <a class="dropdown-item"
+                                           asp-controller="Reservation"
+                                           asp-action="Edit"
+                                           asp-route-id="@reservation.ReservationID">
+                                            Open Reservation
+                                        </a>
+                                    </li>
+
+                                    @if (reservation.BalanceDue > 0)
+                                            {
+                                    <li>
+                                        <a class="dropdown-item"
+                                           asp-controller="Payment"
+                                           asp-action="Checkout"
+                                           asp-route-reservationId="@reservation.ReservationID">
+                                            Process Payment
+                                        </a>
+                                    </li>
+                                            }
+
+                                </ul>
+
+                            </div>
+                        </td>
+
+                    </tr>
+                        }
+
+                </tbody>
+
+            </table>
+
+        </div>
+        }
+
+    </div>
+
+</section>

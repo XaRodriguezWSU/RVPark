@@ -99,10 +99,18 @@ namespace RVSite.Controllers
 
             await SignInUser(user);
 
-            if (user.Role?.Type == RoleType.Admin ||
-                user.Role?.Type == RoleType.Staff)
+            if (user.Role?.Type == RoleType.Admin)
             {
-                return RedirectToAction("Dashboard", "Admin");
+                return RedirectToAction(
+                    "Dashboard",
+                    "Admin");
+            }
+
+            if (user.Role?.Type == RoleType.Staff)
+            {
+                return RedirectToAction(
+                    "Dashboard",
+                    "Employee");
             }
 
             if (!string.IsNullOrWhiteSpace(returnUrl) &&
@@ -304,5 +312,85 @@ namespace RVSite.Controllers
 
             await _emailService.SendAsync(user.Email, "Confirm Your Email", body);
         }
+
+        // GET: /Login/CreateStaff
+        [HttpGet]
+        public IActionResult RegisterStaff()
+        {
+            return View();
+        }
+
+        // POST: /Login/CreateStaff
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> RegisterStaff(
+            string firstName,
+            string lastName,
+            string email,
+            string password,
+            string confirmPassword,
+            string role)
+        {
+            firstName = firstName?.Trim() ?? "";
+            lastName = lastName?.Trim() ?? "";
+            email = email?.Trim().ToLower() ?? "";
+
+            if (string.IsNullOrWhiteSpace(firstName))
+                ModelState.AddModelError("firstName", "First name is required.");
+
+            if (string.IsNullOrWhiteSpace(lastName))
+                ModelState.AddModelError("lastName", "Last name is required.");
+
+            if (string.IsNullOrWhiteSpace(email))
+                ModelState.AddModelError("email", "Email is required.");
+
+            if (string.IsNullOrWhiteSpace(password))
+                ModelState.AddModelError("password", "Password is required.");
+
+            if (password != confirmPassword)
+                ModelState.AddModelError("confirmPassword", "Passwords do not match.");
+
+            if (!string.IsNullOrWhiteSpace(password) && password.Length < 8)
+                ModelState.AddModelError("password", "Password must contain at least 8 characters.");
+
+            var emailExists = await _db.Users.AnyAsync(u => u.Email.ToLower() == email);
+            if (emailExists)
+                ModelState.AddModelError("email", "An account with this email already exists.");
+
+            RoleType selectedRole = RoleType.Staff;
+            if (role?.ToLower() == "admin")
+                selectedRole = RoleType.Admin;
+            else if (role?.ToLower() == "staff")
+                selectedRole = RoleType.Staff;
+            else
+                ModelState.AddModelError("role", "Invalid role selected.");
+
+            if (!ModelState.IsValid)
+                return View();
+
+            var roleEntity = await _db.Role.FirstAsync(r => r.Type == selectedRole);
+
+            var user = new User
+            {
+                FirstName = firstName,
+                LastName = lastName,
+                Email = email,
+                PhoneNumber = "", // optional
+                RoleID = roleEntity.RoleID,
+                IsLocked = false,
+                EmailConfirmed = true, // staff/admin accounts auto-confirmed
+                MilitaryID = null,
+                BaseName = null,
+                Rank = null
+            };
+
+            user.PasswordHash = _passwordHasher.HashPassword(user, password);
+
+            _db.Users.Add(user);
+            await _db.SaveChangesAsync();
+
+            return RedirectToAction("Dashboard", "Admin");
+        }
+
     }
 }
